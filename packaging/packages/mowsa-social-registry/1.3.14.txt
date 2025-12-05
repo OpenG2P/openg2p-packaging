@@ -3,7 +3,7 @@
 #!
 
 # OCA dependencies
-oca = git://v1.2.3//https://github.com/openg2p/openg2p-social-registry-community-addons
+oca = git://v1.2.5//https://github.com/openg2p/openg2p-social-registry-community-addons
 
 # OpenG2P developed modules
 openg2p_registry = git://v1.5.7//https://github.com/openg2p/openg2p-registry
