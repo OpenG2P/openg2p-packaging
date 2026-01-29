@@ -8,4 +8,3 @@ oca = git://v1.2.5//https://github.com/openg2p/openg2p-social-registry-community
 openg2p_registry = git://v1.5.3//https://github.com/openg2p/openg2p-registry
 openg2p_social_registry = git://v1.5.8//https://github.com/openg2p/openg2p-social-registry
 openg2p_mowsa_nsr = git://v1.1.0//https://${OPENG2P_BOT_GITHUB_PAT}@github.com/openg2p/openg2p-mowsa-nsr
-
