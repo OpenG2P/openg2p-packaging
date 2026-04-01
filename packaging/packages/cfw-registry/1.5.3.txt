@@ -8,4 +8,4 @@ oca = git://v1.2.5//https://github.com/openg2p/openg2p-social-registry-community
 # OpenG2P developed modules
 openg2p_odoo_commons = git://v1.4.0//https://github.com/OpenG2P/openg2p-odoo-commons
 openg2p_registry = git://v1.6.0//https://github.com/openg2p/openg2p-registry
-openg2p_registry_cfw = git://develop//https://${OPENG2P_BOT_GITHUB_PAT}@github.com/openg2p/openg2p-registry-cfw
+openg2p_registry_cfw = git://v1.5.3//https://${OPENG2P_BOT_GITHUB_PAT}@github.com/openg2p/openg2p-registry-cfw
