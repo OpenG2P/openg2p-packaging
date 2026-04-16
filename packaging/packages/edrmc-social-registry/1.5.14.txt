@@ -6,6 +6,6 @@
 oca = git://v1.2.5//https://github.com/openg2p/openg2p-social-registry-community-addons
 
 # OpenG2P developed modules
-openg2p_registry = git://v1.5.9//https://github.com/openg2p/openg2p-registry
+openg2p_registry = git://v1.5.2//https://github.com/openg2p/openg2p-registry
 openg2p_social_registry = git://v1.5.2//https://github.com/openg2p/openg2p-social-registry
 openg2p_edrmc = git://v1.5.14//https://${OPENG2P_BOT_GITHUB_PAT}@github.com/openg2p/openg2p-edrmc
