@@ -12,7 +12,7 @@ RUN ln -s $(which python3) /usr/bin/python
 
 RUN apt-get update \
  && apt-get purge -y python3-phonenumbers \
- && pip3 install --no-cache-dir phonenumbers==9.0.1 \
+ && pip3 install --no-cache-dir phonenumbers \
  && rm -rf /var/lib/apt/lists/*
 
 ADD ${PACKAGES_TMPDIR} ${EXTRA_ADDONS_DIR}
