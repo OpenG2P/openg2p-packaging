@@ -19,7 +19,10 @@ on:
   workflow_call:
     inputs:
       images:
-        description: 'JSON array of {name, dockerfile, context?}'
+        description: >-
+          JSON array of {name, dockerfile, context?, repo?}.
+          `name` labels the build; `repo` overrides the image repository, which
+          otherwise defaults to <namespace>/<name>.
         required: true
         type: string
       chart-path:
@@ -131,7 +134,7 @@ jobs:
         image: ${{ fromJSON(inputs.images) }}
     name: ${{ matrix.image.name }}
     env:
-      IMAGE: ${{ inputs.registry }}/${{ inputs.namespace }}/${{ matrix.image.name }}
+      IMAGE: ${{ inputs.registry }}/${{ matrix.image.repo || format('{0}/{1}', inputs.namespace, matrix.image.name) }}
       VERSION: ${{ needs.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
@@ -247,17 +250,31 @@ jobs:
         run: |
           values="${{ inputs.chart-path }}/values.yaml"
           for path in $(jq -r '.[]' <<<'${{ inputs.chart-image-paths }}'); do
-            echo "  $path = $V"
             yq -i "$path = strenv(V)" "$values"
+            # A typo in a path makes yq create a new key rather than fail, which
+            # would ship a chart still pointing at the `develop` alias.
+            got=$(yq "$path" "$values")
+            [ "$got" = "$V" ] || { echo "::error::$path is '$got', expected '$V'"; exit 1; }
+            echo "  ok  $path = $V"
           done
           # The repo keeps a placeholder; the real tag exists only in the tarball.
           git --no-pager diff --stat -- "$values" || true
 
       - name: Package
+        id: pkg
         run: |
           helm dep up "${{ inputs.chart-path }}"
           helm package "${{ inputs.chart-path }}" --version "$VERSION" --app-version "$VERSION" -d dist/
           ls -l dist/
+          chart="${{ inputs.chart-path }}/Chart.yaml"
+          echo "name=$(yq '.name' "$chart")" >> "$GITHUB_OUTPUT"
+          # Rancher catalog membership is declared by the chart, not the caller.
+          # The annotation's value is the empty string, so test for presence.
+          if yq -e '.annotations | has("openg2p.org/add-to-rancher")' "$chart" >/dev/null 2>&1; then
+            echo "rancher=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "rancher=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Checkout chart repo
         uses: actions/checkout@v4
@@ -268,21 +285,23 @@ jobs:
           path: chart-repo
 
       - name: Refuse to overwrite an existing chart version
+        env:
+          NAME: ${{ steps.pkg.outputs.name }}
         run: |
-          name=$(yq '.name' "${{ inputs.chart-path }}/Chart.yaml")
-          if yq -e ".entries.\"$name\"[] | select(.version == \"$VERSION\")" \
+          if yq -e '.entries[strenv(NAME)][] | select(.version == strenv(VERSION))' \
                chart-repo/index.yaml >/dev/null 2>&1; then
             if [ "${{ inputs.allow-overwrite }}" != "true" ]; then
-              echo "::error::$name $VERSION is already in the chart repo index."
+              echo "::error::$NAME $VERSION is already in the chart repo index."
               exit 1
             fi
-            echo "::warning::overwriting $name $VERSION (allow-overwrite)"
+            echo "::warning::overwriting $NAME $VERSION (allow-overwrite)"
           fi
 
       - name: Publish
         env:
           BRANCH: ${{ inputs.helm-repo-branch }}
           URL: ${{ inputs.helm-repo-url }}
+          RANCHER: ${{ steps.pkg.outputs.rancher }}
         run: |
           cd chart-repo
           git config user.name "openg2p-bot"
@@ -293,12 +312,25 @@ jobs:
           attempt() {
             git fetch -q origin "$BRANCH"
             git reset -q --hard "origin/$BRANCH"
+
             cp ../dist/*.tgz .
             # Full regeneration, NOT `helm repo index --merge`. --merge appends
             # rather than replaces, which is how this index ended up with two
             # `0.0.0-develop` entries for the same chart pointing at different
-            # digests.
+            # digests. Regenerating is safe here because every .tgz is present.
             helm repo index . --url "$URL"
+
+            if [ "$RANCHER" = "true" ]; then
+              # The Rancher index must use --merge: its .tgz files are deleted
+              # after indexing, so there is nothing to regenerate from. That is
+              # only safe because versions are immutable -- --merge duplicates an
+              # entry exactly when the same version is published twice, which the
+              # overwrite guard above prevents.
+              cp ../dist/*.tgz rancher/
+              helm repo index --url ../ --merge rancher/index.yaml rancher
+              rm -f rancher/*.tgz
+            fi
+
             git add -A
             git diff --quiet --cached && { echo "nothing to publish"; return 0; }
             git commit -q -m "publish ${{ github.repository }} $VERSION"
