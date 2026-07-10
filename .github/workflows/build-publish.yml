@@ -1,0 +1,314 @@
+name: OpenG2P Build & Publish
+
+# Reusable workflow: builds every Docker image a service repo owns and packages
+# its Helm chart, all at ONE version derived from the git ref by
+# ci/version/derive-version.sh.
+#
+# Callers stay ~10 lines and never change when the versioning policy changes;
+# pin them to @v1 and move the tag to roll a new policy out to every repo.
+#
+# Guarantees:
+#   * every image and the chart share one version per commit
+#   * an immutable version is never overwritten (the run fails instead)
+#   * a release (tag N.N.N) is a RETAG of the digest the release line already
+#     built and tested -- it is never rebuilt
+#
+# See ci/README.md for the policy table.
+
+on:
+  workflow_call:
+    inputs:
+      images:
+        description: 'JSON array of {name, dockerfile, context?}'
+        required: true
+        type: string
+      chart-path:
+        description: 'Path to the chart dir. Empty = this repo publishes no chart.'
+        required: false
+        type: string
+        default: ''
+      chart-image-paths:
+        description: 'JSON array of yq paths in values.yaml to set to the version, e.g. [".image.tag"]'
+        required: false
+        type: string
+        default: '[]'
+      pin-git-refs:
+        description: 'JSON array of {arg, repo, ref} — resolved to a SHA, passed as build-arg, recorded as a label'
+        required: false
+        type: string
+        default: '[]'
+      registry:
+        required: false
+        type: string
+        default: docker.io
+      namespace:
+        required: false
+        type: string
+        default: openg2p
+      platforms:
+        required: false
+        type: string
+        default: linux/amd64
+      helm-repo:
+        required: false
+        type: string
+        default: openg2p/openg2p-helm
+      helm-repo-branch:
+        required: false
+        type: string
+        default: gh-pages
+      helm-repo-url:
+        required: false
+        type: string
+        default: https://openg2p.github.io/openg2p-helm
+      packaging-ref:
+        description: 'Ref of openg2p-packaging to load ci/ scripts from. Keep in sync with the @ref you call this workflow at.'
+        required: false
+        type: string
+        default: main
+      allow-overwrite:
+        description: 'Republish a version that already exists. Escape hatch; leave false.'
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      docker_hub_actor:
+        required: true
+      docker_hub_token:
+        required: true
+      OPENG2P_BOT_GITHUB_PAT:
+        required: false
+    outputs:
+      version:
+        value: ${{ jobs.version.outputs.version }}
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      channel: ${{ steps.v.outputs.channel }}
+      frozen: ${{ steps.v.outputs.frozen }}
+      alias: ${{ steps.v.outputs.alias }}
+      publish_chart: ${{ steps.v.outputs.publish_chart }}
+      promote_from: ${{ steps.v.outputs.promote_from }}
+      revision: ${{ steps.v.outputs.revision }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # rev-list --count and the tag lookups need full history
+          fetch-tags: true
+
+      - name: Load versioning policy
+        uses: actions/checkout@v4
+        with:
+          repository: openg2p/openg2p-packaging
+          ref: ${{ inputs.packaging-ref }}
+          path: .openg2p-ci
+          sparse-checkout: ci
+
+      - name: Derive version
+        id: v
+        run: bash .openg2p-ci/ci/version/derive-version.sh
+
+      - name: Summary
+        run: |
+          echo "### \`${{ steps.v.outputs.version }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| | |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|--|--|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| channel | ${{ steps.v.outputs.channel }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| frozen | ${{ steps.v.outputs.frozen }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| revision | \`${{ steps.v.outputs.revision }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| chart | ${{ steps.v.outputs.publish_chart }} |" >> "$GITHUB_STEP_SUMMARY"
+
+  images:
+    needs: version
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ${{ fromJSON(inputs.images) }}
+    name: ${{ matrix.image.name }}
+    env:
+      IMAGE: ${{ inputs.registry }}/${{ inputs.namespace }}/${{ matrix.image.name }}
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ inputs.registry == 'docker.io' && '' || inputs.registry }}
+          username: ${{ secrets.docker_hub_actor }}
+          password: ${{ secrets.docker_hub_token }}
+
+      # Immutability. Without this, a re-run of an old workflow silently
+      # replaces the image that a frozen chart already points at.
+      - name: Refuse to overwrite an existing version
+        run: |
+          if docker buildx imagetools inspect "$IMAGE:$VERSION" >/dev/null 2>&1; then
+            if [ "${{ inputs.allow-overwrite }}" != "true" ]; then
+              echo "::error::$IMAGE:$VERSION already exists. Immutable versions are never republished."
+              exit 1
+            fi
+            echo "::warning::overwriting $IMAGE:$VERSION (allow-overwrite)"
+          fi
+
+      # ---------------- release: promote, never rebuild ----------------
+      - name: Promote tested digest to ${{ needs.version.outputs.version }}
+        if: needs.version.outputs.frozen == 'true'
+        run: |
+          src=""
+          for cand in ${{ needs.version.outputs.promote_from }}; do
+            if docker buildx imagetools inspect "$IMAGE:$cand" >/dev/null 2>&1; then
+              src="$cand"; break
+            fi
+          done
+          if [ -z "$src" ]; then
+            echo "::error::nothing to promote. Tried: ${{ needs.version.outputs.promote_from }}"
+            echo "::error::A release must be tagged on a commit whose images CI already built."
+            exit 1
+          fi
+          echo "Promoting $IMAGE:$src -> $IMAGE:$VERSION (same digest, no rebuild)"
+          docker buildx imagetools create -t "$IMAGE:$VERSION" "$IMAGE:$src"
+          docker buildx imagetools inspect "$IMAGE:$VERSION" --format '{{ .Manifest.Digest }}'
+
+      # ---------------- everything else: build ----------------
+      - name: Resolve pinned git refs
+        id: pins
+        if: needs.version.outputs.frozen != 'true'
+        run: |
+          args=""; labels=""
+          while IFS= read -r pin; do
+            [ -n "$pin" ] || continue
+            arg=$(jq -r .arg <<<"$pin")
+            repo=$(jq -r .repo <<<"$pin")
+            ref=$(jq -r .ref <<<"$pin")
+            sha=$(git ls-remote "$repo" "$ref" | head -1 | cut -f1)
+            [ -n "$sha" ] || sha="$ref"    # already a SHA
+            echo "$arg: $ref -> $sha"
+            args+="${arg}=${sha}"$'\n'
+            key=$(printf '%s' "$arg" | tr '[:upper:]_' '[:lower:]-')
+            labels+="org.openg2p.pin.${key}=${sha}"$'\n'
+          done < <(jq -c '.[]' <<<'${{ inputs.pin-git-refs }}')
+          { echo "args<<EOF"; printf '%s' "$args"; echo "EOF"; } >> "$GITHUB_OUTPUT"
+          { echo "labels<<EOF"; printf '%s' "$labels"; echo "EOF"; } >> "$GITHUB_OUTPUT"
+
+      - name: Compute tags
+        id: tags
+        if: needs.version.outputs.frozen != 'true'
+        run: |
+          {
+            echo "list<<EOF"
+            echo "$IMAGE:$VERSION"
+            [ -n "${{ needs.version.outputs.alias }}" ] && echo "$IMAGE:${{ needs.version.outputs.alias }}"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build and push
+        if: needs.version.outputs.frozen != 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.image.context || '.' }}
+          file: ${{ matrix.image.dockerfile }}
+          push: true
+          platforms: ${{ inputs.platforms }}
+          build-args: ${{ steps.pins.outputs.args }}
+          tags: ${{ steps.tags.outputs.list }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ needs.version.outputs.revision }}
+            org.opencontainers.image.version=${{ needs.version.outputs.version }}
+            org.opencontainers.image.title=${{ matrix.image.name }}
+            org.opencontainers.image.vendor=${{ github.repository_owner }}
+            ${{ steps.pins.outputs.labels }}
+
+  chart:
+    needs: [version, images]
+    if: inputs.chart-path != '' && needs.version.outputs.publish_chart == 'true'
+    runs-on: ubuntu-latest
+    # Serialises this repo's own publishes. It CANNOT serialise across repos --
+    # concurrency groups are scoped to a repository -- and gh-pages is shared by
+    # all of them, so the push below retries on rejection.
+    concurrency:
+      group: helm-publish-${{ github.repository }}
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+
+      - name: Pin image tags into values.yaml
+        env:
+          V: ${{ needs.version.outputs.version }}
+        run: |
+          values="${{ inputs.chart-path }}/values.yaml"
+          for path in $(jq -r '.[]' <<<'${{ inputs.chart-image-paths }}'); do
+            echo "  $path = $V"
+            yq -i "$path = strenv(V)" "$values"
+          done
+          # The repo keeps a placeholder; the real tag exists only in the tarball.
+          git --no-pager diff --stat -- "$values" || true
+
+      - name: Package
+        run: |
+          helm dep up "${{ inputs.chart-path }}"
+          helm package "${{ inputs.chart-path }}" --version "$VERSION" --app-version "$VERSION" -d dist/
+          ls -l dist/
+
+      - name: Checkout chart repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.helm-repo }}
+          ref: ${{ inputs.helm-repo-branch }}
+          token: ${{ secrets.OPENG2P_BOT_GITHUB_PAT }}
+          path: chart-repo
+
+      - name: Refuse to overwrite an existing chart version
+        run: |
+          name=$(yq '.name' "${{ inputs.chart-path }}/Chart.yaml")
+          if yq -e ".entries.\"$name\"[] | select(.version == \"$VERSION\")" \
+               chart-repo/index.yaml >/dev/null 2>&1; then
+            if [ "${{ inputs.allow-overwrite }}" != "true" ]; then
+              echo "::error::$name $VERSION is already in the chart repo index."
+              exit 1
+            fi
+            echo "::warning::overwriting $name $VERSION (allow-overwrite)"
+          fi
+
+      - name: Publish
+        env:
+          BRANCH: ${{ inputs.helm-repo-branch }}
+          URL: ${{ inputs.helm-repo-url }}
+        run: |
+          cd chart-repo
+          git config user.name "openg2p-bot"
+          git config user.email "bot@openg2p.org"
+
+          # Every repo in the org pushes to this one branch, so a concurrent
+          # publish will reject ours. Rebuild on top of theirs and retry.
+          attempt() {
+            git fetch -q origin "$BRANCH"
+            git reset -q --hard "origin/$BRANCH"
+            cp ../dist/*.tgz .
+            # Full regeneration, NOT `helm repo index --merge`. --merge appends
+            # rather than replaces, which is how this index ended up with two
+            # `0.0.0-develop` entries for the same chart pointing at different
+            # digests.
+            helm repo index . --url "$URL"
+            git add -A
+            git diff --quiet --cached && { echo "nothing to publish"; return 0; }
+            git commit -q -m "publish ${{ github.repository }} $VERSION"
+            git push -q origin "HEAD:$BRANCH"
+          }
+
+          for i in 1 2 3 4 5; do
+            if attempt; then exit 0; fi
+            echo "::warning::push rejected (attempt $i), retrying"
+            sleep $(( RANDOM % 10 + 5 ))
+          done
+          echo "::error::could not publish $VERSION to $BRANCH after 5 attempts"
+          exit 1

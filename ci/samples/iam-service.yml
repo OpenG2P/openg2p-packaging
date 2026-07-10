@@ -1,0 +1,43 @@
+# Caller stub for iam-service. Drop this at .github/workflows/build-publish.yml
+# and delete docker-build-apis.yml + helm-publish.yml.
+#
+# This file declares only what THIS repo contains. It holds no versioning logic
+# and should never need to change when the policy does -- that lives behind @v1.
+#
+# One workflow, not two: a code-only change must republish the chart, or the
+# newest chart keeps pointing at the previous image.
+
+name: Build & Publish
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["**"]
+  workflow_dispatch:
+
+jobs:
+  build-publish:
+    uses: openg2p/openg2p-packaging/.github/workflows/build-publish.yml@v1
+    with:
+      images: |
+        [
+          {"name": "iam-staff-portal-api", "dockerfile": "docker/iam-staff-portal-api/Dockerfile"},
+          {"name": "iam-agent-portal-api", "dockerfile": "docker/iam-agent-portal-api/Dockerfile"},
+          {"name": "iam-bene-portal-api",  "dockerfile": "docker/iam-bene-portal-api/Dockerfile"}
+        ]
+      chart-path: deployments/charts/openg2p-iam-service
+      chart-image-paths: '[".image.tag"]'
+      # openg2p-fastapi-common is pulled in by the Dockerfile at build time.
+      # `1.1` is a BRANCH: without resolving it to a SHA, two builds of the same
+      # commit produce different images and the version string is a lie.
+      pin-git-refs: |
+        [
+          {"arg": "FASTAPI_COMMON_REF",
+           "repo": "https://github.com/openg2p/openg2p-fastapi-common",
+           "ref": "1.1"}
+        ]
+      packaging-ref: v1
+    secrets:
+      docker_hub_actor: ${{ secrets.docker_hub_actor }}
+      docker_hub_token: ${{ secrets.docker_hub_token }}
+      OPENG2P_BOT_GITHUB_PAT: ${{ secrets.OPENG2P_BOT_GITHUB_PAT }}
