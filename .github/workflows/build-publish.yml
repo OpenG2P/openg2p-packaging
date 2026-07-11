@@ -20,9 +20,14 @@ on:
     inputs:
       images:
         description: >-
-          JSON array of {name, dockerfile, context?, repo?}.
+          JSON array of {name, dockerfile, context?, repo?, pins?}.
           `name` labels the build; `repo` overrides the image repository, which
-          otherwise defaults to <namespace>/<name>.
+          otherwise defaults to <namespace>/<name>; `pins` is a list of
+          {arg, repo, ref} whose git ref is resolved to a SHA, passed as a
+          build-arg, and recorded as an org.openg2p.pin.* label.
+          Pins are per-image because they describe what is compiled into THAT
+          image -- a repo-wide pin would stamp a false provenance label onto
+          images that never consume the arg.
         required: true
         type: string
       chart-path:
@@ -32,11 +37,6 @@ on:
         default: ''
       chart-image-paths:
         description: 'JSON array of yq paths in values.yaml to set to the version, e.g. [".image.tag"]'
-        required: false
-        type: string
-        default: '[]'
-      pin-git-refs:
-        description: 'JSON array of {arg, repo, ref} — resolved to a SHA, passed as build-arg, recorded as a label'
         required: false
         type: string
         default: '[]'
@@ -183,6 +183,9 @@ jobs:
       - name: Resolve pinned git refs
         id: pins
         if: needs.version.outputs.frozen != 'true'
+        env:
+          PINS: ${{ toJSON(matrix.image.pins) }}   # `null` when the image declares none
+          DOCKERFILE: ${{ matrix.image.dockerfile }}
         run: |
           args=""; labels=""
           while IFS= read -r pin; do
@@ -190,13 +193,22 @@ jobs:
             arg=$(jq -r .arg <<<"$pin")
             repo=$(jq -r .repo <<<"$pin")
             ref=$(jq -r .ref <<<"$pin")
+
+            # A build-arg the Dockerfile never declares is silently discarded by
+            # buildx -- but we would still stamp an org.openg2p.pin.* label
+            # claiming that dependency is inside the image. Refuse.
+            if ! grep -qE "^[[:space:]]*ARG[[:space:]]+${arg}([[:space:]]|=|$)" "$DOCKERFILE"; then
+              echo "::error::$DOCKERFILE declares no 'ARG $arg'; pinning it would be a false provenance claim"
+              exit 1
+            fi
+
             sha=$(git ls-remote "$repo" "$ref" | head -1 | cut -f1)
             [ -n "$sha" ] || sha="$ref"    # already a SHA
             echo "$arg: $ref -> $sha"
             args+="${arg}=${sha}"$'\n'
             key=$(printf '%s' "$arg" | tr '[:upper:]_' '[:lower:]-')
             labels+="org.openg2p.pin.${key}=${sha}"$'\n'
-          done < <(jq -c '.[]' <<<'${{ inputs.pin-git-refs }}')
+          done < <(jq -c '.[]?' <<<"$PINS")
           { echo "args<<EOF"; printf '%s' "$args"; echo "EOF"; } >> "$GITHUB_OUTPUT"
           { echo "labels<<EOF"; printf '%s' "$labels"; echo "EOF"; } >> "$GITHUB_OUTPUT"
 
@@ -259,6 +271,23 @@ jobs:
           done
           # The repo keeps a placeholder; the real tag exists only in the tarball.
           git --no-pager diff --stat -- "$values" || true
+
+      - name: Stamp source commit into the chart
+        env:
+          REVISION: ${{ needs.version.outputs.revision }}
+          SOURCE: https://github.com/${{ github.repository }}
+        run: |
+          chart="${{ inputs.chart-path }}/Chart.yaml"
+          # Record the commit in the chart itself, so its provenance does not
+          # depend on the rev-list ordinal (which merge commits can make
+          # ambiguous). Mirrors the OCI labels on the images.
+          REVISION="$REVISION" SOURCE="$SOURCE" yq -i '
+            .annotations["org.opencontainers.image.revision"] = strenv(REVISION) |
+            .annotations["org.opencontainers.image.source"]   = strenv(SOURCE)
+          ' "$chart"
+          got=$(yq '.annotations["org.opencontainers.image.revision"]' "$chart")
+          [ "$got" = "$REVISION" ] || { echo "::error::revision annotation is '$got'"; exit 1; }
+          echo "  ok  revision = $REVISION"
 
       - name: Package
         id: pkg
