@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+#
+# Summarise assembled change notes into a few user-facing bullets via OpenRouter.
+# Reads the notes on stdin, prints the summary on stdout.
+#
+# Best-effort by contract: on ANY failure it exits non-zero with the reason on
+# stderr, and the caller turns that into a warning + placeholder. It never
+# blocks the human changelog.
+#
+#   env: OPENROUTER_API_KEY (required), OPENROUTER_MODEL, OPENROUTER_FALLBACKS
+#        (comma-separated), MAX_TOKENS
+#   cat notes.md | ./summarize.sh > summary.md
+
+set -euo pipefail
+
+[ -n "${OPENROUTER_API_KEY:-}" ] || { echo "OPENROUTER_API_KEY is not set" >&2; exit 3; }
+
+notes=$(cat)
+[ -n "$notes" ] || { echo "no notes to summarise" >&2; exit 2; }
+
+model="${OPENROUTER_MODEL:-openai/gpt-4o-mini}"
+
+# models = [model, ...fallbacks] — OpenRouter routes down the list IN ORDER on
+# failure, so dedup must preserve order (unique_by/sort would not).
+models_arr=$(
+  { printf '%s\n' "$model"
+    printf '%s' "${OPENROUTER_FALLBACKS:-}" | tr ',' '\n'
+  } | sed '/^[[:space:]]*$/d' | jq -R . \
+    | jq -s 'reduce .[] as $m ([]; if index($m) then . else . + [$m] end)'
+)
+
+prompt=$(printf '%s\n\n%s' \
+  "Summarise these change notes into 2-5 short, user-facing bullet points for a release summary. Plain language, no fluff, no headings. Start each line with '- '. Notes:" \
+  "$notes")
+
+body=$(jq -n \
+  --argjson models "$models_arr" \
+  --arg content "$prompt" \
+  --argjson max "${MAX_TOKENS:-400}" \
+  '{models: $models, max_tokens: $max, temperature: 0.2,
+    messages: [{role: "user", content: $content}]}')
+
+resp=$(curl -sS --max-time 60 --retry 2 --retry-delay 3 \
+  -H "Authorization: Bearer ${OPENROUTER_API_KEY}" \
+  -H "Content-Type: application/json" \
+  -H "HTTP-Referer: https://github.com/openg2p" \
+  -H "X-Title: OpenG2P changelog" \
+  -X POST https://openrouter.ai/api/v1/chat/completions \
+  -d "$body") || { echo "request to OpenRouter failed (network/timeout)" >&2; exit 4; }
+
+err=$(printf '%s' "$resp" | jq -r '.error.message // empty' 2>/dev/null || true)
+[ -z "$err" ] || { echo "OpenRouter error: $err" >&2; exit 5; }
+
+content=$(printf '%s' "$resp" | jq -r '.choices[0].message.content // empty' 2>/dev/null || true)
+[ -n "$content" ] || { echo "OpenRouter returned an empty completion" >&2; exit 6; }
+
+printf '%s\n' "$content"

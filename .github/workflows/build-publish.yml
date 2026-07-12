@@ -74,12 +74,37 @@ on:
         required: false
         type: boolean
         default: false
+      changes-dir:
+        description: 'Directory of human change-note fragments in the source repo.'
+        required: false
+        type: string
+        default: changes
+      changelog-repo:
+        required: false
+        type: string
+        default: openg2p/openg2p-packaging
+      changelog-branch:
+        required: false
+        type: string
+        default: gh-pages
+      changelog_skip_ai:
+        description: 'Publish the changelog with human notes only, no AI summary.'
+        required: false
+        type: boolean
+        default: false
+      changelog_regenerate:
+        description: 'Backfill the AI summary for an already-published version (e.g. 1.0.1). Skips build/publish.'
+        required: false
+        type: string
+        default: ''
     secrets:
       docker_hub_actor:
         required: true
       docker_hub_token:
         required: true
       OPENG2P_BOT_GITHUB_PAT:
+        required: false
+      OPENROUTER_API_KEY:
         required: false
     outputs:
       version:
@@ -372,4 +397,105 @@ jobs:
             sleep $(( RANDOM % 10 + 5 ))
           done
           echo "::error::could not publish $VERSION to $BRANCH after 5 attempts"
+          exit 1
+
+  changelog:
+    needs: [version, images]
+    # Runs for develop (rolling Unreleased) and release tags (frozen section).
+    # RC and feature builds are skipped: the release tag captures everything
+    # since the last release, and feature branches are throwaway. A manual
+    # regenerate run bypasses the channel gate.
+    if: >-
+      always() &&
+      needs.version.result == 'success' &&
+      (needs.images.result == 'success' || inputs.changelog_regenerate != '') &&
+      (inputs.changelog_regenerate != '' ||
+       needs.version.outputs.channel == 'develop' ||
+       needs.version.outputs.frozen == 'true')
+    runs-on: ubuntu-latest
+    # One repo's changelog pushes are serialised against each other; the shared
+    # branch is handled by the retry loop below (concurrency can't span repos).
+    concurrency:
+      group: changelog-${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Load changelog scripts
+        uses: actions/checkout@v4
+        with:
+          repository: openg2p/openg2p-packaging
+          ref: ${{ inputs.packaging-ref }}
+          path: .openg2p-ci
+          sparse-checkout: ci
+
+      - name: Read summariser config
+        id: cfg
+        run: |
+          f=.openg2p-ci/ci/changelog/config.yml
+          echo "model=$(yq '.model' "$f")" >> "$GITHUB_OUTPUT"
+          echo "fallbacks=$(yq '.fallbacks | join(",")' "$f")" >> "$GITHUB_OUTPUT"
+          echo "max_tokens=$(yq '.max_tokens' "$f")" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout changelog branch
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.changelog-repo }}
+          ref: ${{ inputs.changelog-branch }}
+          token: ${{ secrets.OPENG2P_BOT_GITHUB_PAT }}
+          path: changelog-pages
+
+      - name: Build changelog
+        id: run
+        env:
+          REPO: ${{ github.event.repository.name }}
+          VERSION: ${{ needs.version.outputs.version }}
+          FROZEN: ${{ needs.version.outputs.frozen }}
+          REVISION: ${{ needs.version.outputs.revision }}
+          PAGES_DIR: ${{ github.workspace }}/changelog-pages
+          CHANGES_DIR: ${{ inputs.changes-dir }}
+          SKIP_AI: ${{ inputs.changelog_skip_ai }}
+          REGEN_VERSION: ${{ inputs.changelog_regenerate }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENROUTER_MODEL: ${{ steps.cfg.outputs.model }}
+          OPENROUTER_FALLBACKS: ${{ steps.cfg.outputs.fallbacks }}
+          MAX_TOKENS: ${{ steps.cfg.outputs.max_tokens }}
+        run: |
+          if [ -z "${OPENROUTER_API_KEY:-}" ] && [ "${SKIP_AI}" != "true" ]; then
+            echo "::warning::OPENROUTER_API_KEY not set; publishing human notes only"
+            export SKIP_AI=true
+          fi
+          DATE="$(date -u +%Y-%m-%d)" bash .openg2p-ci/ci/changelog/run.sh
+
+      - name: Publish to changelog branch
+        if: steps.run.outputs.published == 'true'
+        env:
+          BRANCH: ${{ inputs.changelog-branch }}
+          VERSION: ${{ needs.version.outputs.version }}
+          REPO: ${{ github.event.repository.name }}
+        working-directory: changelog-pages
+        run: |
+          git config user.name "openg2p-bot"
+          git config user.email "bot@openg2p.org"
+          # Regenerate our files onto the latest branch tip each attempt: many
+          # repos push here, and per-repo folders keep conflicts rare.
+          src="${{ github.workspace }}/changelog-pages"
+          attempt() {
+            git fetch -q origin "$BRANCH"
+            git stash -q --include-untracked || true
+            git reset -q --hard "origin/$BRANCH"
+            git stash pop -q 2>/dev/null || true
+            git add -A
+            git diff --quiet --cached && { echo "no changelog change"; return 0; }
+            git commit -q -m "changelog: ${REPO} ${VERSION}"
+            git push -q origin "HEAD:$BRANCH"
+          }
+          for i in 1 2 3 4 5; do
+            if attempt; then exit 0; fi
+            echo "::warning::changelog push rejected (attempt $i), retrying"
+            sleep $(( RANDOM % 10 + 5 ))
+          done
+          echo "::error::could not publish changelog after 5 attempts"
           exit 1

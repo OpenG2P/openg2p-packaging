@@ -1,0 +1,16 @@
+# Changelog summariser settings. NON-SECRET — safe to commit.
+#
+# The OpenRouter API key is NOT here; it is the OPENROUTER_API_KEY Actions
+# secret. These repos and the gh-pages branch are public, so a committed key
+# would be world-readable.
+#
+# `model` is tried first; if OpenRouter cannot serve it, it falls through the
+# `fallbacks` in order (OpenRouter's native multi-model routing). If every one
+# fails, the changelog is still published with the human notes and a warning —
+# the summary section says so and can be backfilled later.
+
+model: google/gemini-2.5-flash-lite
+fallbacks:
+  - openai/gpt-4o-mini
+  - anthropic/claude-3.5-haiku
+max_tokens: 400
