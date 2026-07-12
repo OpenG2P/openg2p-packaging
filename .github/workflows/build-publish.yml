@@ -74,11 +74,6 @@ on:
         required: false
         type: boolean
         default: false
-      changes-dir:
-        description: 'Directory of human change-note fragments in the source repo.'
-        required: false
-        type: string
-        default: changes
       changelog-repo:
         required: false
         type: string
@@ -455,7 +450,6 @@ jobs:
           FROZEN: ${{ needs.version.outputs.frozen }}
           REVISION: ${{ needs.version.outputs.revision }}
           PAGES_DIR: ${{ github.workspace }}/changelog-pages
-          CHANGES_DIR: ${{ inputs.changes-dir }}
           SKIP_AI: ${{ inputs.changelog_skip_ai }}
           REGEN_VERSION: ${{ inputs.changelog_regenerate }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}

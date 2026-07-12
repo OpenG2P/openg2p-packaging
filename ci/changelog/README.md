@@ -1,20 +1,22 @@
 # Changelog
 
-Human change notes, captured at PR time, rolled up per version, published as
-**markdown** to the packaging `gh-pages` branch. Gitbook points at the rendered
-page; nothing is ever committed back to a source repo's build branch (which
-would bump the commit-count version and loop).
+The developer writes nothing extra — the **commit message is the note**. CI
+collects the commit messages in a version's range, lists them verbatim, adds a
+compact AI summary, and publishes **markdown** to the packaging `gh-pages`
+branch. Gitbook points at the rendered page; nothing is ever committed back to a
+source repo's build branch (which would bump the commit-count version and loop).
 
 ## Flow
 
 ```
-changes/*.md   →   assemble (git range)   →   summarize (OpenRouter, best-effort)   →   render
-(one per PR,        notes since the last        2-5 user-facing bullets                  gh-pages:
- human sentence)    frozen release              (skippable / regenerable)                <repo>/CHANGELOG.md
+git commit messages  →  assemble (git range)  →  summarize (OpenRouter)  →  render
+(the check-in            commits since the        2-5 user-facing            gh-pages:
+ comments)               last frozen release      bullets (best-effort)      <repo>/CHANGELOG.md
 ```
 
 All of it runs inside `build-publish.yml`'s `changelog` job, keyed to the same
-version the images and chart get.
+version the images and chart get. There is no note file to write and no PR
+check — a commit is the input.
 
 ## Where it lands
 
@@ -43,12 +45,20 @@ A version with no new notes in its range publishes nothing.
 
 `summarize.sh` is best-effort. If OpenRouter (or the key) is unavailable, the
 job logs `::warning::` with the reason, and the changelog **still publishes**
-with the human notes; the Summary section says it's pending. Two knobs:
+with the commit-message list; the Summary section says it's pending. Two knobs:
 
-- `changelog_skip_ai: true` — human notes only, clean success, no API call.
+- `changelog_skip_ai: true` — commit messages only, clean success, no API call.
 - `changelog_regenerate: <version>` — re-summarise an already-published page,
-  reading its human notes back and rewriting **only** the Summary. Human notes
-  are immutable after release.
+  reading its commit-message list back and rewriting **only** the Summary. The
+  commit-message list is immutable after release.
+
+## Commit messages are the source
+
+Since the changelog is built from commit subjects, the quality of the changelog
+is the quality of your commit messages. Terse is fine — the AI summary is there
+to make the range readable — but a message like `fix` produces a useless line.
+The repos already prefix with the ticket id (`G2P-5678 Sign consent receipts`),
+which is exactly right.
 
 ## Config & secret
 
@@ -59,5 +69,5 @@ with the human notes; the Summary section says it's pending. Two knobs:
 ## Tests
 
 ```bash
-./ci/changelog/test-changelog.sh   # range + assembly + render, no network
+./ci/changelog/test-changelog.sh   # commit-range + assembly + render, no network
 ```

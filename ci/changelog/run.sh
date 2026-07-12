@@ -11,8 +11,7 @@
 #     REVISION     full commit sha
 #     PAGES_DIR    checkout of the changelog gh-pages branch
 #     DATE         YYYY-MM-DD (passed in, for reproducibility)
-#     CHANGES_DIR  default: changes
-#     SKIP_AI      true -> human notes only, no API call
+#     SKIP_AI      true -> commit messages only, no API call
 #     REGEN_VERSION  non-empty -> re-summarise an existing page, nothing else
 #     OPENROUTER_API_KEY / OPENROUTER_MODEL / OPENROUTER_FALLBACKS / MAX_TOKENS
 #
@@ -22,7 +21,6 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CHANGES_DIR="${CHANGES_DIR:-changes}"
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 
@@ -81,7 +79,7 @@ fi
 FROM=$(printf '%s\n' "$rels" | sed '/^$/d' | head -1)
 PREV_VERSION="$FROM"
 
-RANGE_FROM="$FROM" RANGE_TO=HEAD CHANGES_DIR="$CHANGES_DIR" \
+RANGE_FROM="$FROM" RANGE_TO=HEAD \
   bash "$HERE/assemble.sh" >"$work/notes.md" || true
 
 if [ ! -s "$work/notes.md" ]; then
