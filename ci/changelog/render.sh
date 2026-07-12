@@ -16,9 +16,10 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_dir="${PAGES_DIR}/${REPO}"
 mkdir -p "${repo_dir}/versions"
 
-notes=$(cat "$NOTES_FILE")
+# Linkify Jira refs (G2P-####) in both the commit list and the AI summary.
+notes=$(bash "$HERE/linkify.sh" <"$NOTES_FILE")
 if [ "${SUMMARY_OK:-false}" = true ] && [ -s "${SUMMARY_FILE:-/dev/null}" ]; then
-  summary=$(cat "$SUMMARY_FILE")
+  summary=$(bash "$HERE/linkify.sh" <"$SUMMARY_FILE")
 else
   summary="_AI summary unavailable — re-run the workflow with \`changelog_regenerate=${VERSION}\` to generate it._"
 fi

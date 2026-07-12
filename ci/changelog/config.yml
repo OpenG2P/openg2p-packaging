@@ -14,3 +14,8 @@ fallbacks:
   - openai/gpt-4o-mini
   - anthropic/claude-3.5-haiku
 max_tokens: 400
+
+# Jira ticket linking in the rendered changelog. A commit message like
+# "G2P-5335 …" becomes a markdown link. Set jira_project to "" to disable.
+jira_base: https://openg2p.atlassian.net/browse
+jira_project: G2P

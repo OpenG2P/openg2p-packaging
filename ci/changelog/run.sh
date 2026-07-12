@@ -51,6 +51,8 @@ if [ -n "${REGEN_VERSION:-}" ]; then
   summarise_into "$work/notes.md" "$work/summary.md"
   [ "$SUMMARY_OK" = true ] || { echo "::error::regenerate requested but AI still unavailable"; exit 1; }
 
+  bash "$HERE/linkify.sh" <"$work/summary.md" >"$work/summary.linked" && mv "$work/summary.linked" "$work/summary.md"
+
   # Replace only the Summary section, preserve the rest verbatim.
   awk -v sf="$work/summary.md" '
     /^### Summary/ { print; print ""; while ((getline l < sf) > 0) print l; print ""; skip=1; next }

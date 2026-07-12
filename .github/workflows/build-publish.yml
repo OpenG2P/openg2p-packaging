@@ -433,6 +433,8 @@ jobs:
           echo "model=$(yq '.model' "$f")" >> "$GITHUB_OUTPUT"
           echo "fallbacks=$(yq '.fallbacks | join(",")' "$f")" >> "$GITHUB_OUTPUT"
           echo "max_tokens=$(yq '.max_tokens' "$f")" >> "$GITHUB_OUTPUT"
+          echo "jira_base=$(yq '.jira_base // ""' "$f")" >> "$GITHUB_OUTPUT"
+          echo "jira_project=$(yq '.jira_project // ""' "$f")" >> "$GITHUB_OUTPUT"
 
       - name: Checkout changelog branch
         uses: actions/checkout@v4
@@ -456,6 +458,8 @@ jobs:
           OPENROUTER_MODEL: ${{ steps.cfg.outputs.model }}
           OPENROUTER_FALLBACKS: ${{ steps.cfg.outputs.fallbacks }}
           MAX_TOKENS: ${{ steps.cfg.outputs.max_tokens }}
+          JIRA_BASE: ${{ steps.cfg.outputs.jira_base }}
+          JIRA_PROJECT: ${{ steps.cfg.outputs.jira_project }}
         run: |
           if [ -z "${OPENROUTER_API_KEY:-}" ] && [ "${SKIP_AI}" != "true" ]; then
             echo "::warning::OPENROUTER_API_KEY not set; publishing human notes only"

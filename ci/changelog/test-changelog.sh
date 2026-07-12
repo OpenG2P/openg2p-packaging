@@ -74,6 +74,7 @@ contains "aggregate has Unreleased"   "$agg" "Unreleased"
 contains "placeholder when no AI"     "$agg" "AI summary unavailable"
 contains "shows since-version"        "$agg" "changes since 1.0.0"
 contains "lists the commit note"      "$agg" "signed JWTs"
+contains "jira ref linked"            "$agg" "[G2P-3](https://openg2p.atlassian.net/browse/G2P-3)"
 
 echo
 echo "render: freeze to 1.0.1 clears unreleased, adds a version page"
