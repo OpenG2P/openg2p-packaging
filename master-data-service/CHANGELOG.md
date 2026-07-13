@@ -2,26 +2,27 @@
 
 _Published automatically. Newest first._
 
-## master-data-service — Unreleased (0.0.0-develop.24, 2026-07-13)
+## master-data-service — Unreleased (0.0.0-develop.25, 2026-07-13)
 
-_commit `aaa21ac` · baseline: release the start · previous build 0.0.0-develop.22_
-<!-- build:0.0.0-develop.24 revision:aaa21acd2bcff3af836a793c40d9dad1179f5961 -->
+_commit `815addd` · baseline: release the start · previous build 0.0.0-develop.24_
+<!-- build:0.0.0-develop.25 revision:815addd771c33c9821b793076a77e77a17a80e8f -->
 
 ### Summary
 
 _All changes since release the start:_
 
-- Improved data handling and integration with the registry database.
-- Fixed an issue that caused the API to crash on startup.
+- Improved integration with the registry database and IAM for master data.
 - Added a new API endpoint to retrieve all G2P geographic levels.
-- Enhanced geo data loading for more efficient processing.
+- Enhanced geo data loading for more efficient processing and hierarchy derivation.
+- Resolved issues related to API boot crashes and pre-commit errors.
 
-### New in this build (since 0.0.0-develop.22)
+### New in this build (since 0.0.0-develop.24)
 
-- [G2P-5341](https://openg2p.atlassian.net/browse/G2P-5341): Clean up registry DB and data policy codechanges in data policy handling. ([`2253343`](https://github.com/OpenG2P/master-data-service/commit/225334332fbdeffbc3a45243e6f8c56177f4508e))
+- [G2P-5341](https://openg2p.atlassian.net/browse/G2P-5341) Fix master-data-api boot crash: source keycloak_client_id from iam-core auth config ([`815addd`](https://github.com/OpenG2P/master-data-service/commit/815addd771c33c9821b793076a77e77a17a80e8f))
 
 ### Since last release (the start)
 
+- [G2P-5341](https://openg2p.atlassian.net/browse/G2P-5341) Fix master-data-api boot crash: source keycloak_client_id from iam-core auth config ([`815addd`](https://github.com/OpenG2P/master-data-service/commit/815addd771c33c9821b793076a77e77a17a80e8f))
 - [G2P-5341](https://openg2p.atlassian.net/browse/G2P-5341): Clean up registry DB and data policy codechanges in data policy handling. ([`2253343`](https://github.com/OpenG2P/master-data-service/commit/225334332fbdeffbc3a45243e6f8c56177f4508e))
 - [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) New CI implemented. ([`54307f3`](https://github.com/OpenG2P/master-data-service/commit/54307f32726d73c3bd1d0f0995ebe4c4b89e3038))
 - Fix API boot crash: migrate to iam-core 1.3 auth API; use fastapi-common develop ([`81e48ae`](https://github.com/OpenG2P/master-data-service/commit/81e48ae613337c5368bd11eaccc44dfb3400382a))
