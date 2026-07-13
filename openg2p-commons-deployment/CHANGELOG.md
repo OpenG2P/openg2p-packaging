@@ -2,26 +2,27 @@
 
 _Published automatically. Newest first._
 
-## openg2p-commons-deployment — Unreleased (0.0.0-develop.167, 2026-07-13)
+## openg2p-commons-deployment — Unreleased (0.0.0-develop.168, 2026-07-13)
 
-_commit `7328c8c` · baseline: release v2.0.1 · previous build 0.0.0-develop.166_
-<!-- build:0.0.0-develop.167 revision:7328c8cb68ea317ab117e8531853c469a753fe8f -->
+_commit `44278e8` · baseline: release v2.0.1 · previous build 0.0.0-develop.167_
+<!-- build:0.0.0-develop.168 revision:44278e83c26f5ec8bd1139408605869dd5fe5009 -->
 
 ### Summary
 
 _All changes since release v2.0.1:_
 
-- Consent Manager is now an optional service.
-- Partner Management has been integrated.
-- Updates to master data and various component versions.
-- Improvements to build and testing workflows.
+- Master data and Partner Management versions have been updated.
+- The Consent Manager is now available as an optional service.
+- Improvements have been made to automatic testing and build processes.
+- Several fixes and version updates have been applied across various components.
 
-### New in this build (since 0.0.0-develop.166)
+### New in this build (since 0.0.0-develop.167)
 
-- Master Data version updated. ([`7328c8c`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/7328c8cb68ea317ab117e8531853c469a753fe8f))
+- Master data version updated. ([`44278e8`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/44278e83c26f5ec8bd1139408605869dd5fe5009))
 
 ### Since last release (v2.0.1)
 
+- Master data version updated. ([`44278e8`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/44278e83c26f5ec8bd1139408605869dd5fe5009))
 - Master Data version updated. ([`7328c8c`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/7328c8cb68ea317ab117e8531853c469a753fe8f))
 - PM, Master data updated. ([`a8537c6`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/a8537c68b96d30503135478723430bd8ea752d70))
 - [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) add bespoke build/publish workflow for commons packaging charts; drop old push_trigger ([`39580bd`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/39580bd6fe94d9ec38f87881e7d139296f792aac))
