@@ -85,6 +85,23 @@ FROM=$(git describe "${dargs[@]}" HEAD 2>/dev/null || true)
 printf '%s' "$FROM" | grep -qE '^v?[0-9]+\.[0-9]+\.[0-9]+$' || FROM=""
 PREV_VERSION="$FROM"
 
+# Diverged-gitflow fallback (develop only): if no release tag is an ANCESTOR of
+# HEAD but a release exists on a separate line (e.g. a `1.2` branch never merged
+# back), baseline at the merge-base — i.e. "develop changes since it branched
+# from the release line" — instead of dumping the entire history. Labelled with
+# the release version.
+if [ -z "$FROM" ] && [ "${FROZEN:-false}" != true ]; then
+  latest_rel=$(git tag --list --sort=-v:refname 2>/dev/null \
+    | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+$' | head -1 || true)
+  if [ -n "$latest_rel" ]; then
+    mb=$(git merge-base HEAD "$latest_rel" 2>/dev/null || true)
+    if [ -n "$mb" ] && [ "$mb" != "$(git rev-parse HEAD)" ]; then
+      FROM="$mb"
+      PREV_VERSION="$latest_rel"
+    fi
+  fi
+fi
+
 # Cumulative notes: everything since the last release.
 RANGE_FROM="$FROM" RANGE_TO=HEAD \
   bash "$HERE/assemble.sh" >"$work/notes.md" || true

@@ -102,6 +102,25 @@ contains "baselines against v2.3.0"  "$(cat "$P2/demo2/versions/unreleased.md")"
 rm -rf "$solo" "$P2"
 
 echo
+echo "diverged release line (tag not an ancestor of develop) baselines at merge-base"
+dv=$(mktemp -d); Pd=$(mktemp -d)
+git -C "$dv" init -q -b develop; git -C "$dv" config user.email t@t; git -C "$dv" config user.name t
+git -C "$dv" commit -q --allow-empty -m "G2P-0 shared base"          # merge-base
+git -C "$dv" checkout -q -b 1.2
+git -C "$dv" commit -q --allow-empty -m "G2P-90 release-only fix"; git -C "$dv" tag v1.2.1
+git -C "$dv" checkout -q develop
+git -C "$dv" commit -q --allow-empty -m "G2P-91 develop-only work A"
+git -C "$dv" commit -q --allow-empty -m "G2P-92 develop-only work B"
+( cd "$dv" && REPO=dv VERSION=0.0.0-develop.3 FROZEN=false REVISION=$(git rev-parse HEAD) \
+    PAGES_DIR="$Pd" SKIP_AI=true DATE=2026-07-13 bash "$HERE/run.sh" >/dev/null )
+dvu=$(cat "$Pd/dv/versions/unreleased.md")
+contains "diverged: baselines at v1.2.1"     "$dvu" "Since last release (v1.2.1)"
+contains "diverged: lists develop-only work" "$dvu" "develop-only work B"
+excludes "diverged: excludes shared base"    "$dvu" "shared base"
+excludes "diverged: excludes release-only"   "$dvu" "release-only fix"
+rm -rf "$dv" "$Pd"
+
+echo
 echo "structural digest (git-derived, bounded)"
 mkdir -p "$REPO_DIR/backend/migrations" "$REPO_DIR/ui"
 echo "route" > "$REPO_DIR/backend/api_controller.py"
