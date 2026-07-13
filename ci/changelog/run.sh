@@ -82,6 +82,7 @@ fi
 FROM=$(printf '%s\n' "$rels" | sed '/^$/d' | head -1)
 PREV_VERSION="$FROM"
 
+# Cumulative notes: everything since the last release.
 RANGE_FROM="$FROM" RANGE_TO=HEAD \
   bash "$HERE/assemble.sh" >"$work/notes.md" || true
 
@@ -94,9 +95,33 @@ fi
 summarise_into "$work/notes.md" "$work/summary.md"
 
 MODE=$([ "${FROZEN:-false}" = true ] && echo frozen || echo unreleased)
+
+# Incremental notes for the rolling Unreleased page: what THIS build added since
+# the previous build. The previous build's commit is recorded as a hidden marker
+# in the existing unreleased.md.
+PREV_BUILD=""
+INCR_NOTES_FILE=""
+if [ "$MODE" = unreleased ]; then
+  existing="${PAGES_DIR}/${REPO}/versions/unreleased.md"
+  if [ -f "$existing" ]; then
+    marker=$(grep -oE '<!-- build:[^ ]+ revision:[0-9a-f]+ -->' "$existing" | head -1 || true)
+    if [ -n "$marker" ]; then
+      PREV_BUILD=$(printf '%s' "$marker" | sed -E 's/.*build:([^ ]+) revision:.*/\1/')
+      prev_rev=$(printf '%s' "$marker" | sed -E 's/.*revision:([0-9a-f]+).*/\1/')
+      if [ -n "$prev_rev" ] && git rev-parse -q --verify "${prev_rev}^{commit}" >/dev/null 2>&1; then
+        RANGE_FROM="$prev_rev" RANGE_TO=HEAD bash "$HERE/assemble.sh" >"$work/incr.md" || true
+        INCR_NOTES_FILE="$work/incr.md"
+      else
+        PREV_BUILD=""   # previous build's commit not in history (e.g. after a reset)
+      fi
+    fi
+  fi
+fi
+
 PAGES_DIR="$PAGES_DIR" REPO="$REPO" VERSION="$VERSION" REVISION="$REVISION" \
   PREV_VERSION="$PREV_VERSION" DATE="$DATE" MODE="$MODE" \
   NOTES_FILE="$work/notes.md" SUMMARY_FILE="$work/summary.md" SUMMARY_OK="$SUMMARY_OK" \
+  INCR_NOTES_FILE="$INCR_NOTES_FILE" PREV_BUILD="$PREV_BUILD" \
   bash "$HERE/render.sh"
 
 PAGES_DIR="$PAGES_DIR" bash "$HERE/render-root-index.sh"

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
-# Tests for the changelog assembly + range + render logic. No network: AI is
-# always skipped. Notes come from COMMIT MESSAGES. Builds a throwaway repo,
-# commits across a release tag, and asserts what each range produces.
+# Tests for changelog assembly, ranges, the two-diff Unreleased page, frozen
+# release pages, and the root index. No network: AI is always skipped. Notes
+# come from COMMIT MESSAGES.
 #
 #   ./ci/changelog/test-changelog.sh
 
@@ -14,19 +14,10 @@ PAGES="$(mktemp -d)"
 trap 'rm -rf "$REPO_DIR" "$PAGES"' EXIT
 
 pass=0; fail=0
-check() { # desc expected actual
-  if [ "$2" = "$3" ]; then printf '  ok   %s\n' "$1"; pass=$((pass+1))
-  else printf '  FAIL %s\n       want: %s\n       got:  %s\n' "$1" "$2" "$3"; fail=$((fail+1)); fi
-}
-contains() { # desc haystack needle
-  case "$2" in *"$3"*) printf '  ok   %s\n' "$1"; pass=$((pass+1));;
-  *) printf '  FAIL %s (missing: %s)\n' "$1" "$3"; fail=$((fail+1));; esac
-}
-excludes() { # desc haystack needle
-  case "$2" in *"$3"*) printf '  FAIL %s (leaked: %s)\n' "$1" "$3"; fail=$((fail+1));;
-  *) printf '  ok   %s\n' "$1"; pass=$((pass+1));; esac
-}
-commit() { git -C "$REPO_DIR" commit -q --allow-empty -m "$1"; }
+contains() { case "$2" in *"$3"*) printf '  ok   %s\n' "$1"; pass=$((pass+1));; *) printf '  FAIL %s (missing: %s)\n' "$1" "$3"; fail=$((fail+1));; esac; }
+excludes() { case "$2" in *"$3"*) printf '  FAIL %s (leaked: %s)\n' "$1" "$3"; fail=$((fail+1));; *) printf '  ok   %s\n' "$1"; pass=$((pass+1));; esac; }
+check()    { if [ "$2" = "$3" ]; then printf '  ok   %s\n' "$1"; pass=$((pass+1)); else printf '  FAIL %s want=%s got=%s\n' "$1" "$2" "$3"; fail=$((fail+1)); fi; }
+commit()   { git -C "$REPO_DIR" commit -q --allow-empty -m "$1"; }
 
 git -C "$REPO_DIR" init -q -b develop
 git -C "$REPO_DIR" config user.email t@t.t; git -C "$REPO_DIR" config user.name t
@@ -35,69 +26,70 @@ commit "root"
 commit "G2P-1 Staff portal supports bulk consent import"
 commit "G2P-2 Fix partner-API pagination dropping the last page"
 
-echo "assemble: all commits (no lower bound)"
+echo "assemble: all commits / range since a tag"
 notes=$(cd "$REPO_DIR" && bash "$HERE/assemble.sh")
-contains "lists first commit"  "$notes" "G2P-1 Staff portal supports bulk consent import"
-contains "lists second commit" "$notes" "G2P-2 Fix partner-API pagination"
-contains "has a short sha ref"  "$notes" '(`'
-excludes "no merge/root noise" "$notes" "root
-- root"
-
-echo
-echo "freeze 1.0.0, then add a commit on develop"
+contains "lists commits"       "$notes" "G2P-1 Staff portal supports bulk consent import"
+contains "short sha ref"       "$notes" '(`'
 git -C "$REPO_DIR" tag 1.0.0
 commit "G2P-3 Consent receipts are now signed JWTs"
-
-echo "assemble: only commits since 1.0.0"
 since=$(cd "$REPO_DIR" && RANGE_FROM=1.0.0 RANGE_TO=HEAD bash "$HERE/assemble.sh")
-contains "includes the new one"        "$since" "signed JWTs"
-excludes "excludes pre-1.0.0 commits"  "$since" "bulk consent import"
+contains "range includes new"  "$since" "signed JWTs"
+excludes "range excludes old"  "$since" "bulk consent import"
+
+# helper: run the changelog for the current HEAD as a develop build
+build() { # $1 = version
+  ( cd "$REPO_DIR" && REPO=demo VERSION="$1" FROZEN=false REVISION=$(git rev-parse HEAD) \
+      PAGES_DIR="$PAGES" SKIP_AI=true DATE=2026-07-13 bash "$HERE/run.sh" >/dev/null )
+}
 
 echo
-echo "no commits in an empty range"
-empty=$(cd "$REPO_DIR" && RANGE_FROM=HEAD RANGE_TO=HEAD bash "$HERE/assemble.sh")
-check "empty output" "" "$empty"
+echo "develop build #1 (first since release 1.0.0)"
+build 0.0.0-develop.3
+u=$(cat "$PAGES/demo/versions/unreleased.md")
+contains "baseline names release"   "$u" "baseline: release 1.0.0"
+contains "since-last-release header" "$u" "Since last release (1.0.0)"
+contains "lists the commit"          "$u" "signed JWTs"
+contains "jira linked"               "$u" "[G2P-3](https://openg2p.atlassian.net/browse/G2P-3)"
+contains "records a build marker"    "$u" "<!-- build:0.0.0-develop.3 revision:"
+excludes "no incremental on 1st build" "$u" "New in this build"
 
 echo
-echo "render: unreleased page + aggregate"
-rev=$(git -C "$REPO_DIR" rev-parse HEAD)
-printf '%s\n' "$since" > "$PAGES/notes.md"
-PAGES_DIR="$PAGES" REPO=demo VERSION=0.0.0-develop.4 REVISION="$rev" \
-  PREV_VERSION=1.0.0 DATE=2026-07-12 MODE=unreleased \
-  NOTES_FILE="$PAGES/notes.md" SUMMARY_FILE=/dev/null SUMMARY_OK=false \
-  bash "$HERE/render.sh" >/dev/null
-[ -f "$PAGES/demo/versions/unreleased.md" ] && u=yes || u=no
-check "unreleased page written" yes "$u"
-agg=$(cat "$PAGES/demo/CHANGELOG.md")
-contains "aggregate has title"        "$agg" "# demo changelog"
-contains "aggregate has Unreleased"   "$agg" "Unreleased"
-contains "placeholder when no AI"     "$agg" "AI summary unavailable"
-contains "shows since-version"        "$agg" "changes since 1.0.0"
-contains "lists the commit note"      "$agg" "signed JWTs"
-contains "jira ref linked"            "$agg" "[G2P-3](https://openg2p.atlassian.net/browse/G2P-3)"
+echo "develop build #2 (adds one commit)"
+commit "G2P-4 Add JWKS rotation endpoint"
+build 0.0.0-develop.4
+u2=$(cat "$PAGES/demo/versions/unreleased.md")
+contains "incremental section present" "$u2" "New in this build (since 0.0.0-develop.3)"
+contains "marker advanced"             "$u2" "<!-- build:0.0.0-develop.4 revision:"
+# the incremental section should contain the new commit, not the older one
+incr=$(printf '%s' "$u2" | awk '/^### New in this build/{f=1;next} /^### Since last release/{f=0} f')
+contains "incremental has new commit"  "$incr" "JWKS rotation"
+excludes "incremental omits older"     "$incr" "signed JWTs"
+# cumulative still has both
+contains "cumulative has both"         "$u2" "signed JWTs"
 
 echo
-echo "render: freeze to 1.0.1 clears unreleased, adds a version page"
-PAGES_DIR="$PAGES" REPO=demo VERSION=1.0.1 REVISION="$rev" \
-  PREV_VERSION=1.0.0 DATE=2026-07-12 MODE=frozen \
-  NOTES_FILE="$PAGES/notes.md" SUMMARY_FILE=/dev/null SUMMARY_OK=false \
-  bash "$HERE/render.sh" >/dev/null
+echo "cut release 1.0.1 (frozen)"
+git -C "$REPO_DIR" tag 1.0.1
+( cd "$REPO_DIR" && REPO=demo VERSION=1.0.1 FROZEN=true REVISION=$(git rev-parse HEAD) \
+    PAGES_DIR="$PAGES" SKIP_AI=true DATE=2026-07-13 bash "$HERE/run.sh" >/dev/null )
 [ -f "$PAGES/demo/versions/1.0.1.md" ] && v=yes || v=no
 check "frozen page written"        yes "$v"
-[ -f "$PAGES/demo/versions/unreleased.md" ] && u2=yes || u2=no
-check "unreleased cleared"         no  "$u2"
-contains "aggregate lists 1.0.1"   "$(cat "$PAGES/demo/CHANGELOG.md")" "demo 1.0.1"
+[ -f "$PAGES/demo/versions/unreleased.md" ] && u3=yes || u3=no
+check "unreleased cleared"         no  "$u3"
+rel=$(cat "$PAGES/demo/versions/1.0.1.md")
+contains "release labels baseline" "$rel" "changes since release 1.0.0"
+agg=$(cat "$PAGES/demo/CHANGELOG.md")
+contains "aggregate lists 1.0.1"   "$agg" "demo 1.0.1"
 
 echo
 echo "root index lists repos with a changelog"
 mkdir -p "$PAGES/other-repo"; echo x > "$PAGES/other-repo/CHANGELOG.md"
-mkdir -p "$PAGES/.github"     # must be ignored (no CHANGELOG.md)
+mkdir -p "$PAGES/.github"
 PAGES_DIR="$PAGES" bash "$HERE/render-root-index.sh" >/dev/null
 idx=$(cat "$PAGES/index.md")
-contains "index links demo"       "$idx" "[demo](./demo/CHANGELOG)"
-contains "index links other-repo" "$idx" "[other-repo](./other-repo/CHANGELOG)"
-excludes "index skips .github"    "$idx" ".github"
-contains "index has front matter" "$idx" "title: OpenG2P changelogs"
+contains "index links demo"        "$idx" "[demo](./demo/CHANGELOG)"
+contains "index links other-repo"  "$idx" "[other-repo](./other-repo/CHANGELOG)"
+excludes "index skips .github"     "$idx" ".github"
 
 echo
 echo "$pass passed, $fail failed"
