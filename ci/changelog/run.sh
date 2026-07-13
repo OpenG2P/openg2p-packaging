@@ -66,6 +66,7 @@ if [ -n "${REGEN_VERSION:-}" ]; then
     REVISION="" PREV_VERSION="" DATE="$DATE" \
     NOTES_FILE=/dev/null SUMMARY_FILE=/dev/null SUMMARY_OK=false \
     bash "$HERE/render-aggregate.sh"
+  PAGES_DIR="$PAGES_DIR" bash "$HERE/render-root-index.sh"
   out published true
   exit 0
 fi
@@ -97,5 +98,7 @@ PAGES_DIR="$PAGES_DIR" REPO="$REPO" VERSION="$VERSION" REVISION="$REVISION" \
   PREV_VERSION="$PREV_VERSION" DATE="$DATE" MODE="$MODE" \
   NOTES_FILE="$work/notes.md" SUMMARY_FILE="$work/summary.md" SUMMARY_OK="$SUMMARY_OK" \
   bash "$HERE/render.sh"
+
+PAGES_DIR="$PAGES_DIR" bash "$HERE/render-root-index.sh"
 
 out published true

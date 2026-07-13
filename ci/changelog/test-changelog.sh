@@ -89,5 +89,16 @@ check "unreleased cleared"         no  "$u2"
 contains "aggregate lists 1.0.1"   "$(cat "$PAGES/demo/CHANGELOG.md")" "demo 1.0.1"
 
 echo
+echo "root index lists repos with a changelog"
+mkdir -p "$PAGES/other-repo"; echo x > "$PAGES/other-repo/CHANGELOG.md"
+mkdir -p "$PAGES/.github"     # must be ignored (no CHANGELOG.md)
+PAGES_DIR="$PAGES" bash "$HERE/render-root-index.sh" >/dev/null
+idx=$(cat "$PAGES/index.md")
+contains "index links demo"       "$idx" "[demo](./demo/CHANGELOG)"
+contains "index links other-repo" "$idx" "[other-repo](./other-repo/CHANGELOG)"
+excludes "index skips .github"    "$idx" ".github"
+contains "index has front matter" "$idx" "title: OpenG2P changelogs"
+
+echo
 echo "$pass passed, $fail failed"
 [ "$fail" -eq 0 ]
