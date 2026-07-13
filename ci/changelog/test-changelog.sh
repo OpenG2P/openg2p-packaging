@@ -141,7 +141,29 @@ contains "diverged: baselines at v1.2.1"     "$dvu" "Since last release (v1.2.1)
 contains "diverged: lists develop-only work" "$dvu" "develop-only work B"
 excludes "diverged: excludes shared base"    "$dvu" "shared base"
 excludes "diverged: excludes release-only"   "$dvu" "release-only fix"
+# A FROZEN release tagged on develop must show the SAME v1.2.1 baseline (not "first release").
+git -C "$dv" tag 2.0.0
+( cd "$dv" && REPO=dv VERSION=2.0.0 FROZEN=true REVISION=$(git rev-parse HEAD) \
+    PAGES_DIR="$Pd" SKIP_AI=true DATE=2026-07-13 bash "$HERE/run.sh" >/dev/null )
+contains "diverged frozen: since v1.2.1"     "$(cat "$Pd/dv/versions/2.0.0.md")" "changes since release v1.2.1"
+excludes "diverged frozen: not first release" "$(cat "$Pd/dv/versions/2.0.0.md")" "first release"
 rm -rf "$dv" "$Pd"
+
+echo
+echo "a release ON the default branch clears develop's stale Unreleased page"
+cl=$(mktemp -d); Pc=$(mktemp -d)
+git -C "$cl" init -q -b develop; git -C "$cl" config user.email t@t; git -C "$cl" config user.name t
+git -C "$cl" commit -q --allow-empty -m "G2P-1 base"; git -C "$cl" tag v1.0.0
+git -C "$cl" commit -q --allow-empty -m "G2P-2 develop work"
+git -C "$cl" update-ref refs/remotes/origin/develop HEAD   # simulate the remote branch
+( cd "$cl" && REPO=cl VERSION=0.0.0-develop.2 FROZEN=false REVISION=$(git rev-parse HEAD) \
+    PAGES_DIR="$Pc" SKIP_AI=true DATE=2026-07-13 bash "$HERE/run.sh" >/dev/null )
+check "develop build created Unreleased" yes "$([ -f "$Pc/cl/versions/unreleased.md" ] && echo yes || echo no)"
+git -C "$cl" tag 2.0.0   # tagged on develop's tip
+( cd "$cl" && REPO=cl VERSION=2.0.0 FROZEN=true REVISION=$(git rev-parse HEAD) \
+    PAGES_DIR="$Pc" SKIP_AI=true DATE=2026-07-13 DEFAULT_BRANCH=develop bash "$HERE/run.sh" >/dev/null )
+check "release on develop cleared Unreleased" no "$([ -f "$Pc/cl/versions/unreleased.md" ] && echo yes || echo no)"
+rm -rf "$cl" "$Pc"
 
 echo
 echo "structural digest (git-derived, bounded)"

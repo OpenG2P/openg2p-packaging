@@ -80,9 +80,11 @@ case "$MODE" in
       echo "### Changes"; echo
       printf '%s\n' "$cum_notes"
     } > "${repo_dir}/versions/${VERSION}.md"
-    # Do NOT clear unreleased.md here: a release tag usually lives on a release
-    # LINE, not develop, so develop's rolling page is unrelated. Develop's page
-    # regenerates (with the new baseline) on its next build.
+    # Clear develop's rolling page ONLY when this release is on the default
+    # branch (tagged on develop / merged in) — its unreleased changes are now
+    # released, so the stale page would double-list them. For a diverged
+    # release-line tag we leave develop's page alone (CLEAR_UNRELEASED=false).
+    [ "${CLEAR_UNRELEASED:-false}" = true ] && rm -f "${repo_dir}/versions/unreleased.md"
     ;;
   rc)
     two_diff_body "${REPO} ${VERSION} — ${DATE}" > "${repo_dir}/versions/${VERSION}.md"

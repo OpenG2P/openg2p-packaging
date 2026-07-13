@@ -85,14 +85,16 @@ FROM=$(git describe "${dargs[@]}" HEAD 2>/dev/null || true)
 printf '%s' "$FROM" | grep -qE '^v?[0-9]+\.[0-9]+\.[0-9]+$' || FROM=""
 PREV_VERSION="$FROM"
 
-# Diverged-gitflow fallback (develop only): if no release tag is an ANCESTOR of
-# HEAD but a release exists on a separate line (e.g. a `1.2` branch never merged
-# back), baseline at the merge-base — i.e. "develop changes since it branched
-# from the release line" — instead of dumping the entire history. Labelled with
-# the release version.
-if [ -z "$FROM" ] && [ "${FROZEN:-false}" != true ]; then
+# Diverged-gitflow fallback: if no release tag is an ANCESTOR of HEAD but a
+# release exists on a separate line (e.g. an old `v2.0.1` never merged back, or a
+# release line never merged into develop), baseline at the merge-base — "changes
+# since it branched from the release line" — instead of dumping the whole
+# history. Applies to BOTH develop and frozen releases, so a release tagged on
+# develop shows the same "since <last release>" baseline as develop does. On a
+# frozen build we exclude the tag being cut from the candidates.
+if [ -z "$FROM" ]; then
   latest_rel=$(git tag --list --sort=-v:refname 2>/dev/null \
-    | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+$' | head -1 || true)
+    | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+$' | grep -vx "$VERSION" | head -1 || true)
   if [ -n "$latest_rel" ]; then
     mb=$(git merge-base HEAD "$latest_rel" 2>/dev/null || true)
     if [ -n "$mb" ] && [ "$mb" != "$(git rev-parse HEAD)" ]; then
@@ -152,6 +154,15 @@ elif [ "$MODE" = rc ]; then
     if [ "$m" -lt "$cur" ] && [ "$m" -gt "$best" ]; then best="$m"; prev_page="$f"; fi
   done
 fi
+# Should a frozen release clear develop's rolling page? Only if this release is
+# reachable from the default branch (tagged on develop or merged in). Needs the
+# default branch fetched (fetch-depth: 0 provides origin/<default>).
+CLEAR_UNRELEASED=false
+if [ "$MODE" = frozen ] && [ -n "${DEFAULT_BRANCH:-}" ] \
+   && git merge-base --is-ancestor HEAD "origin/${DEFAULT_BRANCH}" 2>/dev/null; then
+  CLEAR_UNRELEASED=true
+fi
+
 if [ -n "$prev_page" ]; then
   marker=$(grep -oE '<!-- build:[^ ]+ revision:[0-9a-f]+ -->' "$prev_page" | head -1 || true)
   if [ -n "$marker" ]; then
@@ -170,6 +181,7 @@ PAGES_DIR="$PAGES_DIR" REPO="$REPO" VERSION="$VERSION" REVISION="$REVISION" \
   PREV_VERSION="$PREV_VERSION" DATE="$DATE" MODE="$MODE" \
   NOTES_FILE="$work/notes.md" SUMMARY_FILE="$work/summary.md" SUMMARY_OK="$SUMMARY_OK" \
   INCR_NOTES_FILE="$INCR_NOTES_FILE" PREV_BUILD="$PREV_BUILD" \
+  CLEAR_UNRELEASED="$CLEAR_UNRELEASED" \
   bash "$HERE/render.sh"
 
 PAGES_DIR="$PAGES_DIR" bash "$HERE/render-root-index.sh"
