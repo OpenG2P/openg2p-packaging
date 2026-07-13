@@ -1,19 +1,24 @@
-## openg2p-commons-deployment — Unreleased (0.0.0-develop.165, 2026-07-13)
+## openg2p-commons-deployment — Unreleased (0.0.0-develop.166, 2026-07-13)
 
-_commit `39580bd` · baseline: release v2.0.1_
-<!-- build:0.0.0-develop.165 revision:39580bd6fe94d9ec38f87881e7d139296f792aac -->
+_commit `a8537c6` · baseline: release v2.0.1 · previous build 0.0.0-develop.165_
+<!-- build:0.0.0-develop.166 revision:a8537c68b96d30503135478723430bd8ea752d70 -->
 
 ### Summary
 
 _All changes since release v2.0.1:_
 
-- Added optional Consent Manager service.
-- Integrated Partner Management service.
-- Improved build and publishing workflows.
-- Resolved various issues and updated component versions.
+- Added optional Consent Manager feature.
+- Integrated Partner Management and AWE services.
+- Updated various service versions and master data.
+- Resolved issues with Keycloak init and automatic tests.
+
+### New in this build (since 0.0.0-develop.165)
+
+- PM, Master data updated. ([`a8537c6`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/a8537c68b96d30503135478723430bd8ea752d70))
 
 ### Since last release (v2.0.1)
 
+- PM, Master data updated. ([`a8537c6`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/a8537c68b96d30503135478723430bd8ea752d70))
 - [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) add bespoke build/publish workflow for commons packaging charts; drop old push_trigger ([`39580bd`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/39580bd6fe94d9ec38f87881e7d139296f792aac))
 - Versions updated. ([`3749358`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/3749358efd7fbec38c56844983b19051c520e70a))
 - [G2P-5222](https://openg2p.atlassian.net/browse/G2P-5222) Add Consent Manager as an optional commons-services subchart (OFF by default, deployed as commons-services-cm-*, surfaced in questions.yaml), mirroring the Partner Management integration. ([`fdb20b1`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/fdb20b1c05311ac0fbabe738072bd5492f1074e8))
