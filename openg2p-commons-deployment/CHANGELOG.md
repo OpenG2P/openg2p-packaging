@@ -2,26 +2,27 @@
 
 _Published automatically. Newest first._
 
-## openg2p-commons-deployment — Unreleased (0.0.0-develop.166, 2026-07-13)
+## openg2p-commons-deployment — Unreleased (0.0.0-develop.167, 2026-07-13)
 
-_commit `a8537c6` · baseline: release v2.0.1 · previous build 0.0.0-develop.165_
-<!-- build:0.0.0-develop.166 revision:a8537c68b96d30503135478723430bd8ea752d70 -->
+_commit `7328c8c` · baseline: release v2.0.1 · previous build 0.0.0-develop.166_
+<!-- build:0.0.0-develop.167 revision:7328c8cb68ea317ab117e8531853c469a753fe8f -->
 
 ### Summary
 
 _All changes since release v2.0.1:_
 
-- Added optional Consent Manager feature.
-- Integrated Partner Management and AWE services.
-- Updated various service versions and master data.
-- Resolved issues with Keycloak init and automatic tests.
+- Consent Manager is now an optional service.
+- Partner Management has been integrated.
+- Updates to master data and various component versions.
+- Improvements to build and testing workflows.
 
-### New in this build (since 0.0.0-develop.165)
+### New in this build (since 0.0.0-develop.166)
 
-- PM, Master data updated. ([`a8537c6`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/a8537c68b96d30503135478723430bd8ea752d70))
+- Master Data version updated. ([`7328c8c`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/7328c8cb68ea317ab117e8531853c469a753fe8f))
 
 ### Since last release (v2.0.1)
 
+- Master Data version updated. ([`7328c8c`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/7328c8cb68ea317ab117e8531853c469a753fe8f))
 - PM, Master data updated. ([`a8537c6`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/a8537c68b96d30503135478723430bd8ea752d70))
 - [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) add bespoke build/publish workflow for commons packaging charts; drop old push_trigger ([`39580bd`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/39580bd6fe94d9ec38f87881e7d139296f792aac))
 - Versions updated. ([`3749358`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/3749358efd7fbec38c56844983b19051c520e70a))
