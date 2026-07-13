@@ -13,4 +13,5 @@ for how these are produced.
 - [consent-manager](./consent-manager/CHANGELOG)
 - [iam-service](./iam-service/CHANGELOG)
 - [master-data-service](./master-data-service/CHANGELOG)
+- [openg2p-commons-deployment](./openg2p-commons-deployment/CHANGELOG)
 - [openg2p-staff-portal-ui](./openg2p-staff-portal-ui/CHANGELOG)
