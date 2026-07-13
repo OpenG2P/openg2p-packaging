@@ -22,6 +22,13 @@ else
   range="$TO"
 fi
 
-# One bullet per commit, newest first: subject + short sha for traceability.
+# One bullet per commit, newest first: subject + short sha. When REPO_URL is set
+# the sha links to the commit on GitHub so it's clickable in the changelog.
 # tformat: emits a trailing newline per entry (and nothing at all when empty).
-git log "$range" --no-merges --no-color --pretty=tformat:'- %s (`%h`)' 2>/dev/null || true
+base="${REPO_URL:-}"
+if [ -n "$base" ]; then
+  fmt="- %s ([\`%h\`](${base}/commit/%H))"
+else
+  fmt="- %s (\`%h\`)"
+fi
+git log "$range" --no-merges --no-color --pretty=tformat:"$fmt" 2>/dev/null || true

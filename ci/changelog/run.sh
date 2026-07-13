@@ -72,14 +72,17 @@ if [ -n "${REGEN_VERSION:-}" ]; then
 fi
 
 # ---- normal path ------------------------------------------------------------
-# Range lower bound = the last frozen release reachable from HEAD. On a release
-# build, exclude the tag being cut so we capture "since the PREVIOUS release".
-rels=$(git tag --list --merged HEAD --sort=-v:refname 2>/dev/null \
-        | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' || true)
-if [ "${FROZEN:-false}" = true ]; then
-  rels=$(printf '%s\n' "$rels" | grep -vx "$VERSION" || true)
-fi
-FROM=$(printf '%s\n' "$rels" | sed '/^$/d' | head -1)
+# Range lower bound = the last release reachable from HEAD, by commit topology
+# (git describe finds the nearest ancestor tag). We accept BOTH the new bare
+# `N.N.N` and legacy `vN.N.N` tags, so a repo migrating from the old convention
+# baselines against its last old release and follows the new scheme forward.
+# Pre-release tags (anything with a '-') are excluded. On a release build we also
+# exclude the tag being cut, to capture "since the PREVIOUS release".
+dargs=(--tags --abbrev=0 --exclude '*-*'
+       --match '[0-9]*.[0-9]*.[0-9]*' --match 'v[0-9]*.[0-9]*.[0-9]*')
+[ "${FROZEN:-false}" = true ] && dargs+=(--exclude "$VERSION")
+FROM=$(git describe "${dargs[@]}" HEAD 2>/dev/null || true)
+printf '%s' "$FROM" | grep -qE '^v?[0-9]+\.[0-9]+\.[0-9]+$' || FROM=""
 PREV_VERSION="$FROM"
 
 # Cumulative notes: everything since the last release.
