@@ -25,7 +25,7 @@ repos=$(printf '%s' "$repos" | sed '/^$/d' | sort)
   echo "# OpenG2P changelogs"
   echo
   echo "Auto-published change logs, one per repository. See the"
-  echo "[versioning & CI docs](https://docs.openg2p.org/releases/helm-docker-versioning-and-ci)"
+  echo "[versioning & CI docs](https://docs.openg2p.org/operations/deployment/helm-docker-versioning-and-ci)"
   echo "for how these are produced."
   echo
   if [ -z "$repos" ]; then
