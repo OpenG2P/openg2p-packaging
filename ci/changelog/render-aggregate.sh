@@ -39,6 +39,8 @@ inprogress=$(printf '%s' "$inprogress" | sed '/^$/d' | sort -rV || true)
 pdate() { grep -m1 '^## ' "$1" 2>/dev/null | grep -oE '20[0-9]{2}-[0-9]{2}-[0-9]{2}' | head -1; }
 # The develop version string out of "Unreleased (<version>, <date>)".
 uver()  { grep -m1 '^## ' "$1" 2>/dev/null | sed -n 's/.*Unreleased (\([^,]*\),.*/\1/p'; }
+# A stable HTML-anchor id for a version (so the table can link to its section).
+anchor() { printf 'v-%s' "$(printf '%s' "$1" | sed 's/[^A-Za-z0-9]/-/g')"; }
 
 {
   echo "# ${REPO} changelog"
@@ -46,19 +48,20 @@ uver()  { grep -m1 '^## ' "$1" 2>/dev/null | sed -n 's/.*Unreleased (\([^,]*\),.
   echo "_Published automatically._"
   echo
 
-  # ---- summary table ----
+  # ---- summary table (Version links to that version's section) ----
   echo "| Version | Date | Type |"
   echo "| --- | --- | --- |"
   printf '%s\n' "$frozen" | while IFS= read -r v; do
     [ -n "$v" ] || continue
-    echo "| \`$v\` | $(pdate "${vdir}/${v}.md") | release |"
+    echo "| [\`$v\`](#$(anchor "$v")) | $(pdate "${vdir}/${v}.md") | release |"
   done
   printf '%s\n' "$inprogress" | while IFS= read -r v; do
     [ -n "$v" ] || continue
-    echo "| \`$v\` | $(pdate "${vdir}/${v}.md") | release candidate |"
+    echo "| [\`$v\`](#$(anchor "$v")) | $(pdate "${vdir}/${v}.md") | release candidate |"
   done
   if [ -f "${vdir}/unreleased.md" ]; then
-    echo "| \`$(uver "${vdir}/unreleased.md")\` | $(pdate "${vdir}/unreleased.md") | develop |"
+    uv=$(uver "${vdir}/unreleased.md")
+    echo "| [\`$uv\`](#$(anchor "$uv")) | $(pdate "${vdir}/unreleased.md") | develop |"
   fi
   echo
 
@@ -68,6 +71,8 @@ uver()  { grep -m1 '^## ' "$1" 2>/dev/null | sed -n 's/.*Unreleased (\([^,]*\),.
     echo
     printf '%s\n' "$frozen" | while IFS= read -r v; do
       [ -n "$v" ] || continue
+      echo "<a id=\"$(anchor "$v")\"></a>"
+      echo
       cat "${vdir}/${v}.md"; echo
     done
   fi
@@ -78,12 +83,16 @@ uver()  { grep -m1 '^## ' "$1" 2>/dev/null | sed -n 's/.*Unreleased (\([^,]*\),.
     echo
     printf '%s\n' "$inprogress" | while IFS= read -r v; do
       [ -n "$v" ] || continue
+      echo "<a id=\"$(anchor "$v")\"></a>"
+      echo
       cat "${vdir}/${v}.md"; echo
     done
   fi
 
   # ---- Unreleased (develop) ----
   if [ -f "${vdir}/unreleased.md" ]; then
+    echo "<a id=\"$(anchor "$(uver "${vdir}/unreleased.md")")\"></a>"
+    echo
     cat "${vdir}/unreleased.md"
     echo
   fi
