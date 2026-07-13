@@ -54,7 +54,9 @@ external ref compiled in. No layers pulled.
 ## Using it
 
 Callers stay ~10 lines and contain no versioning logic — see
-[`samples/iam-service.yml`](samples/iam-service.yml). Pin to `@v1`.
+[`samples/caller-stub.yml`](samples/caller-stub.yml) — the canonical template,
+with the identical boilerplate (including the `workflow_dispatch` inputs) marked
+off from the per-repo declarations. Pin to `@v1`.
 
 Because a reusable workflow's ref resolves independently of the caller's ref, a
 two-year-old release branch calling `@v1` picks up today's `v1`. **The `@ref`
