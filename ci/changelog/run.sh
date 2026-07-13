@@ -26,13 +26,13 @@ trap 'rm -rf "$work"' EXIT
 
 out() { [ -n "${GITHUB_OUTPUT:-}" ] && printf '%s=%s\n' "$1" "$2" >>"$GITHUB_OUTPUT"; printf '%s=%s\n' "$1" "$2"; }
 
-summarise_into() {   # $1 = notes file, $2 = summary out file; sets SUMMARY_OK
+summarise_into() {   # $1 = notes file, $2 = summary out file; uses $DIGEST_FILE; sets SUMMARY_OK
   SUMMARY_OK=false
   if [ "${SKIP_AI:-false}" = true ]; then
     echo "::notice::AI summary skipped (changelog_skip_ai)"
     return
   fi
-  if bash "$HERE/summarize.sh" <"$1" >"$2" 2>"$work/aierr"; then
+  if DIGEST_FILE="${DIGEST_FILE:-}" bash "$HERE/summarize.sh" <"$1" >"$2" 2>"$work/aierr"; then
     SUMMARY_OK=true
   else
     echo "::warning::AI summary unavailable: $(cat "$work/aierr")"
@@ -91,6 +91,12 @@ if [ ! -s "$work/notes.md" ]; then
   out published false
   exit 0
 fi
+
+# Structural digest of the cumulative range — grounds the AI summary in what
+# actually changed (bounded; empty when there is no release baseline).
+DIGEST_FILE=""
+RANGE_FROM="$FROM" RANGE_TO=HEAD bash "$HERE/digest.sh" >"$work/digest.md" 2>/dev/null || true
+[ -s "$work/digest.md" ] && DIGEST_FILE="$work/digest.md"
 
 summarise_into "$work/notes.md" "$work/summary.md"
 

@@ -82,6 +82,22 @@ agg=$(cat "$PAGES/demo/CHANGELOG.md")
 contains "aggregate lists 1.0.1"   "$agg" "demo 1.0.1"
 
 echo
+echo "structural digest (git-derived, bounded)"
+mkdir -p "$REPO_DIR/backend/migrations" "$REPO_DIR/ui"
+echo "route" > "$REPO_DIR/backend/api_controller.py"
+echo "ALTER" > "$REPO_DIR/backend/migrations/0002.sql"
+echo '{}'    > "$REPO_DIR/package.json"
+git -C "$REPO_DIR" add -A
+git -C "$REPO_DIR" commit -q -m "G2P-5 add endpoint, migration, dep"
+dig=$(cd "$REPO_DIR" && RANGE_FROM=1.0.1 RANGE_TO=HEAD bash "$HERE/digest.sh")
+contains "digest has shortstat"        "$dig" "files changed"
+contains "digest lists areas"          "$dig" "Areas touched:"
+contains "digest flags migrations"     "$dig" "Migrations touched:"
+contains "digest flags dependencies"   "$dig" "Dependency manifests changed:"
+nodig=$(cd "$REPO_DIR" && RANGE_FROM= RANGE_TO=HEAD bash "$HERE/digest.sh")
+check "digest empty without baseline"  "" "$nodig"
+
+echo
 echo "root index lists repos with a changelog"
 mkdir -p "$PAGES/other-repo"; echo x > "$PAGES/other-repo/CHANGELOG.md"
 mkdir -p "$PAGES/.github"

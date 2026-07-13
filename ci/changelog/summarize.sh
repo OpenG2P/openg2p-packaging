@@ -29,9 +29,22 @@ models_arr=$(
     | jq -s 'reduce .[] as $m ([]; if index($m) then . else . + [$m] end)'
 )
 
-prompt=$(printf '%s\n\n%s' \
-  "Summarise these change notes into 2-5 short, user-facing bullet points for a release summary. Plain language, no fluff, no headings. Start each line with '- '. Notes:" \
-  "$notes")
+# Optional structural digest (from digest.sh) grounds the summary in what
+# actually changed, so it can surface changes the commit notes omit.
+digest=""
+if [ -n "${DIGEST_FILE:-}" ] && [ -s "$DIGEST_FILE" ]; then
+  digest=$(cat "$DIGEST_FILE")
+fi
+
+if [ -n "$digest" ]; then
+  prompt=$(printf '%s\n\n=== Developer commit notes (intent) ===\n%s\n\n=== Change digest from git (what actually changed) ===\n%s' \
+    "Write 2-5 short, user-facing changelog bullets. Use the developer commit notes as the primary source of INTENT, and the change digest to ground and COMPLETE them — surface meaningful changes the digest implies even if the notes omit them (e.g. new endpoints, database migrations, dependency or configuration changes). Plain language, no fluff, no headings; start each line with '- '." \
+    "$notes" "$digest")
+else
+  prompt=$(printf '%s\n\n%s' \
+    "Summarise these change notes into 2-5 short, user-facing bullet points for a release summary. Plain language, no fluff, no headings. Start each line with '- '. Notes:" \
+    "$notes")
+fi
 
 body=$(jq -n \
   --argjson models "$models_arr" \

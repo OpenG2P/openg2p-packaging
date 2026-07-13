@@ -9,10 +9,18 @@ source repo's build branch (which would bump the commit-count version and loop).
 ## Flow
 
 ```
-git commit messages  →  assemble (git range)  →  summarize (OpenRouter)  →  render
-(the check-in            commits since the        2-5 user-facing            gh-pages:
- comments)               last frozen release      bullets (best-effort)      <repo>/CHANGELOG.md
+git commit messages  →  assemble (git range) ─┐
+(the check-in            commits since last     ├→ summarize (OpenRouter) → render
+ comments)               frozen release         │   2-5 user-facing          gh-pages:
+                      →  digest  (git --stat) ──┘   bullets (best-effort)     <repo>/CHANGELOG.md
+                         changed files + signals,
+                         bounded, no diff content
 ```
+
+The **digest** grounds the summary in what actually changed (new files,
+migrations, dependency/config changes) so it isn't limited to how well the commit
+messages were written — while staying small regardless of diff size. Empty when
+there is no release baseline.
 
 All of it runs inside `build-publish.yml`'s `changelog` job, keyed to the same
 version the images and chart get. There is no note file to write and no PR
