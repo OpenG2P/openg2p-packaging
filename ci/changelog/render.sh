@@ -3,18 +3,19 @@
 # Write a version's human-readable page and regenerate the repo's CHANGELOG.md.
 # Everything is markdown; Gitbook / GitHub Pages render it.
 #
-#   env: PAGES_DIR REPO VERSION REVISION PREV_VERSION DATE MODE(frozen|unreleased)
+#   env: PAGES_DIR REPO VERSION REVISION PREV_VERSION DATE MODE(frozen|rc|unreleased)
 #        NOTES_FILE            cumulative notes since PREV_VERSION (last release)
 #        SUMMARY_FILE SUMMARY_OK
-#   unreleased mode also uses:
+#   rc/unreleased also use:
 #        INCR_NOTES_FILE       notes since the previous build (incremental)
 #        PREV_BUILD            previous build's version string (may be empty)
 #
-# frozen    -> versions/<version>.md (cumulative since the previous release),
-#              and the Unreleased page is cleared
-# unreleased-> versions/unreleased.md showing BOTH diffs: "new in this build"
-#              (since the previous build) and "since last release" (cumulative).
-#              A hidden marker records this build so the next one can diff against it.
+# frozen     -> durable versions/<version>.md, cumulative since the previous release
+# rc         -> durable versions/<version>.md, TWO diffs (kept per RC build, so you
+#               can see what changed between release candidates)
+# unreleased -> rolling versions/unreleased.md, TWO diffs (develop stream)
+#
+# rc/unreleased embed a hidden marker so the next build can diff against them.
 
 set -euo pipefail
 
@@ -31,61 +32,65 @@ else
 fi
 
 cum_notes=$(bash "$HERE/linkify.sh" <"$NOTES_FILE")
+rel_label="${PREV_VERSION:-the start}"
 
-if [ "$MODE" = frozen ]; then
-  {
-    echo "## ${REPO} ${VERSION} — ${DATE}"
-    echo
-    if [ -n "${PREV_VERSION:-}" ]; then
-      echo "_commit \`${short_rev}\` · changes since release ${PREV_VERSION}_"
-    else
-      echo "_commit \`${short_rev}\` · first release_"
-    fi
-    echo
-    echo "### Summary"
-    echo
-    printf '%s\n' "$summary"
-    echo
-    echo "### Changes"
-    echo
-    printf '%s\n' "$cum_notes"
-  } > "${repo_dir}/versions/${VERSION}.md"
-  rm -f "${repo_dir}/versions/unreleased.md"
-
-else
-  rel_label="${PREV_VERSION:-the start}"
-  incr_notes=""
+# Emit a two-diff body (Summary + New-in-this-build + Since-last-release).
+two_diff_body() {   # $1 = heading line
+  local incr_notes=""
   if [ -n "${INCR_NOTES_FILE:-}" ] && [ -s "$INCR_NOTES_FILE" ]; then
     incr_notes=$(bash "$HERE/linkify.sh" <"$INCR_NOTES_FILE")
   fi
-  {
-    echo "## ${REPO} — Unreleased (${VERSION}, ${DATE})"
+  echo "## $1"
+  echo
+  local base="_commit \`${short_rev}\` · baseline: release ${rel_label}"
+  [ -n "${PREV_BUILD:-}" ] && base="${base} · previous build ${PREV_BUILD}"
+  echo "${base}_"
+  echo "<!-- build:${VERSION} revision:${REVISION} -->"
+  echo
+  echo "### Summary"
+  echo
+  echo "_All changes since release ${rel_label}:_"
+  echo
+  printf '%s\n' "$summary"
+  echo
+  if [ -n "${PREV_BUILD:-}" ] && [ -n "$incr_notes" ] && [ "$incr_notes" != "$cum_notes" ]; then
+    echo "### New in this build (since ${PREV_BUILD})"
     echo
-    base="_commit \`${short_rev}\` · baseline: release ${rel_label}"
-    [ -n "${PREV_BUILD:-}" ] && base="${base} · previous build ${PREV_BUILD}"
-    echo "${base}_"
-    # Hidden marker: lets the NEXT build compute "new in this build".
-    echo "<!-- build:${VERSION} revision:${REVISION} -->"
+    printf '%s\n' "$incr_notes"
     echo
-    echo "### Summary"
-    echo
-    echo "_All changes since release ${rel_label}:_"
-    echo
-    printf '%s\n' "$summary"
-    echo
-    # Incremental section only when it adds information over the cumulative one
-    # (i.e. there is a previous build and its delta differs from the whole range).
-    if [ -n "${PREV_BUILD:-}" ] && [ -n "$incr_notes" ] && [ "$incr_notes" != "$cum_notes" ]; then
-      echo "### New in this build (since ${PREV_BUILD})"
+  fi
+  echo "### Since last release (${rel_label})"
+  echo
+  printf '%s\n' "$cum_notes"
+}
+
+case "$MODE" in
+  frozen)
+    {
+      echo "## ${REPO} ${VERSION} — ${DATE}"
       echo
-      printf '%s\n' "$incr_notes"
+      if [ -n "${PREV_VERSION:-}" ]; then
+        echo "_commit \`${short_rev}\` · changes since release ${PREV_VERSION}_"
+      else
+        echo "_commit \`${short_rev}\` · first release_"
+      fi
       echo
-    fi
-    echo "### Since last release (${rel_label})"
-    echo
-    printf '%s\n' "$cum_notes"
-  } > "${repo_dir}/versions/unreleased.md"
-fi
+      echo "### Summary"; echo
+      printf '%s\n' "$summary"; echo
+      echo "### Changes"; echo
+      printf '%s\n' "$cum_notes"
+    } > "${repo_dir}/versions/${VERSION}.md"
+    # Do NOT clear unreleased.md here: a release tag usually lives on a release
+    # LINE, not develop, so develop's rolling page is unrelated. Develop's page
+    # regenerates (with the new baseline) on its next build.
+    ;;
+  rc)
+    two_diff_body "${REPO} ${VERSION} — ${DATE}" > "${repo_dir}/versions/${VERSION}.md"
+    ;;
+  *)  # unreleased (develop): rolling page
+    two_diff_body "${REPO} — Unreleased (${VERSION}, ${DATE})" > "${repo_dir}/versions/unreleased.md"
+    ;;
+esac
 
 PAGES_DIR="$PAGES_DIR" REPO="$REPO" bash "$HERE/render-aggregate.sh"
 echo "wrote ${repo_dir}/CHANGELOG.md (${MODE} ${VERSION})"

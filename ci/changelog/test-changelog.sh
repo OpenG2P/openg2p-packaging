@@ -70,14 +70,37 @@ excludes "incremental omits older"     "$incr" "signed JWTs"
 contains "cumulative has both"         "$u2" "signed JWTs"
 
 echo
+echo "RC builds are durably paged, with rc-to-rc diffs"
+git -C "$REPO_DIR" checkout -q -b 1.1
+git -C "$REPO_DIR" commit -q --allow-empty -m "G2P-10 RC work one"
+rcbuild() { ( cd "$REPO_DIR" && REPO=demo VERSION="$1" FROZEN=false REVISION=$(git rev-parse HEAD) \
+    PAGES_DIR="$PAGES" SKIP_AI=true DATE=2026-07-13 bash "$HERE/run.sh" >/dev/null ); }
+rcbuild 1.1.0-rc.7
+[ -f "$PAGES/demo/versions/1.1.0-rc.7.md" ] && r1=yes || r1=no
+check "rc.7 durable page written" yes "$r1"
+git -C "$REPO_DIR" commit -q --allow-empty -m "G2P-11 RC work two"
+rcbuild 1.1.0-rc.8
+[ -f "$PAGES/demo/versions/1.1.0-rc.8.md" ] && r2=yes || r2=no
+check "rc.8 durable page written"  yes "$r2"
+check "rc.7 page still there"      yes "$([ -f "$PAGES/demo/versions/1.1.0-rc.7.md" ] && echo yes || echo no)"
+rc8=$(cat "$PAGES/demo/versions/1.1.0-rc.8.md")
+contains "rc.8 shows diff vs rc.7"  "$rc8" "New in this build (since 1.1.0-rc.7)"
+incr8=$(printf '%s' "$rc8" | awk '/^### New in this build/{f=1;next} /^### Since last release/{f=0} f')
+contains "rc.8 delta has its commit"   "$incr8" "RC work two"
+excludes "rc.8 delta omits rc.7 commit" "$incr8" "RC work one"
+agg=$(cat "$PAGES/demo/CHANGELOG.md")
+contains "aggregate has RC-in-progress section" "$agg" "Release candidates (in progress)"
+
+echo
 echo "cut release 1.0.1 (frozen)"
+git -C "$REPO_DIR" checkout -q develop
 git -C "$REPO_DIR" tag 1.0.1
 ( cd "$REPO_DIR" && REPO=demo VERSION=1.0.1 FROZEN=true REVISION=$(git rev-parse HEAD) \
     PAGES_DIR="$PAGES" SKIP_AI=true DATE=2026-07-13 bash "$HERE/run.sh" >/dev/null )
 [ -f "$PAGES/demo/versions/1.0.1.md" ] && v=yes || v=no
 check "frozen page written"        yes "$v"
 [ -f "$PAGES/demo/versions/unreleased.md" ] && u3=yes || u3=no
-check "unreleased cleared"         no  "$u3"
+check "unreleased NOT wiped by a release" yes "$u3"   # develop's page self-heals on its next build
 rel=$(cat "$PAGES/demo/versions/1.0.1.md")
 contains "release labels baseline" "$rel" "changes since release 1.0.0"
 agg=$(cat "$PAGES/demo/CHANGELOG.md")

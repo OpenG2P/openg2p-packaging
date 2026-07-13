@@ -396,16 +396,17 @@ jobs:
 
   changelog:
     needs: [version, images]
-    # Runs for develop (rolling Unreleased) and release tags (frozen section).
-    # RC and feature builds are skipped: the release tag captures everything
-    # since the last release, and feature branches are throwaway. A manual
-    # regenerate run bypasses the channel gate.
+    # Changelog follows the chart: anything deployable (develop, RC, release) is
+    # documented. develop -> rolling Unreleased; RC -> durable per-RC page;
+    # release tag -> frozen page. Feature branches publish no chart, so they are
+    # skipped (traced via image labels). A manual regenerate bypasses the gate.
     if: >-
       always() &&
       needs.version.result == 'success' &&
       (needs.images.result == 'success' || inputs.changelog_regenerate != '') &&
       (inputs.changelog_regenerate != '' ||
        needs.version.outputs.channel == 'develop' ||
+       needs.version.outputs.channel == 'rc' ||
        needs.version.outputs.frozen == 'true')
     runs-on: ubuntu-latest
     # One repo's changelog pushes are serialised against each other; the shared
