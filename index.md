@@ -12,6 +12,7 @@ for how these are produced.
 - [g2p-bridge](./g2p-bridge/CHANGELOG)
 - [iam-service](./iam-service/CHANGELOG)
 - [master-data-service](./master-data-service/CHANGELOG)
+- [national-social-registry](./national-social-registry/CHANGELOG)
 - [openg2p-commons-deployment](./openg2p-commons-deployment/CHANGELOG)
 - [openg2p-staff-portal-ui](./openg2p-staff-portal-ui/CHANGELOG)
 - [partner-management](./partner-management/CHANGELOG)
