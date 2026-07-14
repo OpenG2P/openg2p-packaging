@@ -17,3 +17,4 @@ for how these are produced.
 - [openg2p-commons-deployment](./openg2p-commons-deployment/CHANGELOG)
 - [openg2p-staff-portal-ui](./openg2p-staff-portal-ui/CHANGELOG)
 - [partner-management](./partner-management/CHANGELOG)
+- [spar](./spar/CHANGELOG)
