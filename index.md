@@ -11,6 +11,7 @@ for how these are produced.
 - [farmer-registry](./farmer-registry/CHANGELOG)
 - [g2p-bridge](./g2p-bridge/CHANGELOG)
 - [iam-service](./iam-service/CHANGELOG)
+- [id-generator](./id-generator/CHANGELOG)
 - [master-data-service](./master-data-service/CHANGELOG)
 - [national-social-registry](./national-social-registry/CHANGELOG)
 - [openg2p-commons-deployment](./openg2p-commons-deployment/CHANGELOG)
