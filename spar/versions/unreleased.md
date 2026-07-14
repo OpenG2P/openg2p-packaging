@@ -1,18 +1,35 @@
-## spar — Unreleased (0.0.0-develop.27, 2026-07-14)
+## spar — Unreleased (0.0.0-develop.31, 2026-07-14)
 
-_commit `f833914` · baseline: release v1.0.0_
-<!-- build:0.0.0-develop.27 revision:f8339149ebee8992fe94c252ec872eb9e3ecaa0c -->
+_commit `3ec576f` · baseline: release v1.0.0 · previous build 0.0.0-develop.27_
+<!-- build:0.0.0-develop.31 revision:3ec576f98cd67ebe7946ae4b21eabe2cfa62e26e -->
 
 ### Summary
 
 _All changes since release v1.0.0:_
 
-- Improved system stability and performance.
-- Enhanced integration with partner management services.
-- Streamlined version management for development.
+- Signing now uses local key verification instead of Keymanager.
+- Keymanager has been removed from the project.
+- New CI implemented to streamline the build process.
+- Integration with partner management service has been completed.
+- Adjusted names as partner management is now installed via commons-services.
+- Fixed an error related to Keycloak.
+- Build-publish.yml boilerplate has been aligned with organizational conventions.
+- Develop version is now automatically bumped up.
+- Build ordinal has been updated to move past retired run-number versions.
+
+### New in this build (since 0.0.0-develop.27)
+
+- [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) Bump develop build ordinal past retired run-number versions (3/3). ([`3ec576f`](https://github.com/OpenG2P/spar/commit/3ec576f98cd67ebe7946ae4b21eabe2cfa62e26e))
+- [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) Bump develop build ordinal past retired run-number versions (2/3). ([`5b0c69a`](https://github.com/OpenG2P/spar/commit/5b0c69a59ce72632f9a0ec079ee3e6dc25e1b85b))
+- [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) Bump develop build ordinal past retired run-number versions (1/3). ([`442eee8`](https://github.com/OpenG2P/spar/commit/442eee8f0c11f82327d2e80ac39499a784df954b))
+- [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) Align build-publish.yml boilerplate with org convention (partner-management/consent-manager). ([`31c1551`](https://github.com/OpenG2P/spar/commit/31c1551ed9c4a67207696e453e2886243deea9e5))
 
 ### Since last release (v1.0.0)
 
+- [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) Bump develop build ordinal past retired run-number versions (3/3). ([`3ec576f`](https://github.com/OpenG2P/spar/commit/3ec576f98cd67ebe7946ae4b21eabe2cfa62e26e))
+- [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) Bump develop build ordinal past retired run-number versions (2/3). ([`5b0c69a`](https://github.com/OpenG2P/spar/commit/5b0c69a59ce72632f9a0ec079ee3e6dc25e1b85b))
+- [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) Bump develop build ordinal past retired run-number versions (1/3). ([`442eee8`](https://github.com/OpenG2P/spar/commit/442eee8f0c11f82327d2e80ac39499a784df954b))
+- [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) Align build-publish.yml boilerplate with org convention (partner-management/consent-manager). ([`31c1551`](https://github.com/OpenG2P/spar/commit/31c1551ed9c4a67207696e453e2886243deea9e5))
 - [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) New CI implemented. ([`f833914`](https://github.com/OpenG2P/spar/commit/f8339149ebee8992fe94c252ec872eb9e3ecaa0c))
 - [G2P-5261](https://openg2p.atlassian.net/browse/G2P-5261) Keycloak error fix attempt. ([`617df81`](https://github.com/OpenG2P/spar/commit/617df81e8a6f89c51d1657ce80b8de8c93819755))
 - [G2P-5261](https://openg2p.atlassian.net/browse/G2P-5261) Adjusting names as PM is now installed via commons-services. ([`7b6317b`](https://github.com/OpenG2P/spar/commit/7b6317b61c215a6a3b07da876560f4de83b5f272))
