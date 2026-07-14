@@ -9,11 +9,16 @@
 # fails, the changelog is still published with the human notes and a warning —
 # the summary section says so and can be backfilled later.
 
-model: google/gemini-2.5-flash-lite
+# A mid-tier model — the cheapest tier (flash-lite) flattened large ranges into
+# vague filler and dropped significant changes. gpt-4o-mini follows the
+# "don't flatten, name specifics" instructions much better; bump to sonnet or
+# gpt-4o if you want still richer notes (cost is still fractions of a cent).
+model: openai/gpt-4o-mini
 fallbacks:
-  - openai/gpt-4o-mini
+  - google/gemini-2.5-flash
   - anthropic/claude-3.5-haiku
-max_tokens: 400
+# Room for more bullets on large ranges (the prompt scales bullet count to size).
+max_tokens: 700
 
 # Jira ticket linking in the rendered changelog. A commit message like
 # "G2P-5335 …" becomes a markdown link. Set jira_project to "" to disable.
