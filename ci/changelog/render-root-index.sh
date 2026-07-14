@@ -16,15 +16,22 @@ for d in "$PAGES_DIR"/*/; do
 done
 repos=$(printf '%s' "$repos" | sed '/^$/d' | sort)
 
+# Site config: sets the header title (otherwise Jekyll uses the repo name
+# "openg2p-packaging"). Pin jekyll-theme-primer explicitly so the look is
+# unchanged. Written idempotently on every run.
+cat > "$PAGES_DIR/_config.yml" <<'YAML'
+theme: jekyll-theme-primer
+title: OpenG2P Versions & Change logs
+description: Published version history and change logs for OpenG2P repositories
+YAML
+
 {
-  # Front matter makes Jekyll render this as the themed index.html at "/".
+  # Empty front matter still makes Jekyll render this as index.html at "/".
+  # No page H1 here — the theme header already shows the site title above.
   echo "---"
-  echo "title: OpenG2P changelogs"
   echo "---"
   echo
-  echo "# OpenG2P changelogs"
-  echo
-  echo "Auto-published change logs, one per repository. See the"
+  echo "Version history and change logs, one page per repository. See the"
   echo "[versioning & CI docs](https://docs.openg2p.org/operations/deployment/helm-docker-versioning-and-ci)"
   echo "for how these are produced."
   echo
@@ -40,4 +47,4 @@ repos=$(printf '%s' "$repos" | sed '/^$/d' | sort)
 } > "$PAGES_DIR/index.md"
 
 n=$(printf '%s\n' "$repos" | grep -c . || true)
-echo "wrote ${PAGES_DIR}/index.md (${n} repos)"
+echo "wrote ${PAGES_DIR}/index.md + _config.yml (${n} repos)"
