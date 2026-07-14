@@ -11,6 +11,7 @@ for how these are produced.
 - [audit-manager](./audit-manager/CHANGELOG)
 - [awe](./awe/CHANGELOG)
 - [consent-manager](./consent-manager/CHANGELOG)
+- [g2p-bridge](./g2p-bridge/CHANGELOG)
 - [iam-service](./iam-service/CHANGELOG)
 - [master-data-service](./master-data-service/CHANGELOG)
 - [openg2p-commons-deployment](./openg2p-commons-deployment/CHANGELOG)
