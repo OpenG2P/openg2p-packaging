@@ -23,11 +23,12 @@ else
 fi
 
 # One bullet per commit, newest first: subject + short sha. When REPO_URL is set
-# the sha links to the commit on GitHub so it's clickable in the changelog.
-# tformat: emits a trailing newline per entry (and nothing at all when empty).
+# the sha links to the commit on the forge so it's clickable in the changelog.
+# COMMIT_PATH is the forge's commit path segment: `commit` for GitHub (default),
+# `-/commit` for GitLab. tformat: one trailing newline per entry, nothing when empty.
 base="${REPO_URL:-}"
 if [ -n "$base" ]; then
-  fmt="- %s ([\`%h\`](${base}/commit/%H))"
+  fmt="- %s ([\`%h\`](${base}/${COMMIT_PATH:-commit}/%H))"
 else
   fmt="- %s (\`%h\`)"
 fi

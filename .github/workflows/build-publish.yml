@@ -218,21 +218,32 @@ jobs:
           username: ${{ inputs.registry == 'ghcr.io' && github.actor || startsWith(inputs.registry, 'registry.gitlab') && secrets.gitlab_registry_user || secrets.docker_hub_actor }}
           password: ${{ inputs.registry == 'ghcr.io' && secrets.GITHUB_TOKEN || startsWith(inputs.registry, 'registry.gitlab') && secrets.gitlab_registry_token || secrets.docker_hub_token }}
 
-      # Immutability. Without this, a re-run of an old workflow silently
-      # replaces the image that a frozen chart already points at.
-      - name: Refuse to overwrite an existing version
+      # Idempotent guard: SKIP if this exact version was already built from THIS
+      # commit (so a re-run safely finishes a partially-published pipeline); FAIL
+      # only if it exists from a DIFFERENT commit (real drift). Never overwrites.
+      - name: Immutability / idempotency guard
+        id: guard
+        env:
+          REVISION: ${{ needs.version.outputs.revision }}
         run: |
           if docker buildx imagetools inspect "$IMAGE:$VERSION" >/dev/null 2>&1; then
-            if [ "${{ inputs.allow-overwrite }}" != "true" ]; then
-              echo "::error::$IMAGE:$VERSION already exists. Immutable versions are never republished."
+            existing_rev=$(docker buildx imagetools inspect "$IMAGE:$VERSION" \
+              --format '{{json .Image}}' 2>/dev/null \
+              | jq -r '.config.Labels["org.opencontainers.image.revision"] // ""' 2>/dev/null || true)
+            if [ "$existing_rev" = "$REVISION" ]; then
+              echo "$IMAGE:$VERSION already built from this commit ($REVISION); skipping (idempotent)."
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+            elif [ "${{ inputs.allow-overwrite }}" != "true" ]; then
+              echo "::error::$IMAGE:$VERSION exists from a DIFFERENT commit (${existing_rev:-unknown} != $REVISION). Immutable versions are never republished."
               exit 1
+            else
+              echo "::warning::overwriting $IMAGE:$VERSION (allow-overwrite)"
             fi
-            echo "::warning::overwriting $IMAGE:$VERSION (allow-overwrite)"
           fi
 
       # ---------------- release: promote, never rebuild ----------------
       - name: Promote tested digest to ${{ needs.version.outputs.version }}
-        if: needs.version.outputs.frozen == 'true'
+        if: needs.version.outputs.frozen == 'true' && steps.guard.outputs.skip != 'true'
         run: |
           src=""
           for cand in ${{ needs.version.outputs.promote_from }}; do
@@ -252,7 +263,7 @@ jobs:
       # ---------------- everything else: build ----------------
       - name: Resolve pinned git refs
         id: pins
-        if: needs.version.outputs.frozen != 'true'
+        if: needs.version.outputs.frozen != 'true' && steps.guard.outputs.skip != 'true'
         env:
           PINS: ${{ toJSON(matrix.image.pins) }}   # `null` when the image declares none
           DOCKERFILE: ${{ matrix.image.dockerfile }}
@@ -284,7 +295,7 @@ jobs:
 
       - name: Compute tags
         id: tags
-        if: needs.version.outputs.frozen != 'true'
+        if: needs.version.outputs.frozen != 'true' && steps.guard.outputs.skip != 'true'
         run: |
           {
             echo "list<<EOF"
@@ -294,7 +305,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Build and push
-        if: needs.version.outputs.frozen != 'true'
+        if: needs.version.outputs.frozen != 'true' && steps.guard.outputs.skip != 'true'
         uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.image.context || '.' }}
@@ -402,13 +413,14 @@ jobs:
           base="${HOST}/api/v4/projects/${enc}/packages/helm"
           tgz=$(ls dist/*.tgz | head -1)
 
-          # Immutability: GitLab accepts a duplicate version by default, so check
-          # the published index first and refuse unless allow-overwrite.
+          # Idempotency: if already published, the pipeline was here before -- skip
+          # (success) so a re-run that finishes a partial publish doesn't fail.
+          # Drift is caught upstream by the image guard.
           if curl -fsSL --user "$GL_USER:$GL_TOKEN" "${base}/${CHANNEL}/index.yaml" 2>/dev/null \
                | yq -e ".entries[strenv(NAME)][] | select(.version == strenv(VERSION))" >/dev/null 2>&1; then
             if [ "${{ inputs.allow-overwrite }}" != "true" ]; then
-              echo "::error::${NAME} ${VERSION} already in ${PROJECT} Helm registry."
-              exit 1
+              echo "${NAME} ${VERSION} already published; skipping (idempotent)."
+              exit 0
             fi
             echo "::warning::overwriting ${NAME} ${VERSION} (allow-overwrite)"
           fi
@@ -435,11 +447,12 @@ jobs:
           host=$(printf '%s' "$OCI_REPO" | sed -E 's#^oci://##; s#/.*$##')
           echo "$host -> logging in with GITHUB_TOKEN"
           helm registry login "$host" -u "${{ github.actor }}" -p "${{ secrets.GITHUB_TOKEN }}"
-          # Immutability: refuse to overwrite an existing version.
+          # Idempotency: already published -> skip (success), so a re-run to finish
+          # a partial publish doesn't fail. Drift is caught by the image guard.
           if helm pull "${OCI_REPO}/${NAME}" --version "$VERSION" -d /tmp/_exist >/dev/null 2>&1; then
             if [ "${{ inputs.allow-overwrite }}" != "true" ]; then
-              echo "::error::${NAME} ${VERSION} already exists at ${OCI_REPO}."
-              exit 1
+              echo "${NAME} ${VERSION} already published; skipping (idempotent)."
+              exit 0
             fi
             echo "::warning::overwriting ${NAME} ${VERSION} (allow-overwrite)"
           fi
@@ -456,22 +469,26 @@ jobs:
           token: ${{ secrets.OPENG2P_BOT_GITHUB_PAT }}
           path: chart-repo
 
-      - name: Refuse to overwrite an existing chart version
+      - name: Chart idempotency guard
+        id: ghpages_guard
         if: inputs.chart-oci-repo == '' && inputs.chart-gitlab-project == ''
         env:
           NAME: ${{ steps.pkg.outputs.name }}
         run: |
+          # Already in the index? Skip (idempotent) so a re-run finishing a partial
+          # publish doesn't fail. Drift is caught upstream by the image guard.
           if yq -e '.entries[strenv(NAME)][] | select(.version == strenv(VERSION))' \
                chart-repo/index.yaml >/dev/null 2>&1; then
             if [ "${{ inputs.allow-overwrite }}" != "true" ]; then
-              echo "::error::$NAME $VERSION is already in the chart repo index."
-              exit 1
+              echo "$NAME $VERSION already published; skipping (idempotent)."
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "::warning::overwriting $NAME $VERSION (allow-overwrite)"
             fi
-            echo "::warning::overwriting $NAME $VERSION (allow-overwrite)"
           fi
 
       - name: Publish
-        if: inputs.chart-oci-repo == '' && inputs.chart-gitlab-project == ''
+        if: inputs.chart-oci-repo == '' && inputs.chart-gitlab-project == '' && steps.ghpages_guard.outputs.skip != 'true'
         env:
           BRANCH: ${{ inputs.helm-repo-branch }}
           URL: ${{ inputs.helm-repo-url }}
