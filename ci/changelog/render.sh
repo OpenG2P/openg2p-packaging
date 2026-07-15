@@ -34,6 +34,11 @@ fi
 cum_notes=$(bash "$HERE/linkify.sh" <"$NOTES_FILE")
 rel_label="${PREV_VERSION:-the start}"
 
+# Where the artifacts for this version live (shown in the header), e.g.
+# "ghcr.io/openg2p". Empty -> not shown.
+art=""
+[ -n "${ARTIFACT_SOURCE:-}" ] && art=" · artifacts: \`${ARTIFACT_SOURCE}\`"
+
 # Emit a two-diff body (Summary + New-in-this-build + Since-last-release).
 two_diff_body() {   # $1 = heading line
   local incr_notes=""
@@ -44,7 +49,7 @@ two_diff_body() {   # $1 = heading line
   echo
   local base="_commit \`${short_rev}\` · baseline: release ${rel_label}"
   [ -n "${PREV_BUILD:-}" ] && base="${base} · previous build ${PREV_BUILD}"
-  echo "${base}_"
+  echo "${base}${art}_"
   echo "<!-- build:${VERSION} revision:${REVISION} -->"
   echo
   echo "### Summary"
@@ -70,9 +75,9 @@ case "$MODE" in
       echo "## ${REPO} ${VERSION} — ${DATE}"
       echo
       if [ -n "${PREV_VERSION:-}" ]; then
-        echo "_commit \`${short_rev}\` · changes since release ${PREV_VERSION}_"
+        echo "_commit \`${short_rev}\` · changes since release ${PREV_VERSION}${art}_"
       else
-        echo "_commit \`${short_rev}\` · first release_"
+        echo "_commit \`${short_rev}\` · first release${art}_"
       fi
       echo
       echo "### Summary"; echo

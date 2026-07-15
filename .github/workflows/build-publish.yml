@@ -40,6 +40,21 @@ on:
         required: false
         type: string
         default: '[]'
+      chart-oci-repo:
+        description: >-
+          If set (e.g. oci://ghcr.io/openg2p), the chart is PUSHED to this OCI
+          registry instead of the HTTP helm-repo/gh-pages. Consumers install via
+          `helm install oci://.../<chart> --version X`. Empty = classic HTTP repo.
+        required: false
+        type: string
+        default: ''
+      artifact-source:
+        description: >-
+          Where this repo's artifacts live, shown in the changelog catalogue
+          (e.g. ghcr.io/openg2p). Cosmetic; empty = not shown.
+        required: false
+        type: string
+        default: ''
       registry:
         required: false
         type: string
@@ -148,6 +163,11 @@ jobs:
   images:
     needs: version
     runs-on: ubuntu-latest
+    # packages: write lets us push to GHCR with the built-in GITHUB_TOKEN. The
+    # CALLER stub must also grant it (permissions are capped by the caller).
+    permissions:
+      contents: read
+      packages: write
     strategy:
       fail-fast: false
       matrix:
@@ -162,11 +182,13 @@ jobs:
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
 
+      # GHCR authenticates with the built-in GITHUB_TOKEN; any other registry
+      # uses the docker_hub_actor/token secret pair.
       - uses: docker/login-action@v3
         with:
           registry: ${{ inputs.registry == 'docker.io' && '' || inputs.registry }}
-          username: ${{ secrets.docker_hub_actor }}
-          password: ${{ secrets.docker_hub_token }}
+          username: ${{ inputs.registry == 'ghcr.io' && github.actor || secrets.docker_hub_actor }}
+          password: ${{ inputs.registry == 'ghcr.io' && secrets.GITHUB_TOKEN || secrets.docker_hub_token }}
 
       # Immutability. Without this, a re-run of an old workflow silently
       # replaces the image that a frozen chart already points at.
@@ -265,6 +287,10 @@ jobs:
     needs: [version, images]
     if: inputs.chart-path != '' && needs.version.outputs.publish_chart == 'true'
     runs-on: ubuntu-latest
+    # packages: write for the OCI push path (harmless for the HTTP path).
+    permissions:
+      contents: read
+      packages: write
     # Serialises this repo's own publishes. It CANNOT serialise across repos --
     # concurrency groups are scoped to a repository -- and gh-pages is shared by
     # all of them, so the push below retries on rejection.
@@ -325,7 +351,30 @@ jobs:
             echo "rancher=false" >> "$GITHUB_OUTPUT"
           fi
 
+      # ============ OCI publish path (chart-oci-repo set) ============
+      - name: Publish chart to OCI registry
+        if: inputs.chart-oci-repo != ''
+        env:
+          OCI_REPO: ${{ inputs.chart-oci-repo }}      # e.g. oci://ghcr.io/openg2p
+          NAME: ${{ steps.pkg.outputs.name }}
+        run: |
+          host=$(printf '%s' "$OCI_REPO" | sed -E 's#^oci://##; s#/.*$##')
+          echo "$host -> logging in with GITHUB_TOKEN"
+          helm registry login "$host" -u "${{ github.actor }}" -p "${{ secrets.GITHUB_TOKEN }}"
+          # Immutability: refuse to overwrite an existing version.
+          if helm pull "${OCI_REPO}/${NAME}" --version "$VERSION" -d /tmp/_exist >/dev/null 2>&1; then
+            if [ "${{ inputs.allow-overwrite }}" != "true" ]; then
+              echo "::error::${NAME} ${VERSION} already exists at ${OCI_REPO}."
+              exit 1
+            fi
+            echo "::warning::overwriting ${NAME} ${VERSION} (allow-overwrite)"
+          fi
+          helm push dist/*.tgz "$OCI_REPO"
+          echo "Pushed ${OCI_REPO}/${NAME}:${VERSION}"
+
+      # ============ HTTP/gh-pages publish path (default) ============
       - name: Checkout chart repo
+        if: inputs.chart-oci-repo == ''
         uses: actions/checkout@v4
         with:
           repository: ${{ inputs.helm-repo }}
@@ -334,6 +383,7 @@ jobs:
           path: chart-repo
 
       - name: Refuse to overwrite an existing chart version
+        if: inputs.chart-oci-repo == ''
         env:
           NAME: ${{ steps.pkg.outputs.name }}
         run: |
@@ -347,6 +397,7 @@ jobs:
           fi
 
       - name: Publish
+        if: inputs.chart-oci-repo == ''
         env:
           BRANCH: ${{ inputs.helm-repo-branch }}
           URL: ${{ inputs.helm-repo-url }}
@@ -455,6 +506,7 @@ jobs:
           PAGES_DIR: ${{ github.workspace }}/changelog-pages
           REPO_URL: ${{ github.server_url }}/${{ github.repository }}
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          ARTIFACT_SOURCE: ${{ inputs.artifact-source }}
           SKIP_AI: ${{ inputs.changelog_skip_ai }}
           REGEN_VERSION: ${{ inputs.changelog_regenerate }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
