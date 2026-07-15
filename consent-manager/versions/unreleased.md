@@ -1,33 +1,35 @@
-## consent-manager — Unreleased (0.0.0-develop.41, 2026-07-15)
+## consent-manager — Unreleased (0.0.0-develop.42, 2026-07-15)
 
-_commit `6f7508a` · baseline: release the start · artifacts: `ghcr.io/openg2p`_
-<!-- build:0.0.0-develop.41 revision:6f7508aa35737986fec55598e0a692384da7bf63 -->
+_commit `b736910` · baseline: release the start · previous build 0.0.0-develop.41 · artifacts: `ghcr.io/openg2p`_
+<!-- build:0.0.0-develop.42 revision:b73691010948b6fb58607aef4825f28b4f23ae3b -->
 
 ### Summary
 
 _All changes since release the start:_
 
-- [G2P-5222](https://openg2p.atlassian.net/browse/G2P-5222) Major changes -- modifications related to new Partner Management.
-- [G2P-5222](https://openg2p.atlassian.net/browse/G2P-5222) JWS support added.
-- [G2P-5222](https://openg2p.atlassian.net/browse/G2P-5222) Repoint Partner Management to commons-services and align PM-seed auth to the g2p-bridge pmSeedClientId pattern.
-- [G2P-5222](https://openg2p.atlassian.net/browse/G2P-5222) Proper integration with PM and AWE.
-- [G2P-5222](https://openg2p.atlassian.net/browse/G2P-5222) AWE deactivated by default; use it if required.
-- [G2P-5222](https://openg2p.atlassian.net/browse/G2P-5222) Public keys stored in DB, with an option to query well-known keys added.
-- [G2P-5222](https://openg2p.atlassian.net/browse/G2P-5222) Deployment fails if sanity test fails.
-- [G2P-5222](https://openg2p.atlassian.net/browse/G2P-5222) e2e test enabled by default.
-- [G2P-5222](https://openg2p.atlassian.net/browse/G2P-5222) Helm chart publish issue fixed.
-- [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) Publish images and chart to GHCR only (OCI).
-- [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) ci: replace docker-build and helm-publish with central build-publish workflow.
-- [G2P-5222](https://openg2p.atlassian.net/browse/G2P-5222) Support for multiple modules using the same Consent Manager.
-- [G2P-5222](https://openg2p.atlassian.net/browse/G2P-5222) Fix for sanity auth issue.
-- [G2P-5222](https://openg2p.atlassian.net/browse/G2P-5222) Race condition fix.
-- [G2P-5222](https://openg2p.atlassian.net/browse/G2P-5222) Cron job bug fixed.
-- [G2P-5222](https://openg2p.atlassian.net/browse/G2P-5222) Ensured sanity test works with external p12 key as well as with demo key.
-- [G2P-5222](https://openg2p.atlassian.net/browse/G2P-5222) Sorted out .p12 file issues regarding key storage and installation.
-- [G2P-5222](https://openg2p.atlassian.net/browse/G2P-5222) Minor corrections and cleanup tasks completed.
+- [G2P-5222](https://openg2p.atlassian.net/browse/G2P-5222) Major changes related to new Partner Management integration, including modifications to authentication and client naming conventions.
+- [G2P-5222](https://openg2p.atlassian.net/browse/G2P-5222) JWS support added to enhance security and interoperability.
+- [G2P-5222](https://openg2p.atlassian.net/browse/G2P-5222) Public keys are now stored in the database, with an additional option to query well-known keys.
+- [G2P-5222](https://openg2p.atlassian.net/browse/G2P-5222) AWE is now deactivated by default; it can be enabled if required, with sanity tests passing only when it is deactivated.
+- [G2P-5222](https://openg2p.atlassian.net/browse/G2P-5222) Deployment will fail if sanity tests do not pass, ensuring higher reliability.
+- [G2P-5222](https://openg2p.atlassian.net/browse/G2P-5222) e2e tests are enabled by default to improve testing coverage.
+- [G2P-5222](https://openg2p.atlassian.net/browse/G2P-5222) Fixed issues related to multiple pods being created, enhancing resource management.
+- [G2P-5222](https://openg2p.atlassian.net/browse/G2P-5222) Race condition fix implemented to improve stability.
+- [G2P-5222](https://openg2p.atlassian.net/browse/G2P-5222) Helm chart publish issue resolved, ensuring smoother deployments.
+- [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) Consent-manager images and charts are now published to GHCR, with values stored at ghcr.io.
+- [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) Centralized build-publish workflow replaces the previous docker-build and helm-publish processes.
+- [G2P-5222](https://openg2p.atlassian.net/browse/G2P-5222) Corrected Partner Management URLs to ensure proper integration.
+- [G2P-5222](https://openg2p.atlassian.net/browse/G2P-5222) Fixed bugs related to cron jobs and sanity authentication issues.
+- [G2P-5222](https://openg2p.atlassian.net/browse/G2P-5222) Cleanup and minor adjustments made to improve overall code quality.
+- [G2P-5222](https://openg2p.atlassian.net/browse/G2P-5222) Support for multiple modules using the same consent manager has been added.
+
+### New in this build (since 0.0.0-develop.41)
+
+- [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) consent-manager: publish images + chart to GHCR (chart under charts/ to avoid image name clash) ([`b736910`](https://github.com/OpenG2P/consent-manager/commit/b73691010948b6fb58607aef4825f28b4f23ae3b))
 
 ### Since last release (the start)
 
+- [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) consent-manager: publish images + chart to GHCR (chart under charts/ to avoid image name clash) ([`b736910`](https://github.com/OpenG2P/consent-manager/commit/b73691010948b6fb58607aef4825f28b4f23ae3b))
 - [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) Publish images + chart to GHCR only (OCI), values to ghcr.io ([`6f7508a`](https://github.com/OpenG2P/consent-manager/commit/6f7508aa35737986fec55598e0a692384da7bf63))
 - [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) clarify changelog workflow_dispatch input descriptions ([`326edee`](https://github.com/OpenG2P/consent-manager/commit/326edeebd7ca9b5284da5991f14b571046442ce6))
 - [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) forward changelog dispatch inputs to central workflow ([`75b649f`](https://github.com/OpenG2P/consent-manager/commit/75b649f3ceafb79f250ea20d8464e94323d56d63))
