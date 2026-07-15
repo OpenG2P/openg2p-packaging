@@ -48,6 +48,26 @@ on:
         required: false
         type: string
         default: ''
+      chart-gitlab-project:
+        description: >-
+          If set (e.g. openg2p/consent-manager), the chart is pushed to that
+          GitLab project's Helm Package Registry (index-based, so Rancher browses
+          all chart versions from ONE `helm repo add` URL). The path is
+          URL-encoded, so no numeric project id is needed. Takes precedence over
+          chart-oci-repo and the gh-pages path.
+        required: false
+        type: string
+        default: ''
+      chart-gitlab-host:
+        description: 'GitLab base URL for the Helm registry (self-host later). Used only with chart-gitlab-project.'
+        required: false
+        type: string
+        default: 'https://gitlab.com'
+      chart-gitlab-channel:
+        description: 'GitLab Helm channel to publish under (the segment in the repo-add URL).'
+        required: false
+        type: string
+        default: stable
       artifact-source:
         description: >-
           Where this repo's artifacts live, shown in the changelog catalogue
@@ -112,6 +132,12 @@ on:
         required: true
       docker_hub_token:
         required: true
+      # GitLab deploy-token (username + token) used when publishing images to the
+      # GitLab Container Registry and/or the chart to a GitLab Helm registry.
+      gitlab_registry_user:
+        required: false
+      gitlab_registry_token:
+        required: false
       OPENG2P_BOT_GITHUB_PAT:
         required: false
       OPENROUTER_API_KEY:
@@ -182,13 +208,15 @@ jobs:
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
 
-      # GHCR authenticates with the built-in GITHUB_TOKEN; any other registry
-      # uses the docker_hub_actor/token secret pair.
+      # Registry auth, by host:
+      #   ghcr.io           -> built-in GITHUB_TOKEN
+      #   registry.gitlab.* -> gitlab_registry_user / gitlab_registry_token (deploy token)
+      #   anything else     -> docker_hub_actor / docker_hub_token
       - uses: docker/login-action@v3
         with:
           registry: ${{ inputs.registry == 'docker.io' && '' || inputs.registry }}
-          username: ${{ inputs.registry == 'ghcr.io' && github.actor || secrets.docker_hub_actor }}
-          password: ${{ inputs.registry == 'ghcr.io' && secrets.GITHUB_TOKEN || secrets.docker_hub_token }}
+          username: ${{ inputs.registry == 'ghcr.io' && github.actor || startsWith(inputs.registry, 'registry.gitlab') && secrets.gitlab_registry_user || secrets.docker_hub_actor }}
+          password: ${{ inputs.registry == 'ghcr.io' && secrets.GITHUB_TOKEN || startsWith(inputs.registry, 'registry.gitlab') && secrets.gitlab_registry_token || secrets.docker_hub_token }}
 
       # Immutability. Without this, a re-run of an old workflow silently
       # replaces the image that a frozen chart already points at.
@@ -351,9 +379,55 @@ jobs:
             echo "rancher=false" >> "$GITHUB_OUTPUT"
           fi
 
+      # ============ GitLab Helm registry path (chart-gitlab-project set) ============
+      # Index-based Package Registry: Rancher adds ONE `helm repo add` URL and
+      # browses every chart + version. Push is an HTTP upload (no `helm push`).
+      - name: Publish chart to GitLab Helm registry
+        if: inputs.chart-gitlab-project != ''
+        env:
+          HOST: ${{ inputs.chart-gitlab-host }}
+          PROJECT: ${{ inputs.chart-gitlab-project }}
+          CHANNEL: ${{ inputs.chart-gitlab-channel }}
+          NAME: ${{ steps.pkg.outputs.name }}
+          GL_USER: ${{ secrets.gitlab_registry_user }}
+          GL_TOKEN: ${{ secrets.gitlab_registry_token }}
+        run: |
+          if [ -z "${GL_USER:-}" ] || [ -z "${GL_TOKEN:-}" ]; then
+            echo "::error::chart-gitlab-project is set but gitlab_registry_user/token secrets are empty."
+            exit 1
+          fi
+          # Address the project by URL-encoded path (group/project -> group%2Fproject)
+          # so we never need to look up its numeric id.
+          enc=$(printf '%s' "$PROJECT" | sed 's#/#%2F#g')
+          base="${HOST}/api/v4/projects/${enc}/packages/helm"
+          tgz=$(ls dist/*.tgz | head -1)
+
+          # Immutability: GitLab accepts a duplicate version by default, so check
+          # the published index first and refuse unless allow-overwrite.
+          if curl -fsSL --user "$GL_USER:$GL_TOKEN" "${base}/${CHANNEL}/index.yaml" 2>/dev/null \
+               | yq -e ".entries[strenv(NAME)][] | select(.version == strenv(VERSION))" >/dev/null 2>&1; then
+            if [ "${{ inputs.allow-overwrite }}" != "true" ]; then
+              echo "::error::${NAME} ${VERSION} already in ${PROJECT} Helm registry."
+              exit 1
+            fi
+            echo "::warning::overwriting ${NAME} ${VERSION} (allow-overwrite)"
+          fi
+
+          code=$(curl -sS -o /tmp/gl_resp -w '%{http_code}' --request POST \
+            --user "$GL_USER:$GL_TOKEN" \
+            --form "chart=@${tgz}" \
+            "${base}/api/${CHANNEL}/charts")
+          echo "HTTP ${code}"; cat /tmp/gl_resp 2>/dev/null || true; echo
+          case "$code" in
+            2*) : ;;
+            *)  echo "::error::GitLab chart upload failed (HTTP ${code})"; exit 1 ;;
+          esac
+          echo "Published ${NAME} ${VERSION} to ${PROJECT} (channel ${CHANNEL})"
+          echo "Consume: helm repo add openg2p ${base}/${CHANNEL} --username <user> --password <token>"
+
       # ============ OCI publish path (chart-oci-repo set) ============
       - name: Publish chart to OCI registry
-        if: inputs.chart-oci-repo != ''
+        if: inputs.chart-oci-repo != '' && inputs.chart-gitlab-project == ''
         env:
           OCI_REPO: ${{ inputs.chart-oci-repo }}      # e.g. oci://ghcr.io/openg2p
           NAME: ${{ steps.pkg.outputs.name }}
@@ -374,7 +448,7 @@ jobs:
 
       # ============ HTTP/gh-pages publish path (default) ============
       - name: Checkout chart repo
-        if: inputs.chart-oci-repo == ''
+        if: inputs.chart-oci-repo == '' && inputs.chart-gitlab-project == ''
         uses: actions/checkout@v4
         with:
           repository: ${{ inputs.helm-repo }}
@@ -383,7 +457,7 @@ jobs:
           path: chart-repo
 
       - name: Refuse to overwrite an existing chart version
-        if: inputs.chart-oci-repo == ''
+        if: inputs.chart-oci-repo == '' && inputs.chart-gitlab-project == ''
         env:
           NAME: ${{ steps.pkg.outputs.name }}
         run: |
@@ -397,7 +471,7 @@ jobs:
           fi
 
       - name: Publish
-        if: inputs.chart-oci-repo == ''
+        if: inputs.chart-oci-repo == '' && inputs.chart-gitlab-project == ''
         env:
           BRANCH: ${{ inputs.helm-repo-branch }}
           URL: ${{ inputs.helm-repo-url }}
