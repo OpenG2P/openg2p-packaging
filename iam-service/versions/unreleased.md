@@ -1,42 +1,35 @@
-## iam-service — Unreleased (0.0.0-develop.58, 2026-07-14)
+## iam-service — Unreleased (0.0.0-develop.59, 2026-07-17)
 
-_commit `5b67859` · baseline: release v1.2.1 · previous build 0.0.0-develop.55_
-<!-- build:0.0.0-develop.58 revision:5b678592fa5cb36393ca887020f7a3c7e5662130 -->
+_commit `947f58f` · baseline: release v1.2.1 · previous build 0.0.0-develop.58_
+<!-- build:0.0.0-develop.59 revision:947f58f1b04920854189aa65c8b9c99ff708da39 -->
 
 ### Summary
 
 _All changes since release v1.2.1:_
 
 - Remove JwtBearerAuth class and related tests from the codebase.
+- Implement refresh token middleware and related helpers for token management, persisting refresh tokens in Redis and enabling auto-refresh in middleware.
 - Implement CSRF token protection for authenticated requests.
 - Implement logout functionality and update refresh token TTL configuration.
-- Persist refresh tokens in Redis and auto-refresh in middleware.
-- Refactor(auth): update RefreshTokenMiddleware to validate tokens before refreshing.
-- Refactor(auth): extract shared functionality into UserAuthMiddlewareBase and update AuthMiddleware and RefreshTokenMiddleware to extend it.
-- Implement refresh token middleware and related helpers for token management.
 - Add DataPolicyMiddleware and data policy role helper functions.
-- Add Environment Variable to Toggle CSRF Middleware.
-- Add cache expiration configuration for staff portal API.
-- Fix staff portal app registration auth, CSRF, and seeded id sequences.
 - Enhance DataLoader to sync staff access ID sequences and update imports.
-- Improve unit test coverage for core IAM functionality.
-- Add unit tests for IAM staff portal API components.
-- Fix for migrate error. Pod was crashing while starting.
-- New CI implemented.
-- 0.0.0-develop.N versioning implemented.
-- Refactor IAM core codebase for readability.
-- Fix unit tests.
-- Minor fix for error in the beginning, but a harmless error.
-- README update.
-- Pre-commit fixes.
+- Add cache expiration configuration for staff portal API.
+- Fix staff portal app registration auth, CSRF, and seeded ID sequences.
+- Improve unit test coverage for core IAM functionality and add unit tests for IAM staff portal API components.
+- Fix for migrate error that caused the pod to crash while starting.
+- New CI implemented and versioning set to 0.0.0-develop.N.
+- Update chart-image-paths to .iamStaffPortalApi.image.tag to ensure pinned chart shipping.
+- Update README for clarity and accuracy.
+- Refactor IAM core codebase for improved readability.
+- Fix various unit tests and pre-commit issues.
 
-### New in this build (since 0.0.0-develop.55)
+### New in this build (since 0.0.0-develop.58)
 
-- [G2P-5313](https://openg2p.atlassian.net/browse/G2P-5313) Add unit tests for IAM staff portal API components ([`8670822`](https://github.com/OpenG2P/iam-service/commit/867082285f362b88550be7ba2a265621eb0b8a4d))
-- [G2P-5313](https://openg2p.atlassian.net/browse/G2P-5313) Improve unit test coverage for core IAM functionality ([`c762c7b`](https://github.com/OpenG2P/iam-service/commit/c762c7b741a5c9d19bbd30b6875daacbd5d88717))
+- [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) Fix chart-image-paths to .iamStaffPortalApi.image.tag (chart shipped unpinned) ([`947f58f`](https://github.com/OpenG2P/iam-service/commit/947f58f1b04920854189aa65c8b9c99ff708da39))
 
 ### Since last release (v1.2.1)
 
+- [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) Fix chart-image-paths to .iamStaffPortalApi.image.tag (chart shipped unpinned) ([`947f58f`](https://github.com/OpenG2P/iam-service/commit/947f58f1b04920854189aa65c8b9c99ff708da39))
 - [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) New CI implemented ([`8109437`](https://github.com/OpenG2P/iam-service/commit/810943725a2040fadbf4c18868471f205daa930c))
 - 0.0.0-develop.N versioning implemented. ([`a1579ba`](https://github.com/OpenG2P/iam-service/commit/a1579ba229373a333ceb75797685e3a086d2b9d8))
 - [G2P-5313](https://openg2p.atlassian.net/browse/G2P-5313) Add unit tests for IAM staff portal API components ([`8670822`](https://github.com/OpenG2P/iam-service/commit/867082285f362b88550be7ba2a265621eb0b8a4d))
