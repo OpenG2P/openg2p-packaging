@@ -1,54 +1,31 @@
-## farmer-registry — Unreleased (0.0.0-develop.96, 2026-07-14)
+## farmer-registry — Unreleased (0.0.0-develop.97, 2026-07-17)
 
-_commit `6e15b11` · baseline: release the start · previous build 0.0.0-develop.95_
-<!-- build:0.0.0-develop.96 revision:6e15b117626e7c8abc678f71c3a3b87148c604b1 -->
+_commit `85b60d1` · baseline: release the start · previous build 0.0.0-develop.96_
+<!-- build:0.0.0-develop.97 revision:85b60d11a4628ec7a18322a21de3878a09ba940d -->
 
 ### Summary
 
 _All changes since release the start:_
 
-- **Breaking Change**: AWE has been removed; Commons AWE is now used instead.
-- **Dependency Change**: IAM service repository has been renamed from `openg2p-iam-service` to `iam-service`.
-- **Feature Update**: Added CSRF validation configuration for staff-portal-api requests.
-- **Security Update**: Added Redis configuration for staff-portal-api authentication.
-- **Production Hardening**: Fixed resource limits, resolved HPA bug, and ensured Dockers run as non-root.
-- **Data Migration**: Enhanced db-seed functionality to support loading geo reference data into the master_data database.
-- **Feature Addition**: Implemented domain validation utilities for various services.
-- **Feature Addition**: Added SQL seed data for farmer intake forms and templates.
-- **Feature Addition**: Added IAM public URL configuration for Staff Portal UI.
-- **Feature Addition**: Added AWE_CALLBACK_CALLER_SERVICE to db-seed and updated SQL template.
-- **Feature Addition**: Added CSP configuration for profile/document images from MinIO.
-- **Feature Addition**: Updated AWE approver user password and added first/last names for new users in keycloak-init.
-- **Feature Addition**: Introduced geo hierarchy functions in load_sample_data.py and updated related JSON files.
-- **Feature Addition**: Updated SQL data models and templates for farmer extension.
-- **Feature Addition**: Added sanity tests.
-- **Feature Addition**: Enhanced consent, partner management, and WJS functionalities.
-- **Build Update**: Moved to a central build-publish CI with self-contained pinned Dockerfiles.
-- **Build Update**: Updated dependencies and image tags to latest versions.
-- **Build Update**: Updated Docker configuration files for version 1.1.0 of Celery, Partner API, and Staff Portal API.
-- **Refactor**: Updated SQL data models and templates for farmer extension.
-- **Refactor**: Removed unused verification permissions from payload.json.
-- **Refactor**: Updated farmer ID prefix from 'FAR-' to 'FR-' for consistency.
-- **Refactor**: Renamed internal_record_id to link_internal_record_id for clarity.
-- **Refactor**: Removed legacy logging and synced changes with the latest NSR.
-- **Fix**: Resolved db seed Docker failing issue.
-- **Fix**: Corrected ports and URLs for various services.
-- **Fix**: Updated git branch URL for staff portal UI.
-- **Fix**: Updated Staff Portal UI version in configuration file to 1.1.0.
-- **Fix**: Fixed pin/build-arg repo mismatch for iam-core installation.
-- **Fix**: Cleaned up README and fixed hardcoded chart name issue.
-- **Fix**: Removed duplicate jobs with the same name.
-- **Fix**: Updated develop versioning to follow '0.0.0-develop.N' convention.
-- **Fix**: Updated Postgres version and ensured it is frozen.
-- **Fix**: Fixed translations and UI schema seeding.
-- **Fix**: Updated SQL data for farmer extension to modify incoming model semantic patterns and enhance g2p register scores.
+- AWE has been removed; Commons AWE is now used instead. ([`6b302cd`](https://github.com/OpenG2P/farmer-registry/commit/6b302cd1ccf4a54b9afe742c954f4eef54ac4a78))
+- IAM service repository has been renamed from 'openg2p-iam-service' to 'iam-service'. ([`ce226a5`](https://github.com/OpenG2P/farmer-registry/commit/ce226a56f6bf9d282ca1c224d1c00fbf30b129ba))
+- Production hardening has been implemented: resource limits fixed, HPA bug resolved, and Docker containers now run as non-root. ([`41ea585`](https://github.com/OpenG2P/farmer-registry/commit/41ea5851217bf2b8e29b5ea9c03113ab967d629c))
+- CSRF validation configuration has been added for staff-portal-api requests. ([`5b00de3`](https://github.com/OpenG2P/farmer-registry/commit/5b00de3d9da0875353112159c0437877c8e753b1))
+- Redis configuration has been added for staff-portal-api authentication. ([`26383d9`](https://github.com/OpenG2P/farmer-registry/commit/26383d9f0e7753fa0686e1d1d7feb3bf3aa135c6))
+- Added support for loading geo reference data into the master_data database during db-seed functionality. ([`7d9f06b`](https://github.com/OpenG2P/farmer-registry/commit/7d9f06b7f93350de0b6f0110578a379cde4b6b96))
+- Updated SQL data models and templates for farmer extension, including modifications to incoming model semantic patterns and enhancements to g2p register scores. ([`d61f6c8`](https://github.com/OpenG2P/farmer-registry/commit/d61f6c8548ad877a97c611a58248666b2aec62ac))
+- Added a new feature for domain validation utilities across various services. ([`e79ad62`](https://github.com/OpenG2P/farmer-registry/commit/e79ad6217157667b9165ab50bcb580acc6276618))
+- Updated the Staff Portal UI version in the configuration file to 1.1.0. ([`4f2b43f`](https://github.com/OpenG2P/farmer-registry/commit/4f2b43f39a4acfc206d86f0c396da1968df5b1bf))
+- Added a sanity test suite with 2 power e2e tests. ([`85b60d1`](https://github.com/OpenG2P/farmer-registry/commit/85b60d11a4628ec7a18322a21de3878a09ba940d))
+- Bumped dependencies and updated image tags to the latest versions. ([`7fdcded`](https://github.com/OpenG2P/farmer-registry/
 
-### New in this build (since 0.0.0-develop.95)
+### New in this build (since 0.0.0-develop.96)
 
-- [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) Tidy CI-migration leftovers in farmer: drop dead develop.txt specs, repoint Chart.yaml comment and celery README to build-publish.yml/Dockerfile ([`6e15b11`](https://github.com/OpenG2P/farmer-registry/commit/6e15b117626e7c8abc678f71c3a3b87148c604b1))
+- [G2P-5378](https://openg2p.atlassian.net/browse/G2P-5378) E2e sanity test suite added with 2 power e2e tests. ([`85b60d1`](https://github.com/OpenG2P/farmer-registry/commit/85b60d11a4628ec7a18322a21de3878a09ba940d))
 
 ### Since last release (the start)
 
+- [G2P-5378](https://openg2p.atlassian.net/browse/G2P-5378) E2e sanity test suite added with 2 power e2e tests. ([`85b60d1`](https://github.com/OpenG2P/farmer-registry/commit/85b60d11a4628ec7a18322a21de3878a09ba940d))
 - [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) Tidy CI-migration leftovers in farmer: drop dead develop.txt specs, repoint Chart.yaml comment and celery README to build-publish.yml/Dockerfile ([`6e15b11`](https://github.com/OpenG2P/farmer-registry/commit/6e15b117626e7c8abc678f71c3a3b87148c604b1))
 - [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) Fix pin/build-arg repo mismatch: install iam-core from openg2p/iam-service (was openg2p-iam-service, which lacks the resolved SHA), and fetch openg2p-data by ref via git fetch+checkout so db-seed accepts a pinned commit SHA (git clone -b takes only a branch/tag name) ([`1f22275`](https://github.com/OpenG2P/farmer-registry/commit/1f22275da0bce42cb361e9792db8d45e9d31d044))
 - IAM service repo renamed. ([`ce226a5`](https://github.com/OpenG2P/farmer-registry/commit/ce226a56f6bf9d282ca1c224d1c00fbf30b129ba))
