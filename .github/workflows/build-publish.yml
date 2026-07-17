@@ -347,9 +347,17 @@ jobs:
         run: |
           values="${{ inputs.chart-path }}/values.yaml"
           for path in $(jq -r '.[]' <<<'${{ inputs.chart-image-paths }}'); do
+            # The path MUST already exist. yq creates missing keys rather than
+            # failing, so a wrong path silently writes a stray key and leaves the
+            # real tag at the moving `develop` alias -- i.e. an unpinned chart that
+            # still "verifies". Checking existence BEFORE the write is what catches
+            # that; checking only after cannot (it reads back the key it created).
+            [ "$(yq "$path" "$values")" != "null" ] || {
+              echo "::error::$path does not exist in $values. Give the path as it is"
+              echo "::error::in values.yaml (e.g. .myApi.image.tag) -- not the template's"
+              echo "::error::scoped view (.image.tag). A wrong path ships the chart UNPINNED."
+              exit 1; }
             yq -i "$path = strenv(V)" "$values"
-            # A typo in a path makes yq create a new key rather than fail, which
-            # would ship a chart still pointing at the `develop` alias.
             got=$(yq "$path" "$values")
             [ "$got" = "$V" ] || { echo "::error::$path is '$got', expected '$V'"; exit 1; }
             echo "  ok  $path = $V"
