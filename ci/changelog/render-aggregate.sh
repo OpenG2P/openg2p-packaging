@@ -4,7 +4,7 @@
 # Wholesale rebuild (never appended), so parallel branches cannot make it
 # diverge. Layout:
 #
-#   1. a summary TABLE of every version (Version | Date | Type), newest first
+#   1. a summary TABLE of every version (Version | Date | Type), newest-first BY DATE
 #   2. Releases               — frozen N.N.N pages, newest-first
 #   3. Release candidates     — RC pages whose release is not yet frozen
 #   4. Unreleased             — the develop rolling page
@@ -49,20 +49,36 @@ anchor() { printf 'v-%s' "$(printf '%s' "$1" | sed 's/[^A-Za-z0-9]/-/g')"; }
   echo
 
   # ---- summary table (Version links to that version's section) ----
+  #
+  # Sorted newest-first BY DATE across every kind -- emitting releases, then RCs,
+  # then develop would bury a fresh develop build under an older release. Rows are
+  # collected as "date|version|type" and reverse-sorted on the date. The sort is
+  # STABLE, so same-day rows keep release > rc > develop order; undated pages get a
+  # sentinel date so they sort last and render as an em dash.
+  # (The sections below stay grouped -- only this table is chronological.)
+  tbl=$(mktemp)
+  {
+    printf '%s\n' "$frozen" | while IFS= read -r v; do
+      [ -n "$v" ] || continue
+      printf '%s|%s|release\n' "$(pdate "${vdir}/${v}.md")" "$v"
+    done
+    printf '%s\n' "$inprogress" | while IFS= read -r v; do
+      [ -n "$v" ] || continue
+      printf '%s|%s|release candidate\n' "$(pdate "${vdir}/${v}.md")" "$v"
+    done
+    if [ -f "${vdir}/unreleased.md" ]; then
+      printf '%s|%s|develop\n' "$(pdate "${vdir}/unreleased.md")" "$(uver "${vdir}/unreleased.md")"
+    fi
+  } | sed 's/^|/0000-00-00|/' > "$tbl"
+
   echo "| Version | Date | Type |"
   echo "| --- | --- | --- |"
-  printf '%s\n' "$frozen" | while IFS= read -r v; do
+  sort -s -t'|' -k1,1r "$tbl" | while IFS='|' read -r d v t; do
     [ -n "$v" ] || continue
-    echo "| [\`$v\`](#$(anchor "$v")) | $(pdate "${vdir}/${v}.md") | release |"
+    [ "$d" = "0000-00-00" ] && d="—"
+    echo "| [\`$v\`](#$(anchor "$v")) | $d | $t |"
   done
-  printf '%s\n' "$inprogress" | while IFS= read -r v; do
-    [ -n "$v" ] || continue
-    echo "| [\`$v\`](#$(anchor "$v")) | $(pdate "${vdir}/${v}.md") | release candidate |"
-  done
-  if [ -f "${vdir}/unreleased.md" ]; then
-    uv=$(uver "${vdir}/unreleased.md")
-    echo "| [\`$uv\`](#$(anchor "$uv")) | $(pdate "${vdir}/unreleased.md") | develop |"
-  fi
+  rm -f "$tbl"
   echo
 
   # ---- Releases (newest first) ----
