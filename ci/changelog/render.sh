@@ -122,5 +122,5 @@ case "$MODE" in
     ;;
 esac
 
-PAGES_DIR="$PAGES_DIR" REPO="$REPO" bash "$HERE/render-aggregate.sh"
+PAGES_DIR="$PAGES_DIR" REPO="$REPO" KEEP="$KEEP" bash "$HERE/render-aggregate.sh"
 echo "wrote ${repo_dir}/CHANGELOG.md (${MODE} ${VERSION})"

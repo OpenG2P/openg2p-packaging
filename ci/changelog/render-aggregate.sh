@@ -17,6 +17,7 @@ set -euo pipefail
 
 repo_dir="${PAGES_DIR}/${REPO}"
 vdir="${repo_dir}/versions"
+KEEP="${KEEP:-3}"
 [ -d "$vdir" ] || { echo "no versions/ for ${REPO}"; exit 0; }
 
 list_versions() { ls "$vdir" 2>/dev/null | sed 's/\.md$//'; }
@@ -91,4 +92,15 @@ section() {  # $1 = heading  $2 = newline list of versions
   section "Releases" "$frozen"
   section "Release candidates (in progress)" "$inprogress"
   section "Develop builds" "$develop"
+
+  # ---- retention footnote: make it clear what is (and isn't) listed ----
+  echo "---"
+  echo
+  echo "> **What's shown here.** This catalogue lists **every stable release**, plus"
+  echo "> the **latest ${KEEP} develop builds** and the **latest ${KEEP} release"
+  echo "> candidates** per release line. Older develop builds and release candidates"
+  echo "> are pruned as they are superseded, and a release's candidates are removed"
+  echo "> once it ships. Those versions still exist in the container and Helm"
+  echo "> registries — they are simply not listed here. This page is generated"
+  echo "> automatically from commit history; do not edit it by hand."
 } > "${repo_dir}/CHANGELOG.md"
