@@ -56,7 +56,10 @@ section() {  # $1 = heading  $2 = newline list of versions
 }
 
 {
-  echo "# ${REPO} changelog"
+  # Display name keeps subgroup slashes (spar/spar) from .meta; folder key is flat.
+  disp=$(grep -m1 '^name=' "${repo_dir}/.meta" 2>/dev/null | sed 's/^name=//' || true)
+  [ -n "$disp" ] || disp="$REPO"
+  echo "# ${disp} changelog"
   echo
   echo "_Published automatically._"
   echo

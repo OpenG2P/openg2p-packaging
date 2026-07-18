@@ -270,5 +270,24 @@ contains "generic intro still elaborate" "$idx3" "Helm package"
 rm -rf "$mp"
 
 echo
+echo "subgrouped project keeps its path (spar/spar) in the display, folder stays flat"
+sg=$(mktemp -d); Psg=$(mktemp -d)
+git -C "$sg" init -q -b develop; git -C "$sg" config user.email t@t; git -C "$sg" config user.name t
+git -C "$sg" commit -q --allow-empty -m "G2P-60 initial"
+( cd "$sg" && REPO=spar-spar REPO_DISPLAY=spar/spar VERSION=0.0.0-develop.2 FROZEN=false \
+    REVISION=$(git rev-parse HEAD) PAGES_DIR="$Psg" SKIP_AI=true DATE=2026-07-18 \
+    bash "$HERE/run.sh" >/dev/null )
+check "folder key stays flat (spar-spar)" yes "$([ -d "$Psg/spar-spar" ] && echo yes || echo no)"
+sgp=$(cat "$Psg/spar-spar/versions/0.0.0-develop.2.md")
+contains "page heading shows spar/spar"   "$sgp" "spar/spar — develop"
+excludes "page heading not flattened"     "$sgp" "spar-spar — develop"
+sga=$(cat "$Psg/spar-spar/CHANGELOG.md")
+contains "aggregate title shows spar/spar" "$sga" "# spar/spar changelog"
+sgi=$(cat "$Psg/index.md")
+contains "index label shows spar/spar"     "$sgi" "[spar/spar](./spar-spar/CHANGELOG"
+excludes "index label not flattened"       "$sgi" "[spar-spar]"
+rm -rf "$sg" "$Psg"
+
+echo
 echo "$pass passed, $fail failed"
 [ "$fail" -eq 0 ]

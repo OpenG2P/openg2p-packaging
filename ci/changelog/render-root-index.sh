@@ -72,10 +72,11 @@ fi
     printf '%s\n' "$repos" | while IFS= read -r r; do
       [ -n "$r" ] || continue
       url=$(meta_get "$r" repo)
+      disp=$(meta_get "$r" name); [ -n "$disp" ] || disp="$r"   # keep subgroup slashes
       if [ -n "$url" ]; then
-        echo "- **[${r}](./${r}/CHANGELOG${link_suffix})** · [repository ↗](${url})"
+        echo "- **[${disp}](./${r}/CHANGELOG${link_suffix})** · [repository ↗](${url})"
       else
-        echo "- **[${r}](./${r}/CHANGELOG${link_suffix})**"
+        echo "- **[${disp}](./${r}/CHANGELOG${link_suffix})**"
       fi
     done
   fi

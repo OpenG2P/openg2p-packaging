@@ -26,16 +26,19 @@ trap 'rm -rf "$work"' EXIT
 
 out() { [ -n "${GITHUB_OUTPUT:-}" ] && printf '%s=%s\n' "$1" "$2" >>"$GITHUB_OUTPUT"; printf '%s=%s\n' "$1" "$2"; }
 
-# Record this repo's links for the site (source repo + container registry). The
-# folder name can't be reverse-mapped to a repo path once subgroups flatten it, so
-# the URLs are stored here and read back by render-aggregate / render-root-index.
-if [ -n "${REPO_URL:-}" ] || [ -n "${IMAGES_URL:-}" ]; then
-  mkdir -p "${PAGES_DIR}/${REPO}"
-  {
-    [ -n "${REPO_URL:-}" ]   && echo "repo=${REPO_URL}"
-    [ -n "${IMAGES_URL:-}" ] && echo "images=${IMAGES_URL}"
-  } > "${PAGES_DIR}/${REPO}/.meta"
-fi
+# Record this repo's display name + links for the site. REPO is the FLAT folder key
+# (filesystem/URL safe); REPO_DISPLAY keeps the subgroup path so a project at
+# spar/spar shows as "spar/spar", not the flattened "spar-spar" (which reads like a
+# literal repo name). The folder can't be reverse-mapped to a path once flattened,
+# so both name and URLs are stored here and read back by render-aggregate /
+# render-root-index. Defaults to REPO on forges without subgroups (GitHub).
+REPO_DISPLAY="${REPO_DISPLAY:-$REPO}"
+mkdir -p "${PAGES_DIR}/${REPO}"
+{
+  echo "name=${REPO_DISPLAY}"
+  [ -n "${REPO_URL:-}" ]   && echo "repo=${REPO_URL}"
+  [ -n "${IMAGES_URL:-}" ] && echo "images=${IMAGES_URL}"
+} > "${PAGES_DIR}/${REPO}/.meta"
 
 summarise_into() {   # $1 = notes file, $2 = summary out file; uses $DIGEST_FILE; sets SUMMARY_OK
   SUMMARY_OK=false
@@ -210,7 +213,7 @@ if [ "${FROZEN:-false}" = true ] \
   grep -q '[^[:space:]]' "$work/relnotes.md" 2>/dev/null && RELEASE_NOTES_FILE="$work/relnotes.md"
 fi
 
-PAGES_DIR="$PAGES_DIR" REPO="$REPO" VERSION="$VERSION" REVISION="$REVISION" TS="$TS" \
+PAGES_DIR="$PAGES_DIR" REPO="$REPO" REPO_DISPLAY="$REPO_DISPLAY" VERSION="$VERSION" REVISION="$REVISION" TS="$TS" \
   PREV_VERSION="$PREV_VERSION" DATE="$DATE" MODE="$MODE" \
   NOTES_FILE="$work/notes.md" SUMMARY_FILE="$work/summary.md" SUMMARY_OK="$SUMMARY_OK" \
   INCR_NOTES_FILE="$INCR_NOTES_FILE" PREV_BUILD="$PREV_BUILD" \

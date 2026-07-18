@@ -10,7 +10,7 @@
 #                            release N.N.N is published (the release supersedes them)
 #   develop  0.0.0-develop.N durable, last KEEP kept (was a single rolling page)
 #
-#   env: PAGES_DIR REPO VERSION REVISION PREV_VERSION DATE TS MODE(frozen|rc|develop)
+#   env: PAGES_DIR REPO REPO_DISPLAY VERSION REVISION PREV_VERSION DATE TS MODE(…)
 #        NOTES_FILE            cumulative notes since PREV_VERSION (last release)
 #        SUMMARY_FILE SUMMARY_OK
 #        RELEASE_NOTES_FILE    (frozen only) annotated-tag message -> "Release notes"
@@ -33,6 +33,9 @@ KEEP="${KEEP:-3}"
 
 short_rev=$(printf '%s' "${REVISION:-}" | cut -c1-7)
 marker="<!-- build:${VERSION} revision:${REVISION} ts:${TS:-0} -->"
+# Display name in headings keeps subgroup slashes (spar/spar); REPO stays the flat
+# folder key used for paths. Falls back to the folder key on forges without subgroups.
+disp="${REPO_DISPLAY:-$REPO}"
 
 if [ "${SUMMARY_OK:-false}" = true ] && [ -s "${SUMMARY_FILE:-/dev/null}" ]; then
   summary=$(bash "$HERE/linkify.sh" <"$SUMMARY_FILE")
@@ -92,7 +95,7 @@ two_diff_body() {   # $1 = heading line
 case "$MODE" in
   frozen)
     {
-      echo "## ${REPO} ${VERSION} — ${DATE}"
+      echo "## ${disp} ${VERSION} — ${DATE}"
       echo
       echo "${marker}"
       echo
@@ -119,11 +122,11 @@ case "$MODE" in
     rm -f "${vdir}/${VERSION}-rc."*.md
     ;;
   rc)
-    two_diff_body "${REPO} ${VERSION} — ${DATE}" > "${vdir}/${VERSION}.md"
+    two_diff_body "${disp} ${VERSION} — ${DATE}" > "${vdir}/${VERSION}.md"
     prune "${VERSION%-rc.*}-rc"        # keep the last KEEP RCs of this release line
     ;;
   *)  # develop build (MODE=develop): durable per-N page, last KEEP kept
-    two_diff_body "${REPO} — develop ${VERSION} (${DATE})" > "${vdir}/${VERSION}.md"
+    two_diff_body "${disp} — develop ${VERSION} (${DATE})" > "${vdir}/${VERSION}.md"
     rm -f "${vdir}/unreleased.md"      # retire the legacy single rolling page
     prune "0.0.0-develop"
     ;;
