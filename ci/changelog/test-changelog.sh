@@ -47,7 +47,7 @@ build() { # $1 = version
 echo
 echo "develop build #1 (first since release 1.0.0)"
 build 0.0.0-develop.3
-u=$(cat "$PAGES/demo/versions/unreleased.md")
+u=$(cat "$PAGES/demo/versions/0.0.0-develop.3.md")
 contains "baseline names release"   "$u" "baseline: release 1.0.0"
 contains "since-last-release header" "$u" "Since last release (1.0.0)"
 contains "lists the commit"          "$u" "signed JWTs"
@@ -59,7 +59,7 @@ echo
 echo "develop build #2 (adds one commit)"
 commit "G2P-4 Add JWKS rotation endpoint"
 build 0.0.0-develop.4
-u2=$(cat "$PAGES/demo/versions/unreleased.md")
+u2=$(cat "$PAGES/demo/versions/0.0.0-develop.4.md")
 contains "incremental section present" "$u2" "New in this build (since 0.0.0-develop.3)"
 contains "marker advanced"             "$u2" "<!-- build:0.0.0-develop.4 revision:"
 # the incremental section should contain the new commit, not the older one
@@ -99,8 +99,8 @@ git -C "$REPO_DIR" tag 1.0.1
     PAGES_DIR="$PAGES" SKIP_AI=true DATE=2026-07-13 bash "$HERE/run.sh" >/dev/null )
 [ -f "$PAGES/demo/versions/1.0.1.md" ] && v=yes || v=no
 check "frozen page written"        yes "$v"
-[ -f "$PAGES/demo/versions/unreleased.md" ] && u3=yes || u3=no
-check "unreleased NOT wiped by a release" yes "$u3"   # develop's page self-heals on its next build
+[ -f "$PAGES/demo/versions/0.0.0-develop.4.md" ] && u3=yes || u3=no
+check "develop pages preserved by a release" yes "$u3"   # kept even when tagged on develop
 rel=$(cat "$PAGES/demo/versions/1.0.1.md")
 contains "release labels baseline" "$rel" "changes since release 1.0.0"
 agg=$(cat "$PAGES/demo/CHANGELOG.md")
@@ -121,7 +121,7 @@ git -C "$solo" commit -q --allow-empty -m "G2P-7 after old release"
 P2=$(mktemp -d)
 ( cd "$solo" && REPO=demo2 VERSION=0.0.0-develop.2 FROZEN=false REVISION=$(git rev-parse HEAD) \
     PAGES_DIR="$P2" SKIP_AI=true DATE=2026-07-13 bash "$HERE/run.sh" >/dev/null )
-contains "baselines against v2.3.0"  "$(cat "$P2/demo2/versions/unreleased.md")" "Since last release (v2.3.0)"
+contains "baselines against v2.3.0"  "$(cat "$P2/demo2/versions/0.0.0-develop.2.md")" "Since last release (v2.3.0)"
 rm -rf "$solo" "$P2"
 
 echo
@@ -136,7 +136,7 @@ git -C "$dv" commit -q --allow-empty -m "G2P-91 develop-only work A"
 git -C "$dv" commit -q --allow-empty -m "G2P-92 develop-only work B"
 ( cd "$dv" && REPO=dv VERSION=0.0.0-develop.3 FROZEN=false REVISION=$(git rev-parse HEAD) \
     PAGES_DIR="$Pd" SKIP_AI=true DATE=2026-07-13 bash "$HERE/run.sh" >/dev/null )
-dvu=$(cat "$Pd/dv/versions/unreleased.md")
+dvu=$(cat "$Pd/dv/versions/0.0.0-develop.3.md")
 contains "diverged: baselines at v1.2.1"     "$dvu" "Since last release (v1.2.1)"
 contains "diverged: lists develop-only work" "$dvu" "develop-only work B"
 excludes "diverged: excludes shared base"    "$dvu" "shared base"
@@ -150,20 +150,54 @@ excludes "diverged frozen: not first release" "$(cat "$Pd/dv/versions/2.0.0.md")
 rm -rf "$dv" "$Pd"
 
 echo
-echo "a release ON the default branch clears develop's stale Unreleased page"
-cl=$(mktemp -d); Pc=$(mktemp -d)
-git -C "$cl" init -q -b develop; git -C "$cl" config user.email t@t; git -C "$cl" config user.name t
-git -C "$cl" commit -q --allow-empty -m "G2P-1 base"; git -C "$cl" tag v1.0.0
-git -C "$cl" commit -q --allow-empty -m "G2P-2 develop work"
-git -C "$cl" update-ref refs/remotes/origin/develop HEAD   # simulate the remote branch
-( cd "$cl" && REPO=cl VERSION=0.0.0-develop.2 FROZEN=false REVISION=$(git rev-parse HEAD) \
-    PAGES_DIR="$Pc" SKIP_AI=true DATE=2026-07-13 bash "$HERE/run.sh" >/dev/null )
-check "develop build created Unreleased" yes "$([ -f "$Pc/cl/versions/unreleased.md" ] && echo yes || echo no)"
-git -C "$cl" tag 2.0.0   # tagged on develop's tip
-( cd "$cl" && REPO=cl VERSION=2.0.0 FROZEN=true REVISION=$(git rev-parse HEAD) \
-    PAGES_DIR="$Pc" SKIP_AI=true DATE=2026-07-13 DEFAULT_BRANCH=develop bash "$HERE/run.sh" >/dev/null )
-check "release on develop cleared Unreleased" no "$([ -f "$Pc/cl/versions/unreleased.md" ] && echo yes || echo no)"
-rm -rf "$cl" "$Pc"
+echo "retention: develop keeps the last 3 (KEEP); older ones pruned"
+rd=$(mktemp -d); Pr=$(mktemp -d)
+git -C "$rd" init -q -b develop; git -C "$rd" config user.email t@t; git -C "$rd" config user.name t
+git -C "$rd" commit -q --allow-empty -m base; git -C "$rd" tag 1.0.0
+rbuild() { ( cd "$rd" && REPO=rd VERSION="$1" FROZEN="${2:-false}" REVISION=$(git rev-parse HEAD) \
+    PAGES_DIR="$Pr" SKIP_AI=true DATE=2026-07-13 bash "$HERE/run.sh" >/dev/null ); }
+present() { [ -f "$Pr/rd/versions/$1.md" ] && echo yes || echo no; }
+for n in 10 11 12 13 14; do git -C "$rd" commit -q --allow-empty -m "G2P-$n dev $n"; rbuild "0.0.0-develop.$n"; done
+check "develop.14 kept"  yes "$(present 0.0.0-develop.14)"
+check "develop.12 kept"  yes "$(present 0.0.0-develop.12)"
+check "develop.11 pruned" no "$(present 0.0.0-develop.11)"
+check "develop.10 pruned" no "$(present 0.0.0-develop.10)"
+agg=$(cat "$Pr/rd/CHANGELOG.md")
+contains "has Develop builds section" "$agg" "# Develop builds"
+excludes "table drops pruned develop" "$agg" "0.0.0-develop.10"
+
+echo
+echo "retention: RCs keep last 3 per line; a release deletes that line's RCs"
+git -C "$rd" checkout -q -b 2.0
+for n in 20 21 22 23 24; do git -C "$rd" commit -q --allow-empty -m "G2P-$n rc $n"; rbuild "2.0.0-rc.$n"; done
+check "rc.24 kept"   yes "$(present 2.0.0-rc.24)"
+check "rc.22 kept"   yes "$(present 2.0.0-rc.22)"
+check "rc.21 pruned"  no "$(present 2.0.0-rc.21)"
+git -C "$rd" tag 2.0.0
+rbuild 2.0.0 true
+check "release 2.0.0 written"     yes "$(present 2.0.0)"
+check "rc.24 deleted by release"   no "$(present 2.0.0-rc.24)"
+check "rc.22 deleted by release"   no "$(present 2.0.0-rc.22)"
+excludes "table has no RCs after release" "$(cat "$Pr/rd/CHANGELOG.md")" "2.0.0-rc."
+rm -rf "$rd" "$Pr"
+
+echo
+echo "summary table sorts by datetime (a same-day release below a newer develop build)"
+sd=$(mktemp -d); Ps=$(mktemp -d)
+git -C "$sd" init -q -b develop; git -C "$sd" config user.email t@t; git -C "$sd" config user.name t
+git -C "$sd" commit -q --allow-empty -m base
+GIT_COMMITTER_DATE="2026-08-01T08:00:00" GIT_AUTHOR_DATE="2026-08-01T08:00:00" \
+  git -C "$sd" commit -q --allow-empty -m "G2P-50 release commit (early)"
+git -C "$sd" tag 3.0.0
+( cd "$sd" && REPO=sd VERSION=3.0.0 FROZEN=true REVISION=$(git rev-parse HEAD) \
+    PAGES_DIR="$Ps" SKIP_AI=true DATE=2026-08-01 bash "$HERE/run.sh" >/dev/null )
+GIT_COMMITTER_DATE="2026-08-01T15:00:00" GIT_AUTHOR_DATE="2026-08-01T15:00:00" \
+  git -C "$sd" commit -q --allow-empty -m "G2P-51 develop commit (later, same day)"
+( cd "$sd" && REPO=sd VERSION=0.0.0-develop.4 FROZEN=false REVISION=$(git rev-parse HEAD) \
+    PAGES_DIR="$Ps" SKIP_AI=true DATE=2026-08-01 bash "$HERE/run.sh" >/dev/null )
+first_row=$(awk '/^\| \[/{print; exit}' "$Ps/sd/CHANGELOG.md")
+contains "newest-by-time row is the later develop build" "$first_row" "0.0.0-develop.4"
+rm -rf "$sd" "$Ps"
 
 echo
 echo "structural digest (git-derived, bounded)"

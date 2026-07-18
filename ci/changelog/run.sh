@@ -123,26 +123,33 @@ RANGE_FROM="$FROM" RANGE_TO=HEAD bash "$HERE/digest.sh" >"$work/digest.md" 2>/de
 summarise_into "$work/notes.md" "$work/summary.md"
 
 # MODE decides the page shape:
-#   frozen     -> durable versions/<version>.md, cumulative-only (a release)
-#   rc         -> durable versions/<version>.md, two diffs (release candidate —
-#                 each RC build is kept so you can see what changed rc-to-rc)
-#   unreleased -> rolling versions/unreleased.md, two diffs (develop stream)
+#   frozen   -> durable versions/<version>.md, cumulative-only (a release)
+#   rc       -> durable versions/<version>.md, two diffs (release candidate — last
+#               few RC builds kept so you can see what changed rc-to-rc)
+#   develop  -> durable versions/0.0.0-develop.N.md, two diffs (last few kept)
 if [ "${FROZEN:-false}" = true ]; then
   MODE=frozen
 elif printf '%s' "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+-rc\.[0-9]+$'; then
   MODE=rc
 else
-  MODE=unreleased
+  MODE=develop
 fi
 
-# The incremental "new in this build" diff needs the PREVIOUS build's commit,
-# read from a hidden marker. For develop that marker is in the current
-# unreleased.md; for an RC it's in the previous RC's durable page.
+# The incremental "new in this build" diff needs the PREVIOUS build's commit, read
+# from a hidden marker. For develop it's the newest existing develop page; for an
+# RC it's the previous RC of the same release line.
 PREV_BUILD=""
 INCR_NOTES_FILE=""
 prev_page=""
-if [ "$MODE" = unreleased ]; then
-  [ -f "${PAGES_DIR}/${REPO}/versions/unreleased.md" ] && prev_page="${PAGES_DIR}/${REPO}/versions/unreleased.md"
+if [ "$MODE" = develop ]; then
+  cur="${VERSION##*.}"               # N in 0.0.0-develop.N
+  best=-1
+  for f in "${PAGES_DIR}/${REPO}/versions/0.0.0-develop."*.md; do
+    [ -e "$f" ] || continue
+    m=$(basename "$f" .md); m="${m##*.}"
+    case "$m" in ''|*[!0-9]*) continue ;; esac
+    if [ "$m" -lt "$cur" ] && [ "$m" -gt "$best" ]; then best="$m"; prev_page="$f"; fi
+  done
 elif [ "$MODE" = rc ]; then
   target="${VERSION%-rc.*}"          # 1.0.0
   cur="${VERSION##*-rc.}"            # 19
@@ -154,17 +161,13 @@ elif [ "$MODE" = rc ]; then
     if [ "$m" -lt "$cur" ] && [ "$m" -gt "$best" ]; then best="$m"; prev_page="$f"; fi
   done
 fi
-# Should a frozen release clear develop's rolling page? Only if this release is
-# reachable from the default branch (tagged on develop or merged in). Needs the
-# default branch fetched (fetch-depth: 0 provides origin/<default>).
-CLEAR_UNRELEASED=false
-if [ "$MODE" = frozen ] && [ -n "${DEFAULT_BRANCH:-}" ] \
-   && git merge-base --is-ancestor HEAD "origin/${DEFAULT_BRANCH}" 2>/dev/null; then
-  CLEAR_UNRELEASED=true
-fi
+
+# Commit time (epoch) -> the aggregate sorts the summary table by this, so versions
+# published the same day still order correctly. Reproducible from the revision.
+TS=$(git show -s --format=%ct "$REVISION" 2>/dev/null || echo 0)
 
 if [ -n "$prev_page" ]; then
-  marker=$(grep -oE '<!-- build:[^ ]+ revision:[0-9a-f]+ -->' "$prev_page" | head -1 || true)
+  marker=$(grep -oE '<!-- build:[^ ]+ revision:[0-9a-f]+( ts:[0-9]+)? -->' "$prev_page" | head -1 || true)
   if [ -n "$marker" ]; then
     PREV_BUILD=$(printf '%s' "$marker" | sed -E 's/.*build:([^ ]+) revision:.*/\1/')
     prev_rev=$(printf '%s' "$marker" | sed -E 's/.*revision:([0-9a-f]+).*/\1/')
@@ -177,11 +180,10 @@ if [ -n "$prev_page" ]; then
   fi
 fi
 
-PAGES_DIR="$PAGES_DIR" REPO="$REPO" VERSION="$VERSION" REVISION="$REVISION" \
+PAGES_DIR="$PAGES_DIR" REPO="$REPO" VERSION="$VERSION" REVISION="$REVISION" TS="$TS" \
   PREV_VERSION="$PREV_VERSION" DATE="$DATE" MODE="$MODE" \
   NOTES_FILE="$work/notes.md" SUMMARY_FILE="$work/summary.md" SUMMARY_OK="$SUMMARY_OK" \
   INCR_NOTES_FILE="$INCR_NOTES_FILE" PREV_BUILD="$PREV_BUILD" \
-  CLEAR_UNRELEASED="$CLEAR_UNRELEASED" \
   bash "$HERE/render.sh"
 
 PAGES_DIR="$PAGES_DIR" bash "$HERE/render-root-index.sh"

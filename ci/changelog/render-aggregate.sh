@@ -2,15 +2,14 @@
 #
 # Regenerate a repo's aggregate CHANGELOG.md from its per-version pages.
 # Wholesale rebuild (never appended), so parallel branches cannot make it
-# diverge. Layout:
+# diverge, and pruned pages drop off automatically. Layout:
 #
-#   1. a summary TABLE of every version (Version | Date | Type), newest-first BY DATE
-#   2. Releases               — frozen N.N.N pages, newest-first
-#   3. Release candidates     — RC pages whose release is not yet frozen
-#   4. Unreleased             — the develop rolling page
-#
-# Releases are shown first so the latest release is the most prominent thing on
-# the page; the develop stream sits at the bottom.
+#   1. a summary TABLE of every kept version (Version | Date | Type), newest-first
+#      BY COMMIT TIME (the `ts` marker) so versions published the same day still
+#      order correctly
+#   2. Releases            — N.N.N pages (all kept), newest-first
+#   3. Release candidates  — RC pages whose release is not yet published (last few)
+#   4. Develop builds      — 0.0.0-develop.N pages (last few)
 #
 #   env: PAGES_DIR REPO
 
@@ -23,12 +22,13 @@ vdir="${repo_dir}/versions"
 list_versions() { ls "$vdir" 2>/dev/null | sed 's/\.md$//'; }
 
 frozen=$(list_versions | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -rV || true)
+develop=$(list_versions | grep -E '^0\.0\.0-develop\.[0-9]+$' | sort -t. -k4,4rn || true)
 
 rcs_all=$(list_versions | grep -E '^[0-9]+\.[0-9]+\.[0-9]+-rc\.[0-9]+$' || true)
 inprogress=""
 while IFS= read -r v; do
   [ -n "$v" ] || continue
-  [ -f "${vdir}/${v%-rc.*}.md" ] && continue     # released -> keep file, hide here
+  [ -f "${vdir}/${v%-rc.*}.md" ] && continue     # released -> hidden (also deleted at release)
   inprogress="${inprogress}${v}"$'\n'
 done <<EOF
 $rcs_all
@@ -37,10 +37,22 @@ inprogress=$(printf '%s' "$inprogress" | sed '/^$/d' | sort -rV || true)
 
 # A YYYY-MM-DD from a page's heading, or em dash.
 pdate() { grep -m1 '^## ' "$1" 2>/dev/null | grep -oE '20[0-9]{2}-[0-9]{2}-[0-9]{2}' | head -1; }
-# The develop version string out of "Unreleased (<version>, <date>)".
-uver()  { grep -m1 '^## ' "$1" 2>/dev/null | sed -n 's/.*Unreleased (\([^,]*\),.*/\1/p'; }
+# The commit-time epoch embedded in the page's marker (sort key).
+pts()   { grep -m1 -oE 'ts:[0-9]+' "$1" 2>/dev/null | sed 's/^ts://'; }
 # A stable HTML-anchor id for a version (so the table can link to its section).
 anchor() { printf 'v-%s' "$(printf '%s' "$1" | sed 's/[^A-Za-z0-9]/-/g')"; }
+
+# Print one section: an anchored dump of each version's page.
+section() {  # $1 = heading  $2 = newline list of versions
+  [ -n "$2" ] || return 0
+  echo "# $1"; echo
+  printf '%s\n' "$2" | while IFS= read -r v; do
+    [ -n "$v" ] || continue
+    echo "<a id=\"$(anchor "$v")\"></a>"
+    echo
+    cat "${vdir}/${v}.md"; echo
+  done
+}
 
 {
   echo "# ${REPO} changelog"
@@ -48,68 +60,35 @@ anchor() { printf 'v-%s' "$(printf '%s' "$1" | sed 's/[^A-Za-z0-9]/-/g')"; }
   echo "_Published automatically._"
   echo
 
-  # ---- summary table (Version links to that version's section) ----
-  #
-  # Sorted newest-first BY DATE across every kind -- emitting releases, then RCs,
-  # then develop would bury a fresh develop build under an older release. Rows are
-  # collected as "date|version|type" and reverse-sorted on the date. The sort is
-  # STABLE, so same-day rows keep release > rc > develop order; undated pages get a
-  # sentinel date so they sort last and render as an em dash.
-  # (The sections below stay grouped -- only this table is chronological.)
+  # ---- summary table, newest-first by commit time (ts) across ALL kinds ----
+  # Emitting releases, then RCs, then develop would bury a fresh develop build
+  # under an older release; rows are collected as "ts|date|version|type" and
+  # reverse-sorted on ts. Stable, so same-ts rows keep release > rc > develop.
   tbl=$(mktemp)
+  emit() {  # $1 = version list  $2 = type label
+    printf '%s\n' "$1" | while IFS= read -r v; do
+      [ -n "$v" ] || continue
+      f="${vdir}/${v}.md"
+      printf '%s|%s|%s|%s\n' "$(pts "$f")" "$(pdate "$f")" "$v" "$2"
+    done
+  }
   {
-    printf '%s\n' "$frozen" | while IFS= read -r v; do
-      [ -n "$v" ] || continue
-      printf '%s|%s|release\n' "$(pdate "${vdir}/${v}.md")" "$v"
-    done
-    printf '%s\n' "$inprogress" | while IFS= read -r v; do
-      [ -n "$v" ] || continue
-      printf '%s|%s|release candidate\n' "$(pdate "${vdir}/${v}.md")" "$v"
-    done
-    if [ -f "${vdir}/unreleased.md" ]; then
-      printf '%s|%s|develop\n' "$(pdate "${vdir}/unreleased.md")" "$(uver "${vdir}/unreleased.md")"
-    fi
-  } | sed 's/^|/0000-00-00|/' > "$tbl"
+    emit "$frozen"     "release"
+    emit "$inprogress" "release candidate"
+    emit "$develop"    "develop"
+  } | sed 's/^|/0|/' > "$tbl"     # missing ts -> 0, so it sorts last
 
   echo "| Version | Date | Type |"
   echo "| --- | --- | --- |"
-  sort -s -t'|' -k1,1r "$tbl" | while IFS='|' read -r d v t; do
+  sort -s -t'|' -k1,1rn "$tbl" | while IFS='|' read -r ts d v t; do
     [ -n "$v" ] || continue
-    [ "$d" = "0000-00-00" ] && d="—"
+    [ -n "$d" ] || d="—"
     echo "| [\`$v\`](#$(anchor "$v")) | $d | $t |"
   done
   rm -f "$tbl"
   echo
 
-  # ---- Releases (newest first) ----
-  if [ -n "$frozen" ]; then
-    echo "# Releases"
-    echo
-    printf '%s\n' "$frozen" | while IFS= read -r v; do
-      [ -n "$v" ] || continue
-      echo "<a id=\"$(anchor "$v")\"></a>"
-      echo
-      cat "${vdir}/${v}.md"; echo
-    done
-  fi
-
-  # ---- Release candidates in progress ----
-  if [ -n "$inprogress" ]; then
-    echo "# Release candidates (in progress)"
-    echo
-    printf '%s\n' "$inprogress" | while IFS= read -r v; do
-      [ -n "$v" ] || continue
-      echo "<a id=\"$(anchor "$v")\"></a>"
-      echo
-      cat "${vdir}/${v}.md"; echo
-    done
-  fi
-
-  # ---- Unreleased (develop) ----
-  if [ -f "${vdir}/unreleased.md" ]; then
-    echo "<a id=\"$(anchor "$(uver "${vdir}/unreleased.md")")\"></a>"
-    echo
-    cat "${vdir}/unreleased.md"
-    echo
-  fi
+  section "Releases" "$frozen"
+  section "Release candidates (in progress)" "$inprogress"
+  section "Develop builds" "$develop"
 } > "${repo_dir}/CHANGELOG.md"
