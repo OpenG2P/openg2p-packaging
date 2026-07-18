@@ -5,19 +5,28 @@
 # automatically and removed ones drop off.
 #
 #   env: PAGES_DIR
-#        ROOT_INDEX_FILE  landing filename (default index.md for GitHub Pages;
-#                         README.md for GitLab, so it renders as the repo home)
-#        LINK_SUFFIX      appended to cross-file links ('' for GitHub Pages;
-#                         '.md' for GitLab's plain file browser)
-#        PLAIN_MD         true => plain-markdown repo browsing (GitLab): a real H1
-#                         title, no Jekyll front matter, and no _config.yml (the
-#                         GitHub-Pages index.md/_config.yml are also cleaned up)
+#        ROOT_INDEX_FILE   landing filename (default index.md for GitHub Pages;
+#                          README.md for GitLab, so it renders as the repo home)
+#        LINK_SUFFIX       appended to cross-file links ('' for GitHub Pages;
+#                          '.md' for GitLab's plain file browser)
+#        PLAIN_MD          true => plain-markdown repo browsing (GitLab): a real H1
+#                          title, no Jekyll front matter, and no _config.yml
+#        HELM_REGISTRY_URL if set, the intro links the browsable Helm package
+#                          registry and mentions per-repo Container Registries
+#        DOCS_URL          versioning & CI docs (has a default)
+#
+# Each repo's clickable "repository" link comes from PAGES_DIR/<repo>/.meta
+# (written by the changelog run) -- the repo path can't be reconstructed from the
+# flattened folder name once subgroups exist, so it is stored, not guessed.
 
 set -euo pipefail
 
 index_file="${ROOT_INDEX_FILE:-index.md}"
 link_suffix="${LINK_SUFFIX:-}"
 plain="${PLAIN_MD:-false}"
+docs_url="${DOCS_URL:-https://docs.openg2p.org/operations/deployment/helm-docker-versioning-and-ci}"
+
+meta_get() { grep -m1 "^${2}=" "${PAGES_DIR}/${1}/.meta" 2>/dev/null | sed "s/^${2}=//" || true; }
 
 repos=""
 for d in "$PAGES_DIR"/*/; do
@@ -26,8 +35,7 @@ for d in "$PAGES_DIR"/*/; do
 done
 repos=$(printf '%s' "$repos" | sed '/^$/d' | sort)
 
-# Site config: sets the header title (otherwise Jekyll uses the repo name). Only
-# for the GitHub Pages site -- not written for plain-markdown (GitLab) browsing.
+# Jekyll site config (GitHub Pages only; not for plain-markdown GitLab browsing).
 if [ "$plain" != true ]; then
   cat > "$PAGES_DIR/_config.yml" <<'YAML'
 theme: jekyll-theme-primer
@@ -38,27 +46,37 @@ fi
 
 {
   if [ "$plain" = true ]; then
-    # Plain markdown (GitLab): a real H1 -- there is no Jekyll theme header.
     echo "# OpenG2P Versions & Change logs"
   else
-    # Empty front matter still makes Jekyll render this as index.html at "/".
-    # No page H1 -- the theme header already shows the site title above.
     echo "---"
     echo "---"
   fi
   echo
-  echo "Version history and change logs, one page per repository. See the"
-  echo "[versioning & CI docs](https://docs.openg2p.org/operations/deployment/helm-docker-versioning-and-ci)"
-  echo "for how these are produced."
+  echo "This site presents the **published versions and change logs of every OpenG2P"
+  echo "module and service**, produced automatically as part of the CI pipeline. Each"
+  echo "entry below is a **Helm package**; its Helm chart version and the Docker image"
+  echo "versions it references are **locked together** — one immutable version per commit."
+  echo
+  if [ -n "${HELM_REGISTRY_URL:-}" ]; then
+    echo "Browse all charts in the **[Helm package registry](${HELM_REGISTRY_URL})**."
+    echo "The Docker images for each service live in that repository's **Container"
+    echo "Registry** (linked at the top of each repository's page below). See the"
+    echo "**[versioning & CI docs](${docs_url})** for how these are produced."
+  else
+    echo "See the **[versioning & CI docs](${docs_url})** for how these are produced."
+  fi
   echo
   if [ -z "$repos" ]; then
     echo "_No changelogs published yet._"
   else
     printf '%s\n' "$repos" | while IFS= read -r r; do
       [ -n "$r" ] || continue
-      # Link to the changelog page. LINK_SUFFIX is '' for the Jekyll-rendered
-      # view and '.md' for GitLab's raw file browser.
-      echo "- [${r}](./${r}/CHANGELOG${link_suffix})"
+      url=$(meta_get "$r" repo)
+      if [ -n "$url" ]; then
+        echo "- **[${r}](./${r}/CHANGELOG${link_suffix})** · [repository ↗](${url})"
+      else
+        echo "- **[${r}](./${r}/CHANGELOG${link_suffix})**"
+      fi
     done
   fi
 } > "$PAGES_DIR/${index_file}"

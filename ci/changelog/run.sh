@@ -26,6 +26,17 @@ trap 'rm -rf "$work"' EXIT
 
 out() { [ -n "${GITHUB_OUTPUT:-}" ] && printf '%s=%s\n' "$1" "$2" >>"$GITHUB_OUTPUT"; printf '%s=%s\n' "$1" "$2"; }
 
+# Record this repo's links for the site (source repo + container registry). The
+# folder name can't be reverse-mapped to a repo path once subgroups flatten it, so
+# the URLs are stored here and read back by render-aggregate / render-root-index.
+if [ -n "${REPO_URL:-}" ] || [ -n "${IMAGES_URL:-}" ]; then
+  mkdir -p "${PAGES_DIR}/${REPO}"
+  {
+    [ -n "${REPO_URL:-}" ]   && echo "repo=${REPO_URL}"
+    [ -n "${IMAGES_URL:-}" ] && echo "images=${IMAGES_URL}"
+  } > "${PAGES_DIR}/${REPO}/.meta"
+fi
+
 summarise_into() {   # $1 = notes file, $2 = summary out file; uses $DIGEST_FILE; sets SUMMARY_OK
   SUMMARY_OK=false
   if [ "${SKIP_AI:-false}" = true ]; then

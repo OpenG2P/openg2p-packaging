@@ -60,6 +60,17 @@ section() {  # $1 = heading  $2 = newline list of versions
   echo
   echo "_Published automatically._"
   echo
+  # Links to the source repo + its container registry (from .meta, written by the
+  # changelog run). Reaches the GitLab/GitHub repo from under each repo's page.
+  repo_url=$(grep -m1 '^repo=' "${repo_dir}/.meta" 2>/dev/null | sed 's/^repo=//' || true)
+  images_url=$(grep -m1 '^images=' "${repo_dir}/.meta" 2>/dev/null | sed 's/^images=//' || true)
+  if [ -n "$repo_url" ] || [ -n "$images_url" ]; then
+    line=""
+    [ -n "$repo_url" ] && line="**Repository:** [${repo_url#*://}](${repo_url})"
+    [ -n "$images_url" ] && line="${line:+${line} · }**Container images:** [Container Registry](${images_url})"
+    echo "$line"
+    echo
+  fi
 
   # ---- summary table, newest-first by commit time (ts) across ALL kinds ----
   # Emitting releases, then RCs, then develop would bury a fresh develop build

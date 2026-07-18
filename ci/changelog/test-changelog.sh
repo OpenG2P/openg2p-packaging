@@ -226,5 +226,26 @@ contains "index links other-repo"  "$idx" "[other-repo](./other-repo/CHANGELOG)"
 excludes "index skips .github"     "$idx" ".github"
 
 echo
+echo "repo + registry links (.meta) and the elaborated intro"
+mp=$(mktemp -d); mkdir -p "$mp/svc/versions"
+printf '## svc 1.0.0 — 2026-07-13\n\n<!-- build:1.0.0 revision:abc ts:100 -->\n\n### Summary\n\n- x\n' > "$mp/svc/versions/1.0.0.md"
+printf 'repo=https://gitlab.com/openg2p/svc\nimages=https://gitlab.com/openg2p/svc/container_registry\n' > "$mp/svc/.meta"
+PAGES_DIR="$mp" REPO=svc bash "$HERE/render-aggregate.sh"
+agg=$(cat "$mp/svc/CHANGELOG.md")
+contains "CHANGELOG shows repository link"    "$agg" "(https://gitlab.com/openg2p/svc)"
+contains "CHANGELOG shows container registry" "$agg" "svc/container_registry)"
+HELM_REGISTRY_URL="https://gitlab.com/openg2p/charts/-/packages" PAGES_DIR="$mp" bash "$HERE/render-root-index.sh" >/dev/null
+idx2=$(cat "$mp/index.md")
+contains "intro names Helm packages"    "$idx2" "Helm package"
+contains "intro: versions locked"       "$idx2" "locked together"
+contains "intro links helm registry"    "$idx2" "openg2p/charts/-/packages"
+contains "listing links the repo"       "$idx2" "(https://gitlab.com/openg2p/svc)"
+PAGES_DIR="$mp" bash "$HERE/render-root-index.sh" >/dev/null   # no HELM_REGISTRY_URL
+idx3=$(cat "$mp/index.md")
+excludes "generic intro omits registry" "$idx3" "openg2p/charts/-/packages"
+contains "generic intro still elaborate" "$idx3" "Helm package"
+rm -rf "$mp"
+
+echo
 echo "$pass passed, $fail failed"
 [ "$fail" -eq 0 ]
