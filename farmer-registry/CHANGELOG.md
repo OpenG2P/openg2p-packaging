@@ -4,73 +4,63 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
-| [`0.0.0-develop.99`](#v-0-0-0-develop-99) | 2026-07-18 | develop |
+| [`0.0.0-develop.101`](#v-0-0-0-develop-101) | 2026-07-18 | develop |
 
-<a id="v-0-0-0-develop-99"></a>
+# Develop builds
 
-## farmer-registry — Unreleased (0.0.0-develop.99, 2026-07-18)
+<a id="v-0-0-0-develop-101"></a>
 
-_commit `347f7bf` · baseline: release the start · previous build 0.0.0-develop.98_
-<!-- build:0.0.0-develop.99 revision:347f7bf4da3cf6c4b2214197e804737053acf106 -->
+## farmer-registry — develop 0.0.0-develop.101 (2026-07-18)
+
+_commit `e286919` · baseline: release the start_
+<!-- build:0.0.0-develop.101 revision:e286919fca9c753c7dc3dd61f06d63b0307c9f1d ts:1784338300 -->
 
 ### Summary
 
 _All changes since release the start:_
 
-- Fail closed by default: partner signature validation and consent enforcement are now enabled, aligning with registry platform defaults.
-- AWE removed from the project; Commons AWE is now used instead.
-- IAM service repository renamed from 'openg2p-iam-service' to 'iam-service'.
-- Moved to a central build-publish CI with self-contained pinned Dockerfiles.
-- Added CSRF validation configuration for staff-portal-api requests to enhance security.
-- Added Redis configuration for staff-portal-api authentication.
-- Updated IAM public URL configuration for Staff Portal UI.
-- Added support for loading geo reference data into the master_data database during db-seed functionality.
-- Enhanced data seeding scripts with new records and corrections for accuracy.
-- Added E2E sanity test suite with two power E2E tests.
-- Production hardening measures implemented: resource limits fixed, HPA bug resolved, and Docker containers now run as non-root.
-- Updated SQL data models and templates for farmer extension.
-- Added SQL seed data for farmer intake forms and templates.
-- Updated develop.txt files to reflect the new IAM service name.
-- Added AWE_CALLBACK_CALLER_SERVICE to db-seed and updated SQL template.
-- Fixed pin/build-arg repository mismatch for installing iam-core from the correct repository.
-- Updated Docker configuration files for version 1.1.0 of Celery, Partner API, and Staff Portal API.
-- Enhanced performance testing suite added, still a work in progress.
-- Updated translations and UI schema seeding.
-- Fixed issues with duplicate jobs having the same name.
-- Cleaned up the README for better clarity and organization.
-- Updated various dependencies and image tags to their latest versions.
-- Added new Jinja2 templates for DCI response and farmer data processing.
-- Updated SQL data for farmer extension to modify incoming model semantic patterns.
-- Fixed issues with db seed Docker failing.
-- Updated the versioning convention to '0.0.0-develop.N'.
-- Removed unused verification permissions from payload.json.
-- Hardened helm-publish workflow against push races by adding concurrency control.
-- Updated the URL for Partner Management to align with commons-services.
-- Added new operational role IAM permissions for register metadata API access.
-- Updated the URL of CM as it is no longer installed via commons-services.
-- Fixed ports and updated questions.yaml for consistency.
-- Added CSP configuration for profile/document images from MinIO.
-- Updated AWE version to a frozen state.
-- Fixed the issue with hardcoded chart name appearing during installation with Rancher.
-- Updated the Staff Portal UI version in the configuration file to 1.1.0.
-- Consolidated helm chart with Docker images built using libraries from the registry-platform.
-- Removed legacy logging and synced changes with the latest NSR.
-- Updated the internal record ID to link_internal_record_id for clarity.
-- Refactored the poverty score model and updated enums to use StrEnum.
-- Replaced PMT score computation with a new poverty score service.
-- Updated farmer ID prefix from 'FAR-' to 'FR-' for consistency.
-- Added domain validation utilities for various services.
-- Enhanced Docker setup for template uploads.
-- Updated the git branch URL for the staff portal UI.
-- Fixed issues with the postgres version and corrected it to the appropriate state.
-- Updated the version number to fix the problem with the fixed chart name appearing during installation.
-
-### New in this build (since 0.0.0-develop.98)
-
-- [G2P-5378](https://openg2p.atlassian.net/browse/G2P-5378) Docs: add Farmer Registry sanity-testing page (tests, DCI + change-request flow diagrams, seeding & markers, install packaging, run-local procedure, gates/e2e-off behavior, teardown); link from deployment README, helm-chart and SUMMARY ([`347f7bf`](https://github.com/OpenG2P/farmer-registry/commit/347f7bf4da3cf6c4b2214197e804737053acf106))
+- **Breaking Change**: AWE has been removed; Commons AWE is now used instead.
+- **Dependency Change**: The IAM service repository has been renamed from `openg2p-iam-service` to `iam-service`.
+- **Feature Update**: Added CSRF validation configuration for staff-portal-api requests.
+- **Security Enhancement**: Partner signature validation and consent enforcement are now enabled by default, aligning with registry platform defaults.
+- **New Feature**: Added Redis configuration for staff-portal-api authentication.
+- **New Feature**: Added IAM public URL configuration for Staff Portal UI.
+- **New Feature**: Added support for loading geo reference data into the master_data database.
+- **New Feature**: Introduced domain validation utilities for various services.
+- **New Feature**: Added SQL seed data for farmer intake forms and templates.
+- **New Feature**: E2E sanity test suite added with two power E2E tests.
+- **Documentation Update**: Added Farmer Registry sanity-testing page with comprehensive testing documentation and flow diagrams.
+- **Production Hardening**: Resource limits fixed, HPA bug fixed, and Docker containers now run as non-root.
+- **Feature Update**: Enhanced data seeding scripts with new records and corrections to existing entries.
+- **Feature Update**: Updated SQL data models and templates for farmer extension.
+- **Feature Update**: Updated AWE approver user passwords and added first/last names for new users in Keycloak initialization.
+- **Feature Update**: Added AWE_CALLBACK_CALLER_SERVICE to db-seed and updated SQL template.
+- **Feature Update**: Added CSP configuration for profile/document images from MinIO.
+- **Feature Update**: Updated develop.txt files to replace references to 'openg2p-iam-service' with 'iam-service'.
+- **Feature Update**: Updated SQL data for farmer extension, modifying incoming model semantic patterns and enhancing G2P register scores.
+- **Feature Update**: Enhanced Docker setup for template uploads.
+- **Feature Update**: Added async method to link internal record ID.
+- **Fix**: Resolved issues with db seed Docker failing.
+- **Fix**: Corrected pin/build-arg repository mismatch for IAM core installation.
+- **Fix**: Fixed stale audit comment and ensured teardown keys on internal_record_id.
+- **Fix**: Updated SQL data models and templates for farmer extension.
+- **Fix**: Updated Staff Portal UI version in configuration file to 1.1.0.
+- **Fix**: Updated image tags to use the latest versions for Docker configurations.
+- **Fix**: Removed unused verification permissions from payload.json.
+- **Fix**: Consolidated helm chart with Docker images built using libraries from the registry platform.
+- **Fix**: Cleaned up README documentation.
+- **Fix**: Fixed issues with duplicate jobs having the same name.
+- **Fix**: Updated git branch URL for Staff Portal UI.
+- **Fix**: Updated dependencies to use the 'develop' branch.
+- **Fix**: Updated versions to 'develop' and corrected Postgres version.
+- **Fix**: Updated the URL for Partner Management and corrected ports.
+- **Fix**: Hardened helm-publish workflow against gh-pages push races.
+- **Fix**: Updated the URL of CM as it is not installed via commons-services.
 
 ### Since last release (the start)
 
+- [G2P-5378](https://openg2p.atlassian.net/browse/G2P-5378) Fix sanity audit-DB wiring: auditDbSecret/key were audit-manager-db-user / audit-manager-db-user-password; the real Secret is audit-manager / audit-manager-db-user (as the auditmanager deployment mounts) — the in-cluster audit test would otherwise fail ([`e286919`](https://github.com/OpenG2P/farmer-registry/commit/e286919fca9c753c7dc3dd61f06d63b0307c9f1d))
+- [G2P-5378](https://openg2p.atlassian.net/browse/G2P-5378) Make change-request e2e pass end-to-end on a live cluster: grant the sanity user AWE_ADMIN and approve every task on the request (shipped stages are mode='all' with demo approvers); poll for the async history row; key the audit assertion on actor_id (events carry no resource_id); add tab_id to get_number_of_versions; fix teardown to key on internal_record_id (CR/history are stamped with the display name) ([`14ec94c`](https://github.com/OpenG2P/farmer-registry/commit/14ec94c2ed2a4cd436ffec2f087e1833b6fd3ff3))
 - [G2P-5378](https://openg2p.atlassian.net/browse/G2P-5378) Docs: add Farmer Registry sanity-testing page (tests, DCI + change-request flow diagrams, seeding & markers, install packaging, run-local procedure, gates/e2e-off behavior, teardown); link from deployment README, helm-chart and SUMMARY ([`347f7bf`](https://github.com/OpenG2P/farmer-registry/commit/347f7bf4da3cf6c4b2214197e804737053acf106))
 - Fail closed by default: enable partner signature validation and consent enforcement (matching the registry platform defaults, which the chart inverted); keep sanity e2e off by default; fix stale audit comment; record the consent/signature posture as a perf-testing variable ([`331ab43`](https://github.com/OpenG2P/farmer-registry/commit/331ab43be49d4f800bd6552fbbcabddfc1b45681))
 - [G2P-5378](https://openg2p.atlassian.net/browse/G2P-5378) E2e sanity test suite added with 2 power e2e tests. ([`85b60d1`](https://github.com/OpenG2P/farmer-registry/commit/85b60d11a4628ec7a18322a21de3878a09ba940d))
@@ -144,3 +134,12 @@ _All changes since release the start:_
 - [G2P-4692](https://openg2p.atlassian.net/browse/G2P-4692) Added. ([`c5e4dfa`](https://github.com/OpenG2P/farmer-registry/commit/c5e4dfa9caa5338ea31f80ff250b96965bbd66cd))
 - Initial commit ([`6e3cf83`](https://github.com/OpenG2P/farmer-registry/commit/6e3cf838809c5522a8b0cda15b87f726683ec175))
 
+---
+
+> **What's shown here.** This catalogue lists **every stable release**, plus
+> the **latest 3 develop builds** and the **latest 3 release
+> candidates** per release line. Older develop builds and release candidates
+> are pruned as they are superseded, and a release's candidates are removed
+> once it ships. Those versions still exist in the container and Helm
+> registries — they are simply not listed here. This page is generated
+> automatically from commit history; do not edit it by hand.
