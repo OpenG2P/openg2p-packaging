@@ -11,7 +11,7 @@ See the **[versioning & CI docs](https://docs.openg2p.org/operations/deployment/
 - **[audit-manager](./audit-manager/CHANGELOG)**
 - **[awe](./awe/CHANGELOG)**
 - **[consent-manager](./consent-manager/CHANGELOG)**
-- **[farmer-registry](./farmer-registry/CHANGELOG)**
+- **[farmer-registry](./farmer-registry/CHANGELOG)** · [repository ↗](https://github.com/OpenG2P/farmer-registry)
 - **[g2p-bridge](./g2p-bridge/CHANGELOG)**
 - **[iam-service](./iam-service/CHANGELOG)**
 - **[id-generator](./id-generator/CHANGELOG)**
