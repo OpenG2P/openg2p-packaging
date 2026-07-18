@@ -4,8 +4,8 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.178`](#v-0-0-0-develop-178) | 2026-07-18 | develop |
 | [`2.1.0`](#v-2-1-0) | 2026-07-13 | release |
-| [`0.0.0-develop.172`](#v-0-0-0-develop-172) | 2026-07-17 | develop |
 
 # Releases
 
@@ -185,30 +185,45 @@ _commit `44278e8` · first release_
 - [[G2P-3267](https://openg2p.atlassian.net/browse/G2P-3267)] Added OpenG2P-commons Helm Charts in to openg2p-deployment-commons repo. ([`bf14317`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/bf14317de2261ad192ecdf1980711eeebd315002))
 - Initial commit ([`04cc8c6`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/04cc8c6f16ae3132d62a9b80087c0cea81ce472d))
 
-<a id="v-0-0-0-develop-172"></a>
+# Develop builds
 
-## openg2p-commons-deployment — Unreleased (0.0.0-develop.172, 2026-07-17)
+<a id="v-0-0-0-develop-178"></a>
 
-_commit `5a80b71` · baseline: release 2.1.0 · previous build 0.0.0-develop.171_
-<!-- build:0.0.0-develop.172 revision:5a80b7195c36db2e5371910c3428f0d7ac9f9247 -->
+## openg2p-commons-deployment — develop 0.0.0-develop.178 (2026-07-18)
+
+_commit `fd11304` · baseline: release 2.1.0_
+<!-- build:0.0.0-develop.178 revision:fd11304430b62b0fcdf8d139da81f9b7a917011d ts:1784339092 -->
 
 ### Summary
 
 _All changes since release 2.1.0:_
 
-- Audit Manager has been moved to GitLab, with charts now referred from the GitLab Helm repository.
-- PM has been transitioned to GitLab, with charts now referred from the GitLab Helm repository.
-- [G2P-5348](https://openg2p.atlassian.net/browse/G2P-5348) CM has been relocated to GitLab, marking the new location for Helm charts.
-- The DEFAULT_BRANCH is now passed to the changelog in the commons repository.
-
-### New in this build (since 0.0.0-develop.171)
-
-- Audit Manager  moved to Gitlab. Charts referred from Gitlab Helm repo ([`5a80b71`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/5a80b7195c36db2e5371910c3428f0d7ac9f9247))
+- [G2P-5378](https://openg2p.atlassian.net/browse/G2P-5378): Fixed AWE token validation by pointing the openg2p-awe issuer at the EXTERNAL Keycloak issuer, resolving AWE-ERR-006 'Invalid issuer' on change-request approvals.
+- Master data, AWE, Audit Manager, PM, and CM have all been moved to GitLab, with charts now referred from the GitLab Helm repository.
+- Uninstall scripts have been improved to ensure they are up-to-date.
+- Fixed incorrect chart path to enhance deployment accuracy.
+- Pre-commit fixes implemented for better code quality.
+- DEFAULT_BRANCH is now passed to the changelog for improved version tracking.
 
 ### Since last release (2.1.0)
 
+- Pre-commit fixes. ([`fd11304`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/fd11304430b62b0fcdf8d139da81f9b7a917011d))
+- Incorrect chart path fixed. ([`c5962ae`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/c5962ae81af6c736b643d2cd22a1ad0f53cdd4f1))
+- Uninstall scripts improved as they were not updated since a while. ([`af74872`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/af748720540812724b9dd8b4b004a37658216a51))
+- [G2P-5378](https://openg2p.atlassian.net/browse/G2P-5378) Fix AWE token validation: point openg2p-awe issuer at the EXTERNAL Keycloak issuer (matching PM/CM) so registry-forwarded user tokens validate; jwks stays internal. Resolves AWE-ERR-006 'Invalid issuer' on change-request approvals. And AWE repo and version updated. ([`cf7a980`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/cf7a980294987dcf4a6a4266c81a38046f14523e))
+- Master data moved to Gitlab. ([`9f2a0a6`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/9f2a0a6fd4870ae4da8bead080fc8cff90093474))
+- AWE moved to Gitlab. ([`2195ea8`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/2195ea8188664ef0e4ce771f18a9c085dd05d53a))
 - Audit Manager  moved to Gitlab. Charts referred from Gitlab Helm repo ([`5a80b71`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/5a80b7195c36db2e5371910c3428f0d7ac9f9247))
 - PM moved to Gitlab. Charts referred from Gitlab Helm repo ([`7c7dc4e`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/7c7dc4e948daf9de54034b41c703ed7d7719c448))
 - [G2P-5348](https://openg2p.atlassian.net/browse/G2P-5348) CM moved to Gitlab. New location of Helm charts now. ([`f5a12c1`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/f5a12c1029b149eeeb2f22a07e66e13a3a49cc38))
 - [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) commons: pass DEFAULT_BRANCH to changelog ([`c087528`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/c08752886e9ab3fb12f193a04ba3a080efdf2a11))
 
+---
+
+> **What's shown here.** This catalogue lists **every stable release**, plus
+> the **latest 3 develop builds** and the **latest 3 release
+> candidates** per release line. Older develop builds and release candidates
+> are pruned as they are superseded, and a release's candidates are removed
+> once it ships. Those versions still exist in the container and Helm
+> registries — they are simply not listed here. This page is generated
+> automatically from commit history; do not edit it by hand.
