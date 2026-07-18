@@ -194,22 +194,36 @@ if [ -n "$prev_page" ]; then
   fi
 fi
 
-# Release notes: on a release build, surface the ANNOTATED tag's message verbatim
-# at the top of the page (curated "what's in this release" prose). Core git — an
-# annotated tag is a real object (objecttype=tag) carrying a message; a lightweight
-# tag's ref points straight at a commit (objecttype=commit) and is skipped, so a
-# commit subject is never mistaken for release notes. subject+body omits any PGP
-# signature. Reachable because the release pipeline runs on the pushed tag.
-RELEASE_NOTES_FILE=""
-if [ "${FROZEN:-false}" = true ] \
+# Release notes shown at the top of a release page. Two sources, in priority order:
+#   1. An externally provided RELEASE_NOTES_FILE — the wrapper fetches the editable
+#      platform Release description (GitLab Release / GitHub Release body). This lets
+#      you refine notes AFTER cutting the release WITHOUT moving the tag: edit the
+#      Release in the UI and re-run the pipeline on the tag. Every build/publish job
+#      is idempotent, so only this changelog page changes.
+#   2. Else the ANNOTATED tag's message (core git). An annotated tag is a real object
+#      (objecttype=tag) carrying a message; a lightweight tag's ref points straight at
+#      a commit (objecttype=commit) and is skipped, so a commit subject is never
+#      mistaken for release notes. subject+body omits any PGP signature.
+# Whichever wins is normalised (trailing spaces + surrounding blank lines trimmed).
+# render.sh only emits the section for a frozen release, so a stray value is inert
+# on develop/RC builds.
+notes_src=""
+if [ -n "${RELEASE_NOTES_FILE:-}" ] && [ -s "${RELEASE_NOTES_FILE}" ] \
+   && grep -q '[^[:space:]]' "${RELEASE_NOTES_FILE}" 2>/dev/null; then
+  notes_src="${RELEASE_NOTES_FILE}"   # editable platform Release description
+elif [ "${FROZEN:-false}" = true ] \
    && [ "$(git for-each-ref "refs/tags/${VERSION}" --format='%(objecttype)' 2>/dev/null || true)" = tag ]; then
   git for-each-ref "refs/tags/${VERSION}" \
-      --format='%(contents:subject)%0a%0a%(contents:body)' 2>/dev/null \
-    | sed 's/[[:space:]]*$//' \
+      --format='%(contents:subject)%0a%0a%(contents:body)' 2>/dev/null > "$work/tagmsg.md" || true
+  notes_src="$work/tagmsg.md"
+fi
+RELEASE_NOTES_FILE=""
+if [ -n "$notes_src" ] && [ -s "$notes_src" ]; then
+  sed 's/[[:space:]]*$//' "$notes_src" \
     | awk '{l[NR]=$0}
            END{s=1; while(s<=NR && l[s]~/^$/) s++;
                e=NR; while(e>=s && l[e]~/^$/) e--;
-               for(i=s;i<=e;i++) print l[i]}' > "$work/relnotes.md" || true
+               for(i=s;i<=e;i++) print l[i]}' > "$work/relnotes.md"
   grep -q '[^[:space:]]' "$work/relnotes.md" 2>/dev/null && RELEASE_NOTES_FILE="$work/relnotes.md"
 fi
 

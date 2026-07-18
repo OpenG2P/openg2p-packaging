@@ -130,6 +130,39 @@ contains "annotated: aggregate carries release notes" "$(cat "$Pa/an/CHANGELOG.m
 rm -rf "$at" "$Pa"
 
 echo
+echo "external release notes (editable platform Release description) override the tag"
+ov=$(mktemp -d); Pov=$(mktemp -d)
+git -C "$ov" init -q -b develop; git -C "$ov" config user.email t@t; git -C "$ov" config user.name t
+git -C "$ov" commit -q --allow-empty -m "G2P-70 feature"
+git -C "$ov" tag -a 3.0.0 -m "Original tag message."
+notesf="$ov/desc.md"
+printf '\n\nEdited later via the Release UI.\n\nMore info: https://docs.openg2p.org/x  \n\n' > "$notesf"
+( cd "$ov" && REPO=ov VERSION=3.0.0 FROZEN=true REVISION=$(git rev-parse HEAD) \
+    RELEASE_NOTES_FILE="$notesf" PAGES_DIR="$Pov" SKIP_AI=true DATE=2026-07-18 \
+    bash "$HERE/run.sh" >/dev/null )
+ovp=$(cat "$Pov/ov/versions/3.0.0.md")
+contains "override: uses Release description" "$ovp" "Edited later via the Release UI."
+contains "override: keeps the link"           "$ovp" "https://docs.openg2p.org/x"
+excludes "override: tag message not used"     "$ovp" "Original tag message."
+# surrounding blank lines trimmed: content sits right under the (blank-separated) heading
+adjacent=$(printf '%s' "$ovp" | awk '/^### Release notes/{getline; getline; print; exit}')
+contains "override: leading blanks trimmed"   "$adjacent" "Edited later"
+rm -rf "$ov" "$Pov"
+
+echo
+echo "blank external release notes -> fall back to the annotated tag"
+fb=$(mktemp -d); Pfb=$(mktemp -d)
+git -C "$fb" init -q -b develop; git -C "$fb" config user.email t@t; git -C "$fb" config user.name t
+git -C "$fb" commit -q --allow-empty -m "G2P-71 feature"
+git -C "$fb" tag -a 3.1.0 -m "Fallback tag notes."
+empty="$fb/empty.md"; printf '   \n\n' > "$empty"     # whitespace-only == effectively empty
+( cd "$fb" && REPO=fb VERSION=3.1.0 FROZEN=true REVISION=$(git rev-parse HEAD) \
+    RELEASE_NOTES_FILE="$empty" PAGES_DIR="$Pfb" SKIP_AI=true DATE=2026-07-18 \
+    bash "$HERE/run.sh" >/dev/null )
+contains "blank override: tag message used" "$(cat "$Pfb/fb/versions/3.1.0.md")" "Fallback tag notes."
+rm -rf "$fb" "$Pfb"
+
+echo
 echo "legacy v-prefixed tag is recognised as a baseline"
 git -C "$REPO_DIR" tag v0.9.0 "$(git -C "$REPO_DIR" rev-list --max-parents=0 HEAD)"  # old-convention tag at root
 # a develop build on a repo whose only release is v0.9.0 should baseline against it

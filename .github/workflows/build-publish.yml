@@ -614,11 +614,33 @@ jobs:
           MAX_TOKENS: ${{ steps.cfg.outputs.max_tokens }}
           JIRA_BASE: ${{ steps.cfg.outputs.jira_base }}
           JIRA_PROJECT: ${{ steps.cfg.outputs.jira_project }}
+          RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+          GH_API_TOKEN: ${{ secrets.OPENG2P_BOT_GITHUB_PAT }}
         run: |
           if [ -z "${OPENROUTER_API_KEY:-}" ] && [ "${SKIP_AI}" != "true" ]; then
             echo "::warning::OPENROUTER_API_KEY not set; publishing human notes only"
             export SKIP_AI=true
           fi
+
+          # Release notes (releases only): prefer the editable GitHub Release BODY over
+          # the tag message, so notes can be refined AFTER cutting -- edit the Release,
+          # then re-run this workflow on the tag. Every build/promote/chart job is
+          # idempotent, so only the changelog page changes; the tag is never moved.
+          # Best-effort: on any failure run.sh falls back to the annotated tag message.
+          if [ "${FROZEN}" = "true" ] && [ -n "${RELEASE_TAG:-}" ]; then
+            body=$(curl -fsSL -H "Authorization: Bearer ${GH_API_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/releases/tags/${RELEASE_TAG}" 2>/dev/null \
+              | jq -r '.body // ""' 2>/dev/null || true)
+            if [ -n "$body" ] && [ "$body" != "null" ]; then
+              printf '%s\n' "$body" > "${GITHUB_WORKSPACE}/release-notes.md"
+              export RELEASE_NOTES_FILE="${GITHUB_WORKSPACE}/release-notes.md"
+              echo "release notes: using GitHub Release body for ${RELEASE_TAG}"
+            else
+              echo "release notes: no GitHub Release body; using annotated tag if present"
+            fi
+          fi
+
           DATE="$(date -u +%Y-%m-%d)" bash .openg2p-ci/ci/changelog/run.sh
 
       - name: Publish to changelog branch
