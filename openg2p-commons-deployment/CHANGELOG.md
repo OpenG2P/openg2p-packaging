@@ -2,11 +2,13 @@
 
 _Published automatically._
 
+**Repository:** [github.com/OpenG2P/openg2p-commons-deployment](https://github.com/OpenG2P/openg2p-commons-deployment)
+
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.182`](#v-0-0-0-develop-182) | 2026-07-18 | develop |
 | [`0.0.0-develop.181`](#v-0-0-0-develop-181) | 2026-07-18 | develop |
 | [`0.0.0-develop.180`](#v-0-0-0-develop-180) | 2026-07-18 | develop |
-| [`0.0.0-develop.178`](#v-0-0-0-develop-178) | 2026-07-18 | develop |
 | [`2.1.0`](#v-2-1-0) | 2026-07-13 | release |
 
 # Releases
@@ -189,6 +191,49 @@ _commit `44278e8` · first release_
 
 # Develop builds
 
+<a id="v-0-0-0-develop-182"></a>
+
+## openg2p-commons-deployment — develop 0.0.0-develop.182 (2026-07-18)
+
+_commit `34c665e` · baseline: release 2.1.0 · previous build 0.0.0-develop.181_
+<!-- build:0.0.0-develop.182 revision:34c665ede9c68417c8451fd453fbe38457de1756 ts:1784350347 -->
+
+### Summary
+
+_All changes since release 2.1.0:_
+
+- The consent-manager APIs have been renamed to `<release>-cm-api` and `<release>-cm-partner-api`, which requires overriding the sanity `baseUrl` and `partnerBaseUrl` to the cm-prefixed services for proper functionality.
+- CM is now enabled by default, streamlining the setup process.
+- AWE token validation has been fixed by pointing the `openg2p-awe` issuer at the external Keycloak issuer, resolving the 'Invalid issuer' error during change-request approvals.
+- Master data, AWE, Audit Manager, and PM have all been moved to GitLab, with charts now referred from the GitLab Helm repository.
+- The consent-manager has been migrated to GitLab, establishing a new location for Helm charts.
+- The PM version has been updated to the latest release.
+- The CM version has been bumped up to the latest version.
+- Uninstall scripts have been improved for better functionality.
+- An incorrect chart path has been fixed to ensure proper deployment.
+- Pre-commit fixes have been applied to enhance code quality.
+
+### New in this build (since 0.0.0-develop.181)
+
+- Bumped up CM version ([`34c665e`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/34c665ede9c68417c8451fd453fbe38457de1756))
+
+### Since last release (2.1.0)
+
+- Bumped up CM version ([`34c665e`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/34c665ede9c68417c8451fd453fbe38457de1756))
+- The consent-manager APIs are renamed to <release>-cm-api / -cm-partner-api via nameOverride, but the sanity defaulted to <release>-api / -partner-api, so every run failed with "Name or service not known". Override sanity baseUrl/partnerBaseUrl to the cm-prefixed Services, and set sanity.nameOverride=cm so the Jobs render as commons-services-cm-sanity / -cm-pm-seed (consistent with cm-api/cm-ui/...). ([`d2d865d`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/d2d865d7accee20ea2b389465f75e9adeb872b27))
+- PM version updated ([`cf6b753`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/cf6b7539ee91677ecb431812f3c4b9fdc977c656))
+- CM enabled by default ([`032576b`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/032576baa5e6154d4b90fb4bc200d3f3225414fa))
+- Pre-commit fixes. ([`fd11304`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/fd11304430b62b0fcdf8d139da81f9b7a917011d))
+- Incorrect chart path fixed. ([`c5962ae`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/c5962ae81af6c736b643d2cd22a1ad0f53cdd4f1))
+- Uninstall scripts improved as they were not updated since a while. ([`af74872`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/af748720540812724b9dd8b4b004a37658216a51))
+- [G2P-5378](https://openg2p.atlassian.net/browse/G2P-5378) Fix AWE token validation: point openg2p-awe issuer at the EXTERNAL Keycloak issuer (matching PM/CM) so registry-forwarded user tokens validate; jwks stays internal. Resolves AWE-ERR-006 'Invalid issuer' on change-request approvals. And AWE repo and version updated. ([`cf7a980`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/cf7a980294987dcf4a6a4266c81a38046f14523e))
+- Master data moved to Gitlab. ([`9f2a0a6`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/9f2a0a6fd4870ae4da8bead080fc8cff90093474))
+- AWE moved to Gitlab. ([`2195ea8`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/2195ea8188664ef0e4ce771f18a9c085dd05d53a))
+- Audit Manager  moved to Gitlab. Charts referred from Gitlab Helm repo ([`5a80b71`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/5a80b7195c36db2e5371910c3428f0d7ac9f9247))
+- PM moved to Gitlab. Charts referred from Gitlab Helm repo ([`7c7dc4e`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/7c7dc4e948daf9de54034b41c703ed7d7719c448))
+- [G2P-5348](https://openg2p.atlassian.net/browse/G2P-5348) CM moved to Gitlab. New location of Helm charts now. ([`f5a12c1`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/f5a12c1029b149eeeb2f22a07e66e13a3a49cc38))
+- [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) commons: pass DEFAULT_BRANCH to changelog ([`c087528`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/c08752886e9ab3fb12f193a04ba3a080efdf2a11))
+
 <a id="v-0-0-0-develop-181"></a>
 
 ## openg2p-commons-deployment — develop 0.0.0-develop.181 (2026-07-18)
@@ -258,37 +303,6 @@ _All changes since release 2.1.0:_
 
 - PM version updated ([`cf6b753`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/cf6b7539ee91677ecb431812f3c4b9fdc977c656))
 - CM enabled by default ([`032576b`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/032576baa5e6154d4b90fb4bc200d3f3225414fa))
-- Pre-commit fixes. ([`fd11304`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/fd11304430b62b0fcdf8d139da81f9b7a917011d))
-- Incorrect chart path fixed. ([`c5962ae`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/c5962ae81af6c736b643d2cd22a1ad0f53cdd4f1))
-- Uninstall scripts improved as they were not updated since a while. ([`af74872`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/af748720540812724b9dd8b4b004a37658216a51))
-- [G2P-5378](https://openg2p.atlassian.net/browse/G2P-5378) Fix AWE token validation: point openg2p-awe issuer at the EXTERNAL Keycloak issuer (matching PM/CM) so registry-forwarded user tokens validate; jwks stays internal. Resolves AWE-ERR-006 'Invalid issuer' on change-request approvals. And AWE repo and version updated. ([`cf7a980`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/cf7a980294987dcf4a6a4266c81a38046f14523e))
-- Master data moved to Gitlab. ([`9f2a0a6`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/9f2a0a6fd4870ae4da8bead080fc8cff90093474))
-- AWE moved to Gitlab. ([`2195ea8`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/2195ea8188664ef0e4ce771f18a9c085dd05d53a))
-- Audit Manager  moved to Gitlab. Charts referred from Gitlab Helm repo ([`5a80b71`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/5a80b7195c36db2e5371910c3428f0d7ac9f9247))
-- PM moved to Gitlab. Charts referred from Gitlab Helm repo ([`7c7dc4e`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/7c7dc4e948daf9de54034b41c703ed7d7719c448))
-- [G2P-5348](https://openg2p.atlassian.net/browse/G2P-5348) CM moved to Gitlab. New location of Helm charts now. ([`f5a12c1`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/f5a12c1029b149eeeb2f22a07e66e13a3a49cc38))
-- [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) commons: pass DEFAULT_BRANCH to changelog ([`c087528`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/c08752886e9ab3fb12f193a04ba3a080efdf2a11))
-
-<a id="v-0-0-0-develop-178"></a>
-
-## openg2p-commons-deployment — develop 0.0.0-develop.178 (2026-07-18)
-
-_commit `fd11304` · baseline: release 2.1.0_
-<!-- build:0.0.0-develop.178 revision:fd11304430b62b0fcdf8d139da81f9b7a917011d ts:1784339092 -->
-
-### Summary
-
-_All changes since release 2.1.0:_
-
-- [G2P-5378](https://openg2p.atlassian.net/browse/G2P-5378): Fixed AWE token validation by pointing the openg2p-awe issuer at the EXTERNAL Keycloak issuer, resolving AWE-ERR-006 'Invalid issuer' on change-request approvals.
-- Master data, AWE, Audit Manager, PM, and CM have all been moved to GitLab, with charts now referred from the GitLab Helm repository.
-- Uninstall scripts have been improved to ensure they are up-to-date.
-- Fixed incorrect chart path to enhance deployment accuracy.
-- Pre-commit fixes implemented for better code quality.
-- DEFAULT_BRANCH is now passed to the changelog for improved version tracking.
-
-### Since last release (2.1.0)
-
 - Pre-commit fixes. ([`fd11304`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/fd11304430b62b0fcdf8d139da81f9b7a917011d))
 - Incorrect chart path fixed. ([`c5962ae`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/c5962ae81af6c736b643d2cd22a1ad0f53cdd4f1))
 - Uninstall scripts improved as they were not updated since a while. ([`af74872`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/af748720540812724b9dd8b4b004a37658216a51))
