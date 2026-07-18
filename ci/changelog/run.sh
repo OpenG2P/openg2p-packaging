@@ -219,7 +219,11 @@ elif [ "${FROZEN:-false}" = true ] \
 fi
 RELEASE_NOTES_FILE=""
 if [ -n "$notes_src" ] && [ -s "$notes_src" ]; then
-  sed 's/[[:space:]]*$//' "$notes_src" \
+  # Drop the hidden "publish link" footer the wrapper appends to an auto-created
+  # GitLab Release (everything from the marker line on) so it never shows here, then
+  # normalise. Absent on hand-written notes / other forges -> the cut is a no-op.
+  awk '/<!-- openg2p:publish-link -->/{exit} {print}' "$notes_src" \
+    | sed 's/[[:space:]]*$//' \
     | awk '{l[NR]=$0}
            END{s=1; while(s<=NR && l[s]~/^$/) s++;
                e=NR; while(e>=s && l[e]~/^$/) e--;

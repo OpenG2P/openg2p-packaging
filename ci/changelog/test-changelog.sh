@@ -163,6 +163,23 @@ contains "blank override: tag message used" "$(cat "$Pfb/fb/versions/3.1.0.md")"
 rm -rf "$fb" "$Pfb"
 
 echo
+echo "auto-created Release: the hidden publish-link footer is stripped from the page"
+ft=$(mktemp -d); Pft=$(mktemp -d)
+git -C "$ft" init -q -b develop; git -C "$ft" config user.email t@t; git -C "$ft" config user.name t
+git -C "$ft" commit -q --allow-empty -m "G2P-72 feature"
+git -C "$ft" tag -a 4.0.0 -m "unused"
+descf="$ft/desc.md"
+printf 'Real release notes here.\n\n<!-- openg2p:publish-link -->\n---\n*Edited these notes? [Publish to the changelog](https://gitlab.example/x/-/pipelines/new?ref=4.0.0)*\n' > "$descf"
+( cd "$ft" && REPO=ft VERSION=4.0.0 FROZEN=true REVISION=$(git rev-parse HEAD) \
+    RELEASE_NOTES_FILE="$descf" PAGES_DIR="$Pft" SKIP_AI=true DATE=2026-07-18 \
+    bash "$HERE/run.sh" >/dev/null )
+ftp=$(cat "$Pft/ft/versions/4.0.0.md")
+contains "footer: real notes shown"       "$ftp" "Real release notes here."
+excludes "footer: publish link stripped"  "$ftp" "Publish to the changelog"
+excludes "footer: marker stripped"        "$ftp" "openg2p:publish-link"
+rm -rf "$ft" "$Pft"
+
+echo
 echo "legacy v-prefixed tag is recognised as a baseline"
 git -C "$REPO_DIR" tag v0.9.0 "$(git -C "$REPO_DIR" rev-list --max-parents=0 HEAD)"  # old-convention tag at root
 # a develop build on a repo whose only release is v0.9.0 should baseline against it
