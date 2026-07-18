@@ -105,6 +105,29 @@ rel=$(cat "$PAGES/demo/versions/1.0.1.md")
 contains "release labels baseline" "$rel" "changes since release 1.0.0"
 agg=$(cat "$PAGES/demo/CHANGELOG.md")
 contains "aggregate lists 1.0.1"   "$agg" "demo 1.0.1"
+# 1.0.1 is a LIGHTWEIGHT tag -> no release-notes section, and the tagged commit's
+# own subject must not be mistaken for release notes.
+excludes "lightweight tag: no release-notes section" "$rel" "### Release notes"
+
+echo
+echo "annotated release tag -> its message renders as Release notes"
+at=$(mktemp -d); Pa=$(mktemp -d)
+git -C "$at" init -q -b develop; git -C "$at" config user.email t@t; git -C "$at" config user.name t
+git -C "$at" commit -q --allow-empty -m "G2P-50 First feature"
+git -C "$at" commit -q --allow-empty -m "G2P-51 Second feature"
+git -C "$at" tag -a 2.0.0 -m "$(printf 'GA release.\n\nHighlights:\n\n- Stable public API (G2P-50)\n- Ships the new engine')"
+( cd "$at" && REPO=an VERSION=2.0.0 FROZEN=true REVISION=$(git rev-parse HEAD) \
+    PAGES_DIR="$Pa" SKIP_AI=true DATE=2026-07-13 bash "$HERE/run.sh" >/dev/null )
+ap=$(cat "$Pa/an/versions/2.0.0.md")
+contains "annotated: Release notes section present" "$ap" "### Release notes"
+contains "annotated: message subject shown"         "$ap" "GA release."
+contains "annotated: message body shown"            "$ap" "Ships the new engine"
+contains "annotated: jira ref in notes linkified"   "$ap" "[G2P-50](https://openg2p.atlassian.net/browse/G2P-50)"
+# Release notes must sit ABOVE the auto summary, and the section shows on the aggregate.
+notes_before_summary=$(printf '%s' "$ap" | awk '/^### Release notes/{r=NR} /^### Summary/{s=NR} END{print (r>0 && r<s)?"yes":"no"}')
+check "annotated: notes appear before Summary"      yes "$notes_before_summary"
+contains "annotated: aggregate carries release notes" "$(cat "$Pa/an/CHANGELOG.md")" "### Release notes"
+rm -rf "$at" "$Pa"
 
 echo
 echo "legacy v-prefixed tag is recognised as a baseline"

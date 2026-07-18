@@ -13,6 +13,7 @@
 #   env: PAGES_DIR REPO VERSION REVISION PREV_VERSION DATE TS MODE(frozen|rc|develop)
 #        NOTES_FILE            cumulative notes since PREV_VERSION (last release)
 #        SUMMARY_FILE SUMMARY_OK
+#        RELEASE_NOTES_FILE    (frozen only) annotated-tag message -> "Release notes"
 #   rc/develop also use:
 #        INCR_NOTES_FILE       notes since the previous build (incremental)
 #        PREV_BUILD            previous build's version string (may be empty)
@@ -101,6 +102,12 @@ case "$MODE" in
         echo "_commit \`${short_rev}\` · first release${art}_"
       fi
       echo
+      # Curated release notes from the annotated tag message (verbatim, Jira-linkified),
+      # shown above the auto-generated summary. Absent for lightweight tags.
+      if [ -n "${RELEASE_NOTES_FILE:-}" ] && [ -s "$RELEASE_NOTES_FILE" ]; then
+        echo "### Release notes"; echo
+        bash "$HERE/linkify.sh" <"$RELEASE_NOTES_FILE"; echo
+      fi
       echo "### Summary"; echo
       printf '%s\n' "$summary"; echo
       echo "### Changes"; echo

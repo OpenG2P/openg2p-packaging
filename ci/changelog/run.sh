@@ -191,10 +191,30 @@ if [ -n "$prev_page" ]; then
   fi
 fi
 
+# Release notes: on a release build, surface the ANNOTATED tag's message verbatim
+# at the top of the page (curated "what's in this release" prose). Core git — an
+# annotated tag is a real object (objecttype=tag) carrying a message; a lightweight
+# tag's ref points straight at a commit (objecttype=commit) and is skipped, so a
+# commit subject is never mistaken for release notes. subject+body omits any PGP
+# signature. Reachable because the release pipeline runs on the pushed tag.
+RELEASE_NOTES_FILE=""
+if [ "${FROZEN:-false}" = true ] \
+   && [ "$(git for-each-ref "refs/tags/${VERSION}" --format='%(objecttype)' 2>/dev/null || true)" = tag ]; then
+  git for-each-ref "refs/tags/${VERSION}" \
+      --format='%(contents:subject)%0a%0a%(contents:body)' 2>/dev/null \
+    | sed 's/[[:space:]]*$//' \
+    | awk '{l[NR]=$0}
+           END{s=1; while(s<=NR && l[s]~/^$/) s++;
+               e=NR; while(e>=s && l[e]~/^$/) e--;
+               for(i=s;i<=e;i++) print l[i]}' > "$work/relnotes.md" || true
+  grep -q '[^[:space:]]' "$work/relnotes.md" 2>/dev/null && RELEASE_NOTES_FILE="$work/relnotes.md"
+fi
+
 PAGES_DIR="$PAGES_DIR" REPO="$REPO" VERSION="$VERSION" REVISION="$REVISION" TS="$TS" \
   PREV_VERSION="$PREV_VERSION" DATE="$DATE" MODE="$MODE" \
   NOTES_FILE="$work/notes.md" SUMMARY_FILE="$work/summary.md" SUMMARY_OK="$SUMMARY_OK" \
   INCR_NOTES_FILE="$INCR_NOTES_FILE" PREV_BUILD="$PREV_BUILD" \
+  RELEASE_NOTES_FILE="$RELEASE_NOTES_FILE" \
   bash "$HERE/render.sh"
 
 PAGES_DIR="$PAGES_DIR" bash "$HERE/render-root-index.sh"
