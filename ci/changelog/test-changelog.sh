@@ -370,6 +370,11 @@ contains "library agg: table shows branch name" "$lagg" "[\`develop\`](#v-branch
 contains "library agg: library footnote"       "$lagg" "consumed directly by git"
 excludes "library agg: no develop-N wording"   "$lagg" "develop builds"
 contains "index: Libraries section"            "$(cat "$Plb/index.md")" "### Libraries"
+# a v-prefixed tag (legacy convention some libraries use) is still listed as a release
+git -C "$lb" tag -a v2.0.0 -m "Second lib release."
+librun VERSION=v2.0.0 FROZEN=true DATE=2026-07-20
+check "library: v-tag release page written"    yes "$([ -f "$Plb/mylib/versions/v2.0.0.md" ] && echo yes || echo no)"
+contains "library: v-tag listed in table"      "$(cat "$Plb/mylib/CHANGELOG.md")" "[\`v2.0.0\`]"
 rm -rf "$lb" "$Plb"
 
 echo

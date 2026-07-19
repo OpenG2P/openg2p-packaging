@@ -22,7 +22,8 @@ KEEP="${KEEP:-3}"
 
 list_versions() { ls "$vdir" 2>/dev/null | sed 's/\.md$//'; }
 
-frozen=$(list_versions | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -rV || true)
+# Release pages: bare N.N.N and legacy v-prefixed vN.N.N (some libraries still tag v…).
+frozen=$(list_versions | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+$' | sort -rV || true)
 develop=$(list_versions | grep -E '^0\.0\.0-develop\.[0-9]+$' | sort -t. -k4,4rn || true)
 # Library repos: one rolling page per tracked branch (branch-<name>.md). Empty for
 # services, so the branch table rows + section simply don't appear for them.
