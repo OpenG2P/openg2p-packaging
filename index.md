@@ -27,3 +27,4 @@ See the **[versioning & CI docs](https://docs.openg2p.org/operations/deployment/
 ### Libraries
 
 - **[openg2p-fastapi-common](./openg2p-fastapi-common/CHANGELOG)** · [repository ↗](https://github.com/OpenG2P/openg2p-fastapi-common)
+- **[registry-platform](./registry-platform/CHANGELOG)** · [repository ↗](https://github.com/OpenG2P/registry-platform)
