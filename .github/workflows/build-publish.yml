@@ -28,8 +28,11 @@ on:
           Pins are per-image because they describe what is compiled into THAT
           image -- a repo-wide pin would stamp a false provenance label onto
           images that never consume the arg.
-        required: true
+          Empty (the default) = this repo builds no image (a library, or a
+          chart-only repo). A service that builds images passes them here.
+        required: false
         type: string
+        default: '[]'
       chart-path:
         description: 'Path to the chart dir. Empty = this repo publishes no chart.'
         required: false
