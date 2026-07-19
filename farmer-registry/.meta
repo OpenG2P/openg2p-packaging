@@ -1,1 +1,3 @@
+name=farmer-registry
+kind=service
 repo=https://github.com/OpenG2P/farmer-registry
