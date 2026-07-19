@@ -277,8 +277,17 @@ jobs:
             fi
           done
           if [ -z "$src" ]; then
-            echo "::error::nothing to promote. Tried: ${{ needs.version.outputs.promote_from }}"
-            echo "::error::A release must be tagged on a commit whose images CI already built."
+            line="${VERSION%.*}"
+            echo "::error::nothing to promote for $IMAGE (release ${VERSION}, commit ${{ needs.version.outputs.revision }})."
+            echo "::error::looked for already-built images: ${{ needs.version.outputs.promote_from }}"
+            echo "A release PROMOTES the digest CI already built and tested for this commit; it never rebuilds."
+            echo "This commit was never built -- most likely the tag was pushed WITHOUT first pushing its branch"
+            echo "(pushing only a tag skips the build)."
+            echo "Fix: delete the tag, push branch '${line}' (or the develop branch), let its pipeline go GREEN,"
+            echo "then re-tag THAT commit and push the tag:"
+            echo "  git push origin :refs/tags/${VERSION}"
+            echo "  git push origin ${line}"
+            echo "  git tag -a ${VERSION} <built-commit> -m '...' && git push origin ${VERSION}"
             exit 1
           fi
           echo "Promoting $IMAGE:$src -> $IMAGE:$VERSION (same digest, no rebuild)"
@@ -570,20 +579,22 @@ jobs:
           exit 1
 
   changelog:
-    needs: [version, images]
-    # Changelog follows the chart: anything deployable (develop, RC, release) is
-    # documented. develop -> rolling Unreleased; RC -> durable per-RC page;
-    # release tag -> frozen page. Feature branches publish no chart, so they are
-    # skipped (traced via image labels). A manual regenerate bypasses the gate.
+    needs: [version, images, chart]
+    # The catalogue must reflect only versions whose ARTIFACTS actually published, so a
+    # FAILED images (build/promote) or chart job blocks the changelog -- otherwise a failed
+    # publish would still yield a "published" version in the versions site. Skipped is fine
+    # (a library skips images/chart; a chart-only repo skips images; no-chart repos skip
+    # chart). A manual regenerate bypasses the gate (it only re-summarises an existing page).
     if: >-
       always() &&
       needs.version.result == 'success' &&
-      (needs.images.result == 'success' || inputs.changelog_regenerate != '' || inputs.changelog_kind == 'library') &&
-      (inputs.changelog_regenerate != '' ||
-       inputs.changelog_kind == 'library' ||
-       needs.version.outputs.channel == 'develop' ||
-       needs.version.outputs.channel == 'rc' ||
-       needs.version.outputs.frozen == 'true')
+      ( inputs.changelog_regenerate != '' ||
+        ( needs.images.result != 'failure' && needs.images.result != 'cancelled' &&
+          needs.chart.result != 'failure' && needs.chart.result != 'cancelled' &&
+          ( inputs.changelog_kind == 'library' ||
+            needs.version.outputs.channel == 'develop' ||
+            needs.version.outputs.channel == 'rc' ||
+            needs.version.outputs.frozen == 'true' ) ) )
     runs-on: ubuntu-latest
     # One repo's changelog pushes are serialised against each other; the shared
     # branch is handled by the retry loop below (concurrency can't span repos).
