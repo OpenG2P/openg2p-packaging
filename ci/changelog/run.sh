@@ -33,9 +33,15 @@ out() { [ -n "${GITHUB_OUTPUT:-}" ] && printf '%s=%s\n' "$1" "$2" >>"$GITHUB_OUT
 # so both name and URLs are stored here and read back by render-aggregate /
 # render-root-index. Defaults to REPO on forges without subgroups (GitHub).
 REPO_DISPLAY="${REPO_DISPLAY:-$REPO}"
+# kind = service (builds image/chart) | library (code consumed by git ref: no artifact,
+# tracked by branch SHA + tag). render-root-index groups the catalogue by this.
+CHANGELOG_KIND="${CHANGELOG_KIND:-service}"
+# Retention: libraries list the last 5 commits on a branch; services keep 3 build pages.
+if [ "$CHANGELOG_KIND" = library ]; then KEEP="${KEEP:-5}"; else KEEP="${KEEP:-3}"; fi
 mkdir -p "${PAGES_DIR}/${REPO}"
 {
   echo "name=${REPO_DISPLAY}"
+  echo "kind=${CHANGELOG_KIND}"
   [ -n "${REPO_URL:-}" ]   && echo "repo=${REPO_URL}"
   [ -n "${IMAGES_URL:-}" ] && echo "images=${IMAGES_URL}"
 } > "${PAGES_DIR}/${REPO}/.meta"
@@ -122,7 +128,9 @@ fi
 RANGE_FROM="$FROM" RANGE_TO=HEAD \
   bash "$HERE/assemble.sh" >"$work/notes.md" || true
 
-if [ ! -s "$work/notes.md" ]; then
+# A library's rolling branch page always has recent commits to show, even with no new
+# commits since the last tag, so only services bail here.
+if [ ! -s "$work/notes.md" ] && [ "${CHANGELOG_KIND:-service}" != library ]; then
   echo "No new change notes since ${FROM:-start of history}; nothing to publish."
   out published false
   exit 0
@@ -137,16 +145,30 @@ RANGE_FROM="$FROM" RANGE_TO=HEAD bash "$HERE/digest.sh" >"$work/digest.md" 2>/de
 summarise_into "$work/notes.md" "$work/summary.md"
 
 # MODE decides the page shape:
-#   frozen   -> durable versions/<version>.md, cumulative-only (a release)
+#   frozen   -> durable versions/<version>.md, cumulative-only (a release / a tag)
 #   rc       -> durable versions/<version>.md, two diffs (release candidate — last
 #               few RC builds kept so you can see what changed rc-to-rc)
 #   develop  -> durable versions/0.0.0-develop.N.md, two diffs (last few kept)
-if [ "${FROZEN:-false}" = true ]; then
+#   library  -> a library repo's non-tag build: one ROLLING page per branch, keyed by
+#               branch (the identity is the commit SHA), listing the last KEEP commits
+#               + a summary since the last tag. A library TAG is just a frozen release.
+if [ "${CHANGELOG_KIND:-service}" = library ] && [ "${FROZEN:-false}" != true ]; then
+  MODE=library
+elif [ "${FROZEN:-false}" = true ]; then
   MODE=frozen
 elif printf '%s' "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+-rc\.[0-9]+$'; then
   MODE=rc
 else
   MODE=develop
+fi
+
+# A library's rolling branch page lists the last KEEP commits (not a since-last-build
+# diff). Gather them once here; render.sh drops them into the page.
+RECENT_FILE=""
+if [ "$MODE" = library ]; then
+  RANGE_LIMIT="${KEEP:-5}" RANGE_FROM="" RANGE_TO=HEAD \
+    bash "$HERE/assemble.sh" >"$work/recent.md" || true
+  RECENT_FILE="$work/recent.md"
 fi
 
 # The incremental "new in this build" diff needs the PREVIOUS build's commit, read
@@ -236,6 +258,7 @@ PAGES_DIR="$PAGES_DIR" REPO="$REPO" REPO_DISPLAY="$REPO_DISPLAY" VERSION="$VERSI
   NOTES_FILE="$work/notes.md" SUMMARY_FILE="$work/summary.md" SUMMARY_OK="$SUMMARY_OK" \
   INCR_NOTES_FILE="$INCR_NOTES_FILE" PREV_BUILD="$PREV_BUILD" \
   RELEASE_NOTES_FILE="$RELEASE_NOTES_FILE" \
+  BRANCH="${BRANCH:-}" RECENT_FILE="$RECENT_FILE" KEEP="$KEEP" \
   bash "$HERE/render.sh"
 
 PAGES_DIR="$PAGES_DIR" bash "$HERE/render-root-index.sh"

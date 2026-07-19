@@ -24,6 +24,12 @@ list_versions() { ls "$vdir" 2>/dev/null | sed 's/\.md$//'; }
 
 frozen=$(list_versions | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -rV || true)
 develop=$(list_versions | grep -E '^0\.0\.0-develop\.[0-9]+$' | sort -t. -k4,4rn || true)
+# Library repos: one rolling page per tracked branch (branch-<name>.md). Empty for
+# services, so the branch table rows + section simply don't appear for them.
+branches=$(list_versions | grep -E '^branch-' | sort || true)
+
+kind=$(grep -m1 '^kind=' "${repo_dir}/.meta" 2>/dev/null | sed 's/^kind=//' || true)
+[ -n "$kind" ] || kind=service
 
 rcs_all=$(list_versions | grep -E '^[0-9]+\.[0-9]+\.[0-9]+-rc\.[0-9]+$' || true)
 inprogress=""
@@ -59,7 +65,7 @@ section() {  # $1 = heading  $2 = newline list of versions
   # Display name keeps subgroup slashes (spar/spar) from .meta; folder key is flat.
   disp=$(grep -m1 '^name=' "${repo_dir}/.meta" 2>/dev/null | sed 's/^name=//' || true)
   [ -n "$disp" ] || disp="$REPO"
-  echo "# ${disp} changelog"
+  echo "# ${disp}"
   echo
   echo "_Published automatically._"
   echo
@@ -91,6 +97,7 @@ section() {  # $1 = heading  $2 = newline list of versions
     emit "$frozen"     "release"
     emit "$inprogress" "release candidate"
     emit "$develop"    "develop"
+    emit "$branches"   "branch"
   } | sed 's/^|/0|/' > "$tbl"     # missing ts -> 0, so it sorts last
 
   echo "| Version | Date | Type |"
@@ -98,7 +105,8 @@ section() {  # $1 = heading  $2 = newline list of versions
   sort -s -t'|' -k1,1rn "$tbl" | while IFS='|' read -r ts d v t; do
     [ -n "$v" ] || continue
     [ -n "$d" ] || d="—"
-    echo "| [\`$v\`](#$(anchor "$v")) | $d | $t |"
+    label="$v"; case "$v" in branch-*) label="${v#branch-}" ;; esac   # show branch name, not the file key
+    echo "| [\`$label\`](#$(anchor "$v")) | $d | $t |"
   done
   rm -f "$tbl"
   echo
@@ -106,15 +114,25 @@ section() {  # $1 = heading  $2 = newline list of versions
   section "Releases" "$frozen"
   section "Release candidates (in progress)" "$inprogress"
   section "Develop builds" "$develop"
+  section "Branches (moving)" "$branches"
 
   # ---- retention footnote: make it clear what is (and isn't) listed ----
   echo "---"
   echo
-  echo "> **What's shown here.** This catalogue lists **every stable release**, plus"
-  echo "> the **latest ${KEEP} develop builds** and the **latest ${KEEP} release"
-  echo "> candidates** per release line. Older develop builds and release candidates"
-  echo "> are pruned as they are superseded, and a release's candidates are removed"
-  echo "> once it ships. Those versions still exist in the container and Helm"
-  echo "> registries — they are simply not listed here. This page is generated"
-  echo "> automatically from commit history; do not edit it by hand."
+  if [ "$kind" = library ]; then
+    echo "> **What's shown here.** This is a **library**, consumed directly by git"
+    echo "> reference (a branch, tag, or commit) — there is no image or chart. Each"
+    echo "> **tagged version** is listed in full; each tracked **branch** shows its"
+    echo "> current state and its **last ${KEEP} commits**. Pin a **tag** (or a commit)"
+    echo "> for a fixed version, or a **branch** to track the latest. This page is"
+    echo "> generated automatically from commit history; do not edit it by hand."
+  else
+    echo "> **What's shown here.** This catalogue lists **every stable release**, plus"
+    echo "> the **latest ${KEEP} develop builds** and the **latest ${KEEP} release"
+    echo "> candidates** per release line. Older develop builds and release candidates"
+    echo "> are pruned as they are superseded, and a release's candidates are removed"
+    echo "> once it ships. Those versions still exist in the container and Helm"
+    echo "> registries — they are simply not listed here. This page is generated"
+    echo "> automatically from commit history; do not edit it by hand."
+  fi
 } > "${repo_dir}/CHANGELOG.md"

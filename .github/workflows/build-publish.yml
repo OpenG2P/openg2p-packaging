@@ -127,11 +127,18 @@ on:
         required: false
         type: string
         default: ''
+      changelog_kind:
+        description: "library => a code library consumed by git ref: no image/chart is built; the changelog tracks each moving branch (by commit SHA) plus tags."
+        required: false
+        type: string
+        default: service
     secrets:
+      # Optional so a library caller (changelog_kind: library, no images) can omit them.
+      # A service that actually builds images must still pass both, or the login fails.
       docker_hub_actor:
-        required: true
+        required: false
       docker_hub_token:
-        required: true
+        required: false
       # GitLab deploy-token (username + token) used when publishing images to the
       # GitLab Container Registry and/or the chart to a GitLab Helm registry.
       gitlab_registry_user:
@@ -173,7 +180,21 @@ jobs:
 
       - name: Derive version
         id: v
-        run: bash .openg2p-ci/ci/version/derive-version.sh
+        run: |
+          if [ "${{ inputs.changelog_kind }}" = "library" ]; then
+            # A library builds no artifact -> no derived SemVer. Identity = the tag (a
+            # release) or the moving branch (tracked by commit SHA). images/chart skipped.
+            echo "version=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+            echo "revision=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+            echo "publish_chart=false" >> "$GITHUB_OUTPUT"
+            if [ "${{ github.ref_type }}" = "tag" ]; then
+              echo "frozen=true"  >> "$GITHUB_OUTPUT"
+            else
+              echo "frozen=false" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            bash .openg2p-ci/ci/version/derive-version.sh
+          fi
 
       - name: Summary
         run: |
@@ -188,6 +209,7 @@ jobs:
 
   images:
     needs: version
+    if: inputs.changelog_kind != 'library'   # a library builds/promotes no image
     runs-on: ubuntu-latest
     # packages: write lets us push to GHCR with the built-in GITHUB_TOKEN. The
     # CALLER stub must also grant it (permissions are capped by the caller).
@@ -553,8 +575,9 @@ jobs:
     if: >-
       always() &&
       needs.version.result == 'success' &&
-      (needs.images.result == 'success' || inputs.changelog_regenerate != '') &&
+      (needs.images.result == 'success' || inputs.changelog_regenerate != '' || inputs.changelog_kind == 'library') &&
       (inputs.changelog_regenerate != '' ||
+       inputs.changelog_kind == 'library' ||
        needs.version.outputs.channel == 'develop' ||
        needs.version.outputs.channel == 'rc' ||
        needs.version.outputs.frozen == 'true')
@@ -605,6 +628,10 @@ jobs:
           PAGES_DIR: ${{ github.workspace }}/changelog-pages
           REPO_URL: ${{ github.server_url }}/${{ github.repository }}
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          # kind + the moving branch drive library mode (rolling per-branch page keyed
+          # by SHA, grouped under "Libraries" in the catalogue).
+          CHANGELOG_KIND: ${{ inputs.changelog_kind }}
+          BRANCH: ${{ github.ref_type == 'branch' && github.ref_name || '' }}
           ARTIFACT_SOURCE: ${{ inputs.artifact-source }}
           SKIP_AI: ${{ inputs.changelog_skip_ai }}
           REGEN_VERSION: ${{ inputs.changelog_regenerate }}

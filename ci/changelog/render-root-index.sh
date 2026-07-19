@@ -28,6 +28,21 @@ docs_url="${DOCS_URL:-https://docs.openg2p.org/operations/deployment/helm-docker
 
 meta_get() { grep -m1 "^${2}=" "${PAGES_DIR}/${1}/.meta" 2>/dev/null | sed "s/^${2}=//" || true; }
 
+# One markdown bullet per repo in a newline-separated list: display name links to the
+# repo's CHANGELOG; a "repository" link is added when .meta carries the source URL.
+bullets() {
+  printf '%s\n' "$1" | while IFS= read -r r; do
+    [ -n "$r" ] || continue
+    url=$(meta_get "$r" repo)
+    disp=$(meta_get "$r" name); [ -n "$disp" ] || disp="$r"   # keep subgroup slashes
+    if [ -n "$url" ]; then
+      echo "- **[${disp}](./${r}/CHANGELOG${link_suffix})** · [repository ↗](${url})"
+    else
+      echo "- **[${disp}](./${r}/CHANGELOG${link_suffix})**"
+    fi
+  done
+}
+
 repos=""
 for d in "$PAGES_DIR"/*/; do
   [ -f "${d}CHANGELOG.md" ] || continue     # only real changelog folders
@@ -69,16 +84,25 @@ fi
   if [ -z "$repos" ]; then
     echo "_No changelogs published yet._"
   else
-    printf '%s\n' "$repos" | while IFS= read -r r; do
+    # Partition by kind: services (build image/chart) vs libraries (consumed by git ref).
+    svc=""; lib=""
+    while IFS= read -r r; do
       [ -n "$r" ] || continue
-      url=$(meta_get "$r" repo)
-      disp=$(meta_get "$r" name); [ -n "$disp" ] || disp="$r"   # keep subgroup slashes
-      if [ -n "$url" ]; then
-        echo "- **[${disp}](./${r}/CHANGELOG${link_suffix})** · [repository ↗](${url})"
-      else
-        echo "- **[${disp}](./${r}/CHANGELOG${link_suffix})**"
-      fi
-    done
+      if [ "$(meta_get "$r" kind)" = library ]; then lib="${lib}${r}"$'\n'; else svc="${svc}${r}"$'\n'; fi
+    done <<EOF
+$repos
+EOF
+    svc=$(printf '%s' "$svc" | sed '/^$/d'); lib=$(printf '%s' "$lib" | sed '/^$/d')
+    if [ -n "$lib" ]; then
+      # Headed sections only once libraries exist, so the all-services view stays flat.
+      echo "### Services"; echo
+      [ -n "$svc" ] && bullets "$svc" || echo "_None yet._"
+      echo
+      echo "### Libraries"; echo
+      bullets "$lib"
+    else
+      bullets "$svc"
+    fi
   fi
 } > "$PAGES_DIR/${index_file}"
 

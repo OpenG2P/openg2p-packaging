@@ -332,11 +332,45 @@ sgp=$(cat "$Psg/spar-spar/versions/0.0.0-develop.2.md")
 contains "page heading shows spar/spar"   "$sgp" "spar/spar — develop"
 excludes "page heading not flattened"     "$sgp" "spar-spar — develop"
 sga=$(cat "$Psg/spar-spar/CHANGELOG.md")
-contains "aggregate title shows spar/spar" "$sga" "# spar/spar changelog"
+contains "aggregate title is the module name" "$sga" "# spar/spar"
+excludes "aggregate title drops 'changelog'"  "$sga" "# spar/spar changelog"
 sgi=$(cat "$Psg/index.md")
 contains "index label shows spar/spar"     "$sgi" "[spar/spar](./spar-spar/CHANGELOG"
 excludes "index label not flattened"       "$sgi" "[spar-spar]"
 rm -rf "$sg" "$Psg"
+
+echo
+echo "library repo: rolling per-branch page (last 5 commits) + tag release, grouped separately"
+lb=$(mktemp -d); Plb=$(mktemp -d)
+git -C "$lb" init -q -b develop; git -C "$lb" config user.email t@t; git -C "$lb" config user.name t
+for i in 1 2 3 4 5 6; do git -C "$lb" commit -q --allow-empty -m "G2P-$((600+i)) lib change $i"; done
+git -C "$lb" tag -a 1.0.0 -m "First library release."
+librun() { ( cd "$lb" && REPO=mylib REPO_DISPLAY=mylib CHANGELOG_KIND=library \
+  REPO_URL=https://github.com/OpenG2P/mylib PAGES_DIR="$Plb" SKIP_AI=true \
+  REVISION=$(git -C "$lb" rev-parse HEAD) env "$@" bash "$HERE/run.sh" >/dev/null ); }
+# a tagged library release (frozen)
+librun VERSION=1.0.0 FROZEN=true DATE=2026-07-18
+# then two more commits on the branch, and a branch build
+git -C "$lb" commit -q --allow-empty -m "G2P-700 post-release work A"
+git -C "$lb" commit -q --allow-empty -m "G2P-701 post-release work B"
+librun VERSION=develop FROZEN=false BRANCH=develop DATE=2026-07-19
+check "library: rolling branch page written"  yes "$([ -f "$Plb/mylib/versions/branch-develop.md" ] && echo yes || echo no)"
+check "library: tag release page written"     yes "$([ -f "$Plb/mylib/versions/1.0.0.md" ] && echo yes || echo no)"
+bpg=$(cat "$Plb/mylib/versions/branch-develop.md")
+contains "library: page names the branch"     "$bpg" "\`develop\` branch"
+contains "library: recent-commits heading"     "$bpg" "Recent commits (latest 5)"
+contains "library: baseline is the tag"        "$bpg" "since 1.0.0"
+contains "library: lists newest commit"        "$bpg" "post-release work B"
+contains "library: keeps the 5th-newest"       "$bpg" "lib change 4"
+excludes "library: drops the 6th-newest"       "$bpg" "lib change 3"
+lagg=$(cat "$Plb/mylib/CHANGELOG.md")
+contains "library agg: Branches section"       "$lagg" "# Branches (moving)"
+contains "library agg: Releases section"       "$lagg" "# Releases"
+contains "library agg: table shows branch name" "$lagg" "[\`develop\`](#v-branch-develop)"
+contains "library agg: library footnote"       "$lagg" "consumed directly by git"
+excludes "library agg: no develop-N wording"   "$lagg" "develop builds"
+contains "index: Libraries section"            "$(cat "$Plb/index.md")" "### Libraries"
+rm -rf "$lb" "$Plb"
 
 echo
 echo "$pass passed, $fail failed"

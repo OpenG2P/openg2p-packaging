@@ -1,0 +1,28 @@
+# Sample caller workflow for a LIBRARY repo (code consumed by git ref: no image, no chart).
+#
+# Copy into the library repo as `.github/workflows/publish.yml`. The pipeline builds and
+# publishes no artifact; it only tracks the changelog: a rolling page per moving branch
+# (last 5 commits + summary since the last tag) and a durable page per tag. The repo
+# appears under "Libraries" in the versions catalogue.
+#
+# Repos on GitHub today: openg2p-fastapi-commons, registry-platform (and more to come).
+
+name: publish
+on:
+  push:
+    branches: [develop]                 # add maintenance branches here to track them too
+    tags: ['[0-9]+.[0-9]+.[0-9]+']       # bare N.N.N release tags
+
+jobs:
+  publish:
+    uses: openg2p/openg2p-packaging/.github/workflows/build-publish.yml@v1
+    permissions:
+      contents: read
+    with:
+      changelog_kind: library            # <- the only line that differs from a service caller
+      changelog-repo: openg2p/openg2p-packaging
+      changelog-branch: gh-pages
+    secrets:
+      OPENG2P_BOT_GITHUB_PAT: ${{ secrets.OPENG2P_BOT_GITHUB_PAT }}
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      # No docker_hub_* needed: a library builds no image.

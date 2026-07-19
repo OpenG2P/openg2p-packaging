@@ -9,12 +9,17 @@
 # means from the start of history — used for the first release. Merge commits
 # are excluded (they carry no authored message of their own).
 #
+# RANGE_LIMIT caps the number of commits (newest-first) — used by a library's
+# rolling branch page to list just the last few commits.
+#
 #   RANGE_FROM=1.0.0 RANGE_TO=HEAD ./assemble.sh
+#   RANGE_LIMIT=5 ./assemble.sh            # last 5 commits on HEAD
 
 set -euo pipefail
 
 FROM="${RANGE_FROM:-}"
 TO="${RANGE_TO:-HEAD}"
+LIMIT="${RANGE_LIMIT:-}"
 
 if [ -n "$FROM" ] && git rev-parse --verify -q "$FROM" >/dev/null 2>&1; then
   range="${FROM}..${TO}"
@@ -32,4 +37,6 @@ if [ -n "$base" ]; then
 else
   fmt="- %s (\`%h\`)"
 fi
-git log "$range" --no-merges --no-color --pretty=tformat:"$fmt" 2>/dev/null || true
+# ${LIMIT:+…} is unquoted so an empty LIMIT expands to nothing; LIMIT is numeric so
+# word-splitting into `-n N` is safe (and works on bash 3.2 without arrays).
+git log "$range" ${LIMIT:+-n $LIMIT} --no-merges --no-color --pretty=tformat:"$fmt" 2>/dev/null || true

@@ -18,6 +18,10 @@
 #        INCR_NOTES_FILE       notes since the previous build (incremental)
 #        PREV_BUILD            previous build's version string (may be empty)
 #        KEEP                  how many rc/develop pages to keep (default 3)
+#   library (a library repo's non-tag build) also uses:
+#        BRANCH                the moving branch being tracked (page id)
+#        RECENT_FILE           the last KEEP commits, as a bullet list
+#        KEEP                  how many recent commits to list (default 5)
 #
 # Pages embed a hidden `<!-- build:V revision:R ts:EPOCH -->` marker: the next
 # build diffs against it, and the aggregate sorts the summary table by commit
@@ -124,6 +128,33 @@ case "$MODE" in
   rc)
     two_diff_body "${disp} ${VERSION} — ${DATE}" > "${vdir}/${VERSION}.md"
     prune "${VERSION%-rc.*}-rc"        # keep the last KEEP RCs of this release line
+    ;;
+  library)
+    # A library's moving branch: one ROLLING page per branch (regenerated each push),
+    # keyed by the branch name; the identity of "what you get" is the tip SHA. Lists the
+    # last KEEP commits + a summary since the last tag. No pruning (one page per branch).
+    branch="${BRANCH:-$VERSION}"
+    safe=$(printf '%s' "$branch" | sed 's#[^A-Za-z0-9._-]#-#g')   # filesystem-safe id
+    {
+      echo "## ${disp} — \`${branch}\` branch (${DATE})"
+      echo
+      echo "_moving branch · latest commit \`${short_rev}\` · baseline: ${rel_label}${art}_"
+      echo "${marker}"
+      echo
+      echo "### Summary"
+      echo
+      echo "_Changes on \`${branch}\` since ${rel_label}:_"
+      echo
+      printf '%s\n' "$summary"
+      echo
+      echo "### Recent commits (latest ${KEEP})"
+      echo
+      if [ -n "${RECENT_FILE:-}" ] && [ -s "$RECENT_FILE" ]; then
+        bash "$HERE/linkify.sh" <"$RECENT_FILE"
+      else
+        printf '%s\n' "$cum_notes"
+      fi
+    } > "${vdir}/branch-${safe}.md"
     ;;
   *)  # develop build (MODE=develop): durable per-N page, last KEEP kept
     two_diff_body "${disp} — develop ${VERSION} (${DATE})" > "${vdir}/${VERSION}.md"
