@@ -8,6 +8,8 @@ versions it references are **locked together** — one immutable version per com
 
 See the **[versioning & CI docs](https://docs.openg2p.org/operations/deployment/helm-docker-versioning-and-ci)** for how these are produced.
 
+### Services
+
 - **[audit-manager](./audit-manager/CHANGELOG)**
 - **[awe](./awe/CHANGELOG)**
 - **[consent-manager](./consent-manager/CHANGELOG)**
@@ -21,3 +23,7 @@ See the **[versioning & CI docs](https://docs.openg2p.org/operations/deployment/
 - **[openg2p-staff-portal-ui](./openg2p-staff-portal-ui/CHANGELOG)**
 - **[partner-management](./partner-management/CHANGELOG)**
 - **[spar](./spar/CHANGELOG)**
+
+### Libraries
+
+- **[openg2p-fastapi-common](./openg2p-fastapi-common/CHANGELOG)** · [repository ↗](https://github.com/OpenG2P/openg2p-fastapi-common)
