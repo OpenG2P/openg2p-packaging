@@ -36,17 +36,20 @@ if [ -n "${DIGEST_FILE:-}" ] && [ -s "$DIGEST_FILE" ]; then
   digest=$(cat "$DIGEST_FILE")
 fi
 
-# The instructions are deliberately strict about NOT flattening: the failure mode
-# we are fixing is a large range collapsing into vague filler ("improved
-# stability") that drops the one change that matters.
+# A SUMMARY, not a reproduction: the full per-commit list is rendered separately
+# right below this summary, so the model must SYNTHESISE (group by theme) rather
+# than emit one bullet per commit. The two failure modes we guard against: (a) a
+# large range enumerating into a 30-item list that reads like the raw log, and
+# (b) flattening into vague filler that hides the one change that matters.
 rules=$(cat <<'RULES'
-You are writing changelog release notes. Turn the changes below into user-facing bullets, ordered MOST SIGNIFICANT FIRST.
+You are writing a concise CHANGELOG SUMMARY. The full per-commit list is shown separately BELOW your summary, so do NOT reproduce it — SYNTHESISE, do not enumerate.
 
 Rules:
-- Lead with the highest-impact changes and NEVER omit a significant one: breaking changes, security/auth/crypto changes, switching a core component or library, new or removed features, data migrations, dependency changes. If a note says "major", "breaking", "removed", or names a component swap (e.g. Keymanager -> local crypto), it MUST appear as its own bullet, named specifically.
-- Be concrete. Name the actual component, technology or behaviour that changed (e.g. "Signing now uses local crypto instead of Keymanager"). Do NOT use vague filler like "improved stability", "enhanced integration" or "updated defaults".
-- Group several trivial or closely related commits into one bullet, but keep every significant change as its own bullet.
-- Scale the number of bullets to the amount of change: a few for a small range, more for a large one. Do not force a fixed count.
+- Synthesise into a SHORT set of themed bullets (typically 4-10, even for a large range). Group related changes by area — e.g. security, testing, CI/build, a named feature, dependencies, migrations. NEVER emit one bullet per commit or per ticket.
+- Make each bullet dense: state the theme and name the concrete significant items inside it, e.g. "Security hardening: fail-closed partner-signature and consent enforcement by default, CSRF validation, non-root containers".
+- Order most significant first. Do NOT hide a genuinely significant change — breaking changes, security/auth/crypto, switching a core component or library, new or removed features, data migrations must be visible, but may sit inside a themed bullet.
+- Accentuate ONLY when the notes make it unambiguous: if a change is clearly major or breaking (a note literally says "major", "breaking" or "removed", or names a component swap or a data migration), prefix that one bullet with "**Major:** ". If you are not sure it is major, add NO label — never guess, never inflate.
+- Be concrete. Name the actual component, technology or behaviour. Do NOT use vague filler like "improved stability", "enhanced integration" or "updated defaults".
 - Plain language, no headings, no preamble. Start each line with "- ".
 RULES
 )
