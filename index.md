@@ -18,7 +18,7 @@ See the **[versioning & CI docs](https://docs.openg2p.org/operations/deployment/
 - **[iam-service](./iam-service/CHANGELOG)**
 - **[id-generator](./id-generator/CHANGELOG)**
 - **[master-data-service](./master-data-service/CHANGELOG)**
-- **[national-social-registry](./national-social-registry/CHANGELOG)**
+- **[national-social-registry](./national-social-registry/CHANGELOG)** · [repository ↗](https://github.com/OpenG2P/national-social-registry)
 - **[openg2p-commons-deployment](./openg2p-commons-deployment/CHANGELOG)** · [repository ↗](https://github.com/OpenG2P/openg2p-commons-deployment)
 - **[openg2p-staff-portal-ui](./openg2p-staff-portal-ui/CHANGELOG)**
 - **[partner-management](./partner-management/CHANGELOG)**
