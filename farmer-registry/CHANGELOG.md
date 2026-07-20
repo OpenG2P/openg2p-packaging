@@ -6,7 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
-| [`0.0.0-develop.109`](#v-0-0-0-develop-109) | 2026-07-19 | develop |
+| [`0.0.0-develop.109`](#v-0-0-0-develop-109) | 2026-07-20 | develop |
 | [`0.0.0-develop.107`](#v-0-0-0-develop-107) | 2026-07-19 | develop |
 | [`0.0.0-develop.105`](#v-0-0-0-develop-105) | 2026-07-19 | develop |
 
@@ -14,7 +14,7 @@ _Published automatically._
 
 <a id="v-0-0-0-develop-109"></a>
 
-## farmer-registry — develop 0.0.0-develop.109 (2026-07-19)
+## farmer-registry — develop 0.0.0-develop.109 (2026-07-20)
 
 _commit `698a8d0` · baseline: release the start · previous build 0.0.0-develop.107_
 <!-- build:0.0.0-develop.109 revision:698a8d03d41bab6572ab5b59f0bbb0a657c04212 ts:1784482467 -->
@@ -23,13 +23,14 @@ _commit `698a8d0` · baseline: release the start · previous build 0.0.0-develop
 
 _All changes since release the start:_
 
-- **Major:** Migration of id-generator to GitLab with updated references in Chart.yaml; IAM service repo renamed and moved to central build-publish CI with self-contained pinned Dockerfiles.
-- E2E testing enhancements: fixed sanity tests for change-request and install-time issues, added new sanity test suite, and improved change-request e2e flow to pass on live clusters.
-- Security improvements: enabled partner signature validation and consent enforcement by default, added CSRF validation for staff-portal-api requests, and updated IAM permissions for register metadata API access.
-- Dependency management: updated permission-to-role mappings, bumped dependencies to latest versions, and corrected Docker configurations for various services.
-- Data seeding and model updates: enhanced data seeding scripts for geo reference data, updated SQL data models for farmer extension, and added new templates for DCI response processing.
-- CI/CD improvements: tidied up CI migration leftovers, fixed build-arg repo mismatches, and enhanced helm-publish workflow against race conditions.
-- Documentation updates: added a sanity-testing page with diagrams and procedures, and cleaned up README files for clarity.
+- **Major:** Migration of id-generator to Gitlab, necessitating updates in Chart.yaml and related configurations.
+- E2E testing enhancements: Resolved multiple issues in the sanity DCI tests, including search text handling, install-time 403 errors, and audit DB wiring, ensuring successful end-to-end execution on live clusters.
+- Security improvements: Default fail-closed settings for partner signature validation and consent enforcement, alongside the addition of CSRF validation for staff-portal-api requests.
+- CI/CD updates: Transitioned to a central build-publish CI, streamlined Docker configurations, and removed deprecated files, enhancing the overall build process.
+- Dependency management: Updated various dependencies and image tags to the latest versions, including a frozen version for Postgres and AWE.
+- Data seeding and model updates: Enhanced data seeding scripts for geo reference data, updated SQL models for farmer extensions, and introduced new templates for DCI responses.
+- Documentation improvements: Added a comprehensive sanity-testing page and updated deployment documentation to reflect recent changes and configurations.
+- Refactoring efforts: Consistent naming conventions applied across various components, including ID prefixes and internal record IDs, alongside the removal of obsolete models.
 
 ### New in this build (since 0.0.0-develop.107)
 
