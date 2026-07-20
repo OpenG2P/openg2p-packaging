@@ -22,6 +22,7 @@ See the **[versioning & CI docs](https://docs.openg2p.org/operations/deployment/
 - **[openg2p-commons-deployment](./openg2p-commons-deployment/CHANGELOG)** · [repository ↗](https://github.com/OpenG2P/openg2p-commons-deployment)
 - **[openg2p-staff-portal-ui](./openg2p-staff-portal-ui/CHANGELOG)**
 - **[partner-management](./partner-management/CHANGELOG)**
+- **[pbms](./pbms/CHANGELOG)** · [repository ↗](https://github.com/OpenG2P/pbms)
 - **[spar](./spar/CHANGELOG)**
 
 ### Libraries
