@@ -1,33 +1,24 @@
-## registry-platform — `develop` branch (2026-07-19)
+## registry-platform — `develop` branch (2026-07-20)
 
-_moving branch · latest commit `c73493f` · baseline: v1.0.0_
-<!-- build:develop revision:c73493fd9c9990fe57ee36b28461aba944bcaf17 ts:1784449800 -->
+_moving branch · latest commit `0aa8e36` · baseline: v1.0.0_
+<!-- build:develop revision:0aa8e362af8ff75fdc8322b855b3a2aa99217420 ts:1784523907 -->
 
 ### Summary
 
 _Changes on `develop` since v1.0.0:_
 
-- Repointed Partner Management to use commons-services and aligned PM-seed authentication to the g2p-bridge pmSeedClientId pattern.
-- Added cookieDomain to environment configuration and updated authentication cookie handling.
-- Enhanced consent management, partner management, and WJS support.
-- Added client-side CSRF token handling for improved security.
-- Refactored IAM permission handling and authentication cookie management.
-- Added a new endpoint, list_tasks_for_request, and related functionality.
-- Added the assignee_name field to the ApprovalTask model and updated related logic.
-- Implemented permission decoration on one API.
-- Fixed terminal approval validation to rollback CR changes when validation fails.
-- Updated Content Security Policy (CSP) header to include upgrade-insecure-requests.
-- Fixed translations and UI schema seeding issues.
-- Corrected the version in init.py to 0.0.0-dev0.
-- Updated environment variables and refactored logout handling.
-- Added library changelog tracking for better version management.
-- Introduced a changelog workflow in GitHub Actions for automated tracking.
-- Removed sample locale file from the staff portal UI.
+- **Major:** Refactor of document handling across the application, including removal of deprecated classes, restructuring of document processing, and enhancements to validation profiles for uploads.
+- Security improvements: Added CSRF validation for API requests and client-side CSRF token handling to enhance protection against cross-site request forgery.
+- Dependency updates: Upgraded `@openg2p/registry-widgets` to version 1.1.4 and updated various environment variables across modules.
+- UI enhancements: Improved layout and handling of geo hierarchy widgets, added new icons, and updated breadcrumb navigation for intake forms.
+- Refactoring efforts: Streamlined error handling in controllers, improved logging for document ingestion, and deduplicated document retrieval processes.
+- Cleanup and maintenance: Removed unused code and imports, including the deletion of several controller services and middleware related to document handling.
+- Feature additions: Introduced new data policy management features and configurable reference generators for administrative areas.
 
 ### Recent commits (latest 5)
 
 - [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) Grant packages: write in library changelog caller (reusable images/chart jobs require it at startup) ([`c73493f`](https://github.com/OpenG2P/registry-platform/commit/c73493fd9c9990fe57ee36b28461aba944bcaf17))
 - [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) Add library changelog tracking (kind: library) ([`532a3f9`](https://github.com/OpenG2P/registry-platform/commit/532a3f96341f56c3438421fa984bbc807292f1dc))
-- [G2P-5319](https://openg2p.atlassian.net/browse/G2P-5319) Permission decorated enabled on one API. ([`e11e8fe`](https://github.com/OpenG2P/registry-platform/commit/e11e8fe14d717636da5cc8cd1c3d16694db57cca))
-- [G2P-5222](https://openg2p.atlassian.net/browse/G2P-5222) Repoint Partner Management to commons-services and align PM-seed auth to the g2p-bridge pmSeedClientId pattern. ([`7d798a4`](https://github.com/OpenG2P/registry-platform/commit/7d798a430fb4ae254fdd749ed06b766bff8f2fc7))
-- [G2P-5222](https://openg2p.atlassian.net/browse/G2P-5222) Consent and partner management related. ([`873f96a`](https://github.com/OpenG2P/registry-platform/commit/873f96aa7c2624e5bcee3ca51df344d659f6cdd2))
+- [G2P-5375](https://openg2p.atlassian.net/browse/G2P-5375) Update @openg2p/registry-widgets version to 1.1.4 ([`c0331db`](https://github.com/OpenG2P/registry-platform/commit/c0331db71aa8c9af8fdc38643bcc8e7cc58898b7))
+- [G2P-4763](https://openg2p.atlassian.net/browse/G2P-4763) fix: update buildSectionsDataMap return type - change return type to always return an object ([`b010347`](https://github.com/OpenG2P/registry-platform/commit/b010347a6f87170f3975f417e30bdcd7937821ee))
+- updating the ui widget develop tag 1.1.4-dev.2 in the staff portal ui ([`08cb976`](https://github.com/OpenG2P/registry-platform/commit/08cb976ce5d3172f4c82a8ac2a5bf5eb75eced47))
