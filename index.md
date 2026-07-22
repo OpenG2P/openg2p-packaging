@@ -23,9 +23,9 @@ See the **[versioning & CI docs](https://docs.openg2p.org/operations/deployment/
 - **[openg2p-staff-portal-ui](./openg2p-staff-portal-ui/CHANGELOG)**
 - **[partner-management](./partner-management/CHANGELOG)**
 - **[pbms](./pbms/CHANGELOG)** · [repository ↗](https://github.com/OpenG2P/pbms)
+- **[registry-platform](./registry-platform/CHANGELOG)** · [repository ↗](https://github.com/OpenG2P/registry-platform)
 - **[spar](./spar/CHANGELOG)**
 
 ### Libraries
 
 - **[openg2p-fastapi-common](./openg2p-fastapi-common/CHANGELOG)** · [repository ↗](https://github.com/OpenG2P/openg2p-fastapi-common)
-- **[registry-platform](./registry-platform/CHANGELOG)** · [repository ↗](https://github.com/OpenG2P/registry-platform)
