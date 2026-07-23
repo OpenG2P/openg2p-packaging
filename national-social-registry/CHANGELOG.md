@@ -6,11 +6,23 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.164`](#v-0-0-0-develop-164) | 2026-07-23 | develop |
 | [`0.0.0-develop.162`](#v-0-0-0-develop-162) | 2026-07-23 | develop |
 | [`0.0.0-develop.159`](#v-0-0-0-develop-159) | 2026-07-23 | develop |
 | [`0.0.0-develop.158`](#v-0-0-0-develop-158) | 2026-07-23 | develop |
 
 # Develop builds
+
+<a id="v-0-0-0-develop-164"></a>
+
+## national-social-registry — develop 0.0.0-develop.164 (2026-07-23)
+
+_commit `31ec1a5` · changes since 0.0.0-develop.162_
+<!-- build:0.0.0-develop.164 revision:31ec1a5c96663789fec454ba889aaae73753bf57 ts:1784806499 -->
+
+### Changes since 0.0.0-develop.162
+
+- [G2P-5383](https://openg2p.atlassian.net/browse/G2P-5383) NSR db-seed: update the restored loaders for the v1.1.0 document refactor — record_image_storage_id was renamed to record_image_document_id, which made load_sample_data.py fail on g2p_register_individuals and g2p_register_households; verified against the live schema and by running both loaders in-cluster ([`a5634a1`](https://github.com/OpenG2P/national-social-registry/commit/a5634a16993f77cc3411bbf0f0ac65b669fccf73))
 
 <a id="v-0-0-0-develop-162"></a>
 
@@ -464,7 +476,7 @@ _All changes since release the start:_
 ---
 
 > **What's shown here.** This catalogue lists **every stable release**, plus
-> the **latest 3 develop builds** and the **latest 3 release
+> the **latest 10 develop builds** and the **latest 10 release
 > candidates** per release line. Older develop builds and release candidates
 > are pruned as they are superseded, and a release's candidates are removed
 > once it ships. Those versions still exist in the container and Helm
