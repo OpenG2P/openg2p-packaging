@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.292`](#v-0-0-0-develop-292) | 2026-07-23 | develop |
 | [`0.0.0-develop.291`](#v-0-0-0-develop-291) | 2026-07-23 | develop |
 | [`0.0.0-develop.288`](#v-0-0-0-develop-288) | 2026-07-23 | develop |
 | [`0.0.0-develop.286`](#v-0-0-0-develop-286) | 2026-07-22 | develop |
@@ -13,6 +14,17 @@ _Published automatically._
 | [`develop`](#v-branch-develop) | 2026-07-20 | branch |
 
 # Develop builds
+
+<a id="v-0-0-0-develop-292"></a>
+
+## registry-platform — develop 0.0.0-develop.292 (2026-07-23)
+
+_commit `dd25651` · changes since 0.0.0-develop.291_
+<!-- build:0.0.0-develop.292 revision:dd256515449c69dd3290db2d9ddbc2f9c9fefbea ts:1784807418 -->
+
+### Changes since 0.0.0-develop.291
+
+- [G2P-5383](https://openg2p.atlassian.net/browse/G2P-5383) Sanity: fail instead of silently passing — default SANITY_FAIL_ON_ERROR/failOnError to true so a failing suite fails the Job and the install, and make fixtures FAIL when a dependency is configured but broken (unconfigured dependencies still skip), so a run cannot go green having dropped every consent and signature test ([`dd25651`](https://github.com/OpenG2P/registry-platform/commit/dd256515449c69dd3290db2d9ddbc2f9c9fefbea))
 
 <a id="v-0-0-0-develop-291"></a>
 
