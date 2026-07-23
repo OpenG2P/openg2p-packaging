@@ -43,6 +43,20 @@ on:
         required: false
         type: string
         default: '[]'
+      chart-inherit-questions:
+        description: >-
+          Optional, for WRAPPER charts only (a chart that owns no templates and
+          just pins another chart plus a values overlay). JSON:
+          {"dependency":"<subchart name>","alias":"<values key>"}.
+          Rancher reads questions.yaml only from the ROOT of the chart being
+          installed, so a wrapper otherwise shows an empty form. When set, the
+          chart's questions.yaml is REGENERATED at package time from that
+          dependency, with every non-`global.` variable prefixed by the alias --
+          so the wrapper offers the same form as its dependency and cannot drift
+          from the pinned version. Leave empty for normal charts (no-op).
+        required: false
+        type: string
+        default: ''
       chart-oci-repo:
         description: >-
           If set (e.g. oci://ghcr.io/openg2p), the chart is PUSHED to this OCI
@@ -416,10 +430,36 @@ jobs:
           [ "$got" = "$REVISION" ] || { echo "::error::revision annotation is '$got'"; exit 1; }
           echo "  ok  revision = $REVISION"
 
+      # Resolves dependencies into <chart>/charts/. Split out of Package so the
+      # questions step below can read a dependency's questions.yaml.
+      - name: Resolve chart dependencies
+        run: helm dep up "${{ inputs.chart-path }}"
+
+      - name: Load packaging scripts
+        if: inputs.chart-inherit-questions != ''
+        uses: actions/checkout@v4
+        with:
+          repository: openg2p/openg2p-packaging
+          ref: ${{ inputs.packaging-ref }}
+          path: .openg2p-ci
+          sparse-checkout: ci
+
+      # Wrapper charts only: rebuild questions.yaml from the pinned dependency so
+      # Rancher shows its full form. No-op for every other repo.
+      - name: Inherit questions.yaml from dependency
+        if: inputs.chart-inherit-questions != ''
+        env:
+          SPEC: ${{ inputs.chart-inherit-questions }}
+        run: |
+          dep=$(jq -er '.dependency' <<<"$SPEC") || {
+            echo "::error::chart-inherit-questions must be JSON with a .dependency key"; exit 1; }
+          alias=$(jq -er '.alias' <<<"$SPEC") || {
+            echo "::error::chart-inherit-questions must be JSON with an .alias key"; exit 1; }
+          bash .openg2p-ci/ci/chart/inherit-questions.sh "${{ inputs.chart-path }}" "$dep" "$alias"
+
       - name: Package
         id: pkg
         run: |
-          helm dep up "${{ inputs.chart-path }}"
           helm package "${{ inputs.chart-path }}" --version "$VERSION" --app-version "$VERSION" -d dist/
           ls -l dist/
           chart="${{ inputs.chart-path }}/Chart.yaml"

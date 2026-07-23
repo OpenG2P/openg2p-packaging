@@ -66,6 +66,31 @@ and every repo and every branch follows without a single PR.
 Do not pin callers to `@main` — one bad commit would break every repo at once.
 Promote deliberately: `v1.4.0`, test, then move `v1`.
 
+## Wrapper charts (Rancher questions)
+
+A **wrapper chart** owns no templates — it just pins another chart as a
+dependency and supplies a values overlay (e.g. a product variant branding a
+shared platform chart). Rancher reads `questions.yaml` only from the **root** of
+the chart being installed and ignores subchart questions, so a wrapper shows an
+empty configuration form.
+
+Set `chart-inherit-questions` and the `chart` job regenerates `questions.yaml`
+at package time from the pinned dependency, prefixing every non-`global.`
+variable with the subchart key:
+
+```yaml
+chart-inherit-questions: '{"dependency":"platform-chart","alias":"platform"}'
+```
+
+`- variable: api.image.tag` becomes `- variable: platform.api.image.tag`, while
+`global.*` (which Helm propagates to subcharts) is left alone. The rewrite is
+[`chart/inherit-questions.sh`](chart/inherit-questions.sh); it refuses to write a
+form it cannot rewrite faithfully rather than emit a subtly wrong one.
+
+Do **not** commit a `questions.yaml` in a wrapper chart — it is generated, and a
+committed copy would rot against the pinned dependency. Leave the input empty for
+normal charts; the step is then a no-op.
+
 ## Changing the policy
 
 `version/derive-version.sh` is the whole policy. It has tests:
