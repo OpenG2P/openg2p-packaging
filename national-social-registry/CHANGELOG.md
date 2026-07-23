@@ -6,12 +6,24 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.165`](#v-0-0-0-develop-165) | 2026-07-23 | develop |
 | [`0.0.0-develop.164`](#v-0-0-0-develop-164) | 2026-07-23 | develop |
 | [`0.0.0-develop.162`](#v-0-0-0-develop-162) | 2026-07-23 | develop |
 | [`0.0.0-develop.159`](#v-0-0-0-develop-159) | 2026-07-23 | develop |
 | [`0.0.0-develop.158`](#v-0-0-0-develop-158) | 2026-07-23 | develop |
 
 # Develop builds
+
+<a id="v-0-0-0-develop-165"></a>
+
+## national-social-registry — develop 0.0.0-develop.165 (2026-07-23)
+
+_commit `e3e331a` · changes since 0.0.0-develop.164_
+<!-- build:0.0.0-develop.165 revision:e3e331a9ec68e4e37d63e4657e3bf7f60926b3a9 ts:1784807914 -->
+
+### Changes since 0.0.0-develop.164
+
+- Registry platform version updated. ([`e3e331a`](https://github.com/OpenG2P/national-social-registry/commit/e3e331a9ec68e4e37d63e4657e3bf7f60926b3a9))
 
 <a id="v-0-0-0-develop-164"></a>
 
