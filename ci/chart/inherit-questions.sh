@@ -14,22 +14,35 @@
 #   `helm dep up` just resolved -- so it can never drift.
 #
 # WHAT IT DOES
-#   A subchart's values live under its key in the parent (`<alias>.foo.bar`),
-#   while `global.*` is shared and propagates untouched. So the only edit needed
-#   is to prefix every non-global variable path with the alias:
+#   1. PATH PREFIX. A subchart's values live under its key in the parent
+#      (`<alias>.foo.bar`), while `global.*` is shared and propagates untouched:
 #
-#       - variable: staffApi.image.tag   ->  - variable: registry.staffApi.image.tag
-#       - variable: global.postgresqlHost ->  (unchanged)
-#       show_if: sanity.runE2e=true       ->  show_if: registry.sanity.runE2e=true
+#        - variable: staffApi.image.tag    ->  - variable: registry.staffApi.image.tag
+#        - variable: global.postgresqlHost ->  (unchanged)
+#        show_if: sanity.runE2e=true       ->  show_if: registry.sanity.runE2e=true
 #
-#   The rewrite is line-oriented on purpose: it preserves the source file's
-#   comments and grouping, which a YAML round-trip (yq) would strip.
+#   2. DEFAULT BACKFILL. Rancher pre-populates a field from the ROOT chart's
+#      values.yaml, falling back to the question's own `default:`. A wrapper's
+#      root values.yaml holds only its overlay -- everything else lives in the
+#      dependency's values.yaml, inside charts/*.tgz, which Rancher does not
+#      read. Without this pass every inherited knob renders blank, and a boolean
+#      rendered blank submits as FALSE -- silently disabling db-seed, AWE, audit
+#      and friends on install. So each question's effective default is resolved
+#      and written into the generated file, taking the WRAPPER's own values.yaml
+#      first and the dependency's only as a fallback. That order matters: the
+#      overlay is what makes the wrapper a distinct product, so offering the
+#      dependency's image repositories as defaults would let a Rancher install
+#      silently deploy the platform's images instead of the variant's.
+#
+#   The questions rewrite is line-oriented on purpose: it preserves the source
+#   file's comments and grouping, which a YAML round-trip would strip. Only the
+#   dependency's values.yaml is parsed as YAML (to resolve defaults).
 #
 # USAGE
 #   inherit-questions.sh <chart-path> <dependency-name> <alias>
 #
 #   Run it AFTER `helm dep up` (the dependency .tgz must be in <chart>/charts/)
-#   and BEFORE `helm package`.
+#   and BEFORE `helm package`. Requires python3 with PyYAML.
 set -euo pipefail
 
 die() { echo "ERROR: $*" >&2; exit 1; }
@@ -50,40 +63,161 @@ case "$ALIAS" in
   *[!A-Za-z0-9_]*) die "alias '$ALIAS' must be alphanumeric/underscore (it becomes a values key)";;
 esac
 
+command -v python3 >/dev/null || die "python3 is required (with PyYAML)"
+
 # `helm dep up` unpacks nothing -- it leaves the dependency as a .tgz here.
 tgz=$(ls "${CHART_PATH}/charts/${DEPENDENCY}"-*.tgz 2>/dev/null | head -1 || true)
 [ -n "$tgz" ] || die "no ${DEPENDENCY}-*.tgz in ${CHART_PATH}/charts -- run 'helm dep up ${CHART_PATH}' first"
 
-src=$(tar -xzOf "$tgz" "${DEPENDENCY}/questions.yaml" 2>/dev/null || true)
-[ -n "$src" ] || die "dependency '${DEPENDENCY}' ships no questions.yaml (nothing to inherit)"
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+
+tar -xzOf "$tgz" "${DEPENDENCY}/questions.yaml" > "$work/questions.yaml" 2>/dev/null || true
+[ -s "$work/questions.yaml" ] || die "dependency '${DEPENDENCY}' ships no questions.yaml (nothing to inherit)"
+
+tar -xzOf "$tgz" "${DEPENDENCY}/values.yaml" > "$work/values.yaml" 2>/dev/null || true
+[ -s "$work/values.yaml" ] || die "dependency '${DEPENDENCY}' ships no values.yaml -- cannot resolve question defaults"
+
+[ -s "${CHART_PATH}/values.yaml" ] || die "wrapper chart has no values.yaml at ${CHART_PATH}/values.yaml"
+
+ALIAS="$ALIAS" SRC="$work/questions.yaml" VALUES="$work/values.yaml" \
+OWN_VALUES="${CHART_PATH}/values.yaml" \
+OUT="${CHART_PATH}/questions.yaml" python3 - <<'PY'
+import json, os, re, sys
+
+try:
+    import yaml
+except ImportError:
+    sys.exit("ERROR: PyYAML is required (pip install pyyaml / apk add py3-yaml)")
+
+alias  = os.environ["ALIAS"]
+src    = open(os.environ["SRC"]).read().splitlines()
+values = yaml.safe_load(open(os.environ["VALUES"])) or {}
+own    = yaml.safe_load(open(os.environ["OWN_VALUES"])) or {}
+out_path = os.environ["OUT"]
+
+VAR_RE  = re.compile(r'^(\s*(?:-\s+)?variable:\s*)(\S+)(.*)$')
+COND_RE = re.compile(r'^(\s*show_(?:subquestion_)?if:\s*)(\S.*?)\s*$')
+DEF_RE  = re.compile(r'^(\s*)default:\s')
+
+
+def die(msg):
+    sys.exit("ERROR: " + msg)
+
+
+def dig(tree, path):
+    """Resolve a dotted path in a values tree. Returns (value, found)."""
+    cur = tree
+    for key in path.split('.'):
+        if not isinstance(cur, dict) or key not in cur:
+            return None, False
+        cur = cur[key]
+    return cur, True
+
+
+def lookup(path, scoped):
+    """The value Helm would actually use for this question.
+
+    The WRAPPER's own values.yaml wins -- it is the overlay that makes this
+    chart a distinct product (its images, its toggles). Falling back to the
+    dependency's default here would be actively dangerous: it would offer the
+    platform's image repository as the default for a variant chart, and a
+    Rancher install that accepted it would silently deploy the wrong images.
+    Only when the wrapper says nothing do we inherit the dependency's default.
+    """
+    value, found = dig(own, scoped)
+    if found:
+        return value, True, "overlay"
+    value, found = dig(values, path)
+    return value, found, "dependency"
+
+
+def render(value):
+    """Format a scalar as a YAML default. Non-scalars have no sane form."""
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, (int, float)):
+        return repr(value)
+    if isinstance(value, str):
+        # json.dumps produces a double-quoted scalar with correct escaping,
+        # which is also valid YAML -- and keeps `{{ .Release.Namespace }}`
+        # templates intact and unambiguous.
+        return json.dumps(value)
+    return None
+
+
+def prefix(path):
+    return path if path.startswith("global.") else alias + "." + path
+
 
 # Compound conditions would need per-operand rewriting. None of our charts use
 # them; refuse loudly rather than emit a silently-wrong condition.
-if printf '%s\n' "$src" | grep -qE '^[[:space:]]*(show_if|show_subquestion_if):.*&&'; then
-  die "dependency uses a compound show_if (&&), which this rewriter does not handle -- extend ci/chart/inherit-questions.sh"
-fi
+for line in src:
+    m = COND_RE.match(line)
+    if m and "&&" in m.group(2):
+        die("dependency uses a compound show_if (&&), which this rewriter does "
+            "not handle -- extend ci/chart/inherit-questions.sh")
 
-before=$(printf '%s\n' "$src" | grep -cE '^[[:space:]]*(-[[:space:]]+)?variable:' || true)
-[ "$before" -gt 0 ] || die "dependency questions.yaml declares no variables -- refusing to write an empty form"
+result = []
+n_vars = n_global = n_scoped = n_defaults = n_overlay = 0
+# Set while inside a question block whose default we have already emitted, so an
+# existing `default:` further down the block is dropped rather than duplicated.
+suppress_default = False
 
-# Prefix EVERY variable/condition path, then put the `global.` ones back. Doing
-# it in that order avoids needing a negative lookahead, which POSIX/RE2 regex
-# engines (busybox sed, Go) do not support.
-out=$(printf '%s\n' "$src" | sed -E \
-  -e "s|^([[:space:]]*(-[[:space:]]+)?variable:[[:space:]]*)([^[:space:]#]+)|\1${ALIAS}.\3|" \
-  -e "s|^([[:space:]]*show_if:[[:space:]]*)|\1${ALIAS}.|" \
-  -e "s|^([[:space:]]*show_subquestion_if:[[:space:]]*)|\1${ALIAS}.|" \
-  | sed -E "s/${ALIAS}\.global\./global./g")
+for line in src:
+    m = VAR_RE.match(line)
+    if m:
+        head, path, tail = m.groups()
+        n_vars += 1
+        new = prefix(path)
+        if new.startswith("global."):
+            n_global += 1
+        else:
+            n_scoped += 1
+        result.append(head + new + tail)
 
-printf '%s\n' "$out" > "${CHART_PATH}/questions.yaml"
+        # Emit the dependency's effective value as this question's default. The
+        # key indent matches the block's other keys: the column `variable:`
+        # starts at (i.e. just past any "- " list marker).
+        suppress_default = False
+        value, found, origin = lookup(path, new)
+        if found:
+            rendered = render(value)
+            if rendered is not None:
+                indent = " " * (len(head) - len(head.lstrip()) + (2 if "-" in head else 0))
+                result.append(indent + "default: " + rendered)
+                n_defaults += 1
+                if origin == "overlay":
+                    n_overlay += 1
+                suppress_default = True
+        continue
 
-globals=$(printf '%s\n' "$out" | grep -cE '^[[:space:]]*(-[[:space:]]+)?variable:[[:space:]]*global\.' || true)
-scoped=$(printf '%s\n' "$out" | grep -cE "^[[:space:]]*(-[[:space:]]+)?variable:[[:space:]]*${ALIAS}\." || true)
-after=$((globals + scoped))
+    if suppress_default and DEF_RE.match(line):
+        continue          # replaced by the values-derived default above
 
-# Every variable must have landed in exactly one bucket; anything else means the
-# rewrite missed a line shape and the form would be subtly wrong.
-[ "$after" -eq "$before" ] || die "rewrote $after of $before variables -- unexpected line shape in the dependency questions.yaml"
+    m = COND_RE.match(line)
+    if m:
+        head, cond = m.groups()
+        path, sep, rest = cond.partition("=")
+        result.append(head + prefix(path) + sep + rest)
+        continue
 
-echo "  ok  questions.yaml inherited from ${DEPENDENCY} ($(basename "$tgz"))"
-echo "      ${before} variables: ${globals} global.* kept, ${scoped} prefixed with '${ALIAS}.'"
+    result.append(line)
+
+if n_vars == 0:
+    die("dependency questions.yaml declares no variables -- refusing to write an empty form")
+if n_global + n_scoped != n_vars:
+    die("rewrote %d of %d variables -- unexpected line shape" % (n_global + n_scoped, n_vars))
+
+with open(out_path, "w") as fh:
+    fh.write("\n".join(result) + "\n")
+
+print("  ok  questions.yaml inherited from %s" % os.path.basename(os.environ["SRC"]))
+print("      %d variables: %d global.* kept, %d prefixed with '%s.'"
+      % (n_vars, n_global, n_scoped, alias))
+print("      %d defaults backfilled (%d from this chart's own overlay, %d from "
+      "the dependency; %d kept their own)"
+      % (n_defaults, n_overlay, n_defaults - n_overlay, n_vars - n_defaults))
+PY
+
+echo "      source: $(basename "$tgz")"
