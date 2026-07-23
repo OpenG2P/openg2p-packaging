@@ -6,11 +6,23 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.125`](#v-0-0-0-develop-125) | 2026-07-23 | develop |
 | [`0.0.0-develop.124`](#v-0-0-0-develop-124) | 2026-07-23 | develop |
 | [`0.0.0-develop.123`](#v-0-0-0-develop-123) | 2026-07-23 | develop |
 | [`0.0.0-develop.122`](#v-0-0-0-develop-122) | 2026-07-23 | develop |
 
 # Develop builds
+
+<a id="v-0-0-0-develop-125"></a>
+
+## farmer-registry — develop 0.0.0-develop.125 (2026-07-23)
+
+_commit `c797983` · changes since 0.0.0-develop.124_
+<!-- build:0.0.0-develop.125 revision:c79798339e983f011699ca50ea9794eb0b6fdef7 ts:1784808198 -->
+
+### Changes since 0.0.0-develop.124
+
+- [G2P-5383](https://openg2p.atlassian.net/browse/G2P-5383) FR: align RP_VERSION in all Dockerfiles with the chart dependency at 0.0.0-develop.291,and refresh the chart lock so the sanity job renders again ([`c797983`](https://github.com/OpenG2P/farmer-registry/commit/c79798339e983f011699ca50ea9794eb0b6fdef7))
 
 <a id="v-0-0-0-develop-124"></a>
 
@@ -363,7 +375,7 @@ _All changes since release the start:_
 ---
 
 > **What's shown here.** This catalogue lists **every stable release**, plus
-> the **latest 3 develop builds** and the **latest 3 release
+> the **latest 10 develop builds** and the **latest 10 release
 > candidates** per release line. Older develop builds and release candidates
 > are pruned as they are superseded, and a release's candidates are removed
 > once it ships. Those versions still exist in the container and Helm
