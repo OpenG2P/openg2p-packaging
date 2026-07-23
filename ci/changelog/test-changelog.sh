@@ -48,26 +48,25 @@ echo
 echo "develop build #1 (first since release 1.0.0)"
 build 0.0.0-develop.3
 u=$(cat "$PAGES/demo/versions/0.0.0-develop.3.md")
-contains "baseline names release"   "$u" "baseline: release 1.0.0"
-contains "since-last-release header" "$u" "Since last release (1.0.0)"
+# no previous develop page yet -> baseline falls back to the last release tag
+contains "baseline is the last tag"  "$u" "changes since 1.0.0"
+contains "delta section header"      "$u" "### Changes since 1.0.0"
 contains "lists the commit"          "$u" "signed JWTs"
 contains "jira linked"               "$u" "[G2P-3](https://openg2p.atlassian.net/browse/G2P-3)"
 contains "records a build marker"    "$u" "<!-- build:0.0.0-develop.3 revision:"
-excludes "no incremental on 1st build" "$u" "New in this build"
+excludes "no cumulative section"     "$u" "Since last release"
 
 echo
-echo "develop build #2 (adds one commit)"
+echo "develop build #2 (delta vs the PREVIOUS develop build, not cumulative)"
 commit "G2P-4 Add JWKS rotation endpoint"
 build 0.0.0-develop.4
 u2=$(cat "$PAGES/demo/versions/0.0.0-develop.4.md")
-contains "incremental section present" "$u2" "New in this build (since 0.0.0-develop.3)"
-contains "marker advanced"             "$u2" "<!-- build:0.0.0-develop.4 revision:"
-# the incremental section should contain the new commit, not the older one
-incr=$(printf '%s' "$u2" | awk '/^### New in this build/{f=1;next} /^### Since last release/{f=0} f')
-contains "incremental has new commit"  "$incr" "JWKS rotation"
-excludes "incremental omits older"     "$incr" "signed JWTs"
-# cumulative still has both
-contains "cumulative has both"         "$u2" "signed JWTs"
+contains "diffs against previous develop" "$u2" "changes since 0.0.0-develop.3"
+contains "delta section header"           "$u2" "### Changes since 0.0.0-develop.3"
+contains "marker advanced"                "$u2" "<!-- build:0.0.0-develop.4 revision:"
+contains "delta has the new commit"       "$u2" "JWKS rotation"
+# the whole point: an older commit already shown on develop.3 is NOT repeated here
+excludes "delta omits the earlier commit" "$u2" "signed JWTs"
 
 echo
 echo "RC builds are durably paged, with rc-to-rc diffs"
@@ -78,16 +77,19 @@ rcbuild() { ( cd "$REPO_DIR" && REPO=demo VERSION="$1" FROZEN=false REVISION=$(g
 rcbuild 1.1.0-rc.7
 [ -f "$PAGES/demo/versions/1.1.0-rc.7.md" ] && r1=yes || r1=no
 check "rc.7 durable page written" yes "$r1"
+# FIRST RC on a new line diffs against the branch point: the newest ANCESTOR develop build
+rc7=$(cat "$PAGES/demo/versions/1.1.0-rc.7.md")
+contains "first RC diffs vs branch-point develop" "$rc7" "changes since 0.0.0-develop.4"
+contains "first RC delta has its commit"          "$rc7" "RC work one"
 git -C "$REPO_DIR" commit -q --allow-empty -m "G2P-11 RC work two"
 rcbuild 1.1.0-rc.8
 [ -f "$PAGES/demo/versions/1.1.0-rc.8.md" ] && r2=yes || r2=no
 check "rc.8 durable page written"  yes "$r2"
 check "rc.7 page still there"      yes "$([ -f "$PAGES/demo/versions/1.1.0-rc.7.md" ] && echo yes || echo no)"
 rc8=$(cat "$PAGES/demo/versions/1.1.0-rc.8.md")
-contains "rc.8 shows diff vs rc.7"  "$rc8" "New in this build (since 1.1.0-rc.7)"
-incr8=$(printf '%s' "$rc8" | awk '/^### New in this build/{f=1;next} /^### Since last release/{f=0} f')
-contains "rc.8 delta has its commit"   "$incr8" "RC work two"
-excludes "rc.8 delta omits rc.7 commit" "$incr8" "RC work one"
+contains "rc.8 diffs vs rc.7"           "$rc8" "changes since 1.1.0-rc.7"
+contains "rc.8 delta has its commit"    "$rc8" "RC work two"
+excludes "rc.8 delta omits rc.7 commit" "$rc8" "RC work one"
 agg=$(cat "$PAGES/demo/CHANGELOG.md")
 contains "aggregate has RC-in-progress section" "$agg" "Release candidates (in progress)"
 
@@ -194,7 +196,7 @@ git -C "$solo" commit -q --allow-empty -m "G2P-7 after old release"
 P2=$(mktemp -d)
 ( cd "$solo" && REPO=demo2 VERSION=0.0.0-develop.2 FROZEN=false REVISION=$(git rev-parse HEAD) \
     PAGES_DIR="$P2" SKIP_AI=true DATE=2026-07-13 bash "$HERE/run.sh" >/dev/null )
-contains "baselines against v2.3.0"  "$(cat "$P2/demo2/versions/0.0.0-develop.2.md")" "Since last release (v2.3.0)"
+contains "baselines against v2.3.0"  "$(cat "$P2/demo2/versions/0.0.0-develop.2.md")" "changes since v2.3.0"
 rm -rf "$solo" "$P2"
 
 echo
@@ -210,7 +212,7 @@ git -C "$dv" commit -q --allow-empty -m "G2P-92 develop-only work B"
 ( cd "$dv" && REPO=dv VERSION=0.0.0-develop.3 FROZEN=false REVISION=$(git rev-parse HEAD) \
     PAGES_DIR="$Pd" SKIP_AI=true DATE=2026-07-13 bash "$HERE/run.sh" >/dev/null )
 dvu=$(cat "$Pd/dv/versions/0.0.0-develop.3.md")
-contains "diverged: baselines at v1.2.1"     "$dvu" "Since last release (v1.2.1)"
+contains "diverged: baselines at v1.2.1"     "$dvu" "changes since v1.2.1"
 contains "diverged: lists develop-only work" "$dvu" "develop-only work B"
 excludes "diverged: excludes shared base"    "$dvu" "shared base"
 excludes "diverged: excludes release-only"   "$dvu" "release-only fix"
@@ -223,12 +225,12 @@ excludes "diverged frozen: not first release" "$(cat "$Pd/dv/versions/2.0.0.md")
 rm -rf "$dv" "$Pd"
 
 echo
-echo "retention: develop keeps the last 3 (KEEP); older ones pruned"
+echo "retention: develop keeps the last KEEP (KEEP=3 here to exercise pruning)"
 rd=$(mktemp -d); Pr=$(mktemp -d)
 git -C "$rd" init -q -b develop; git -C "$rd" config user.email t@t; git -C "$rd" config user.name t
 git -C "$rd" commit -q --allow-empty -m base; git -C "$rd" tag 1.0.0
 rbuild() { ( cd "$rd" && REPO=rd VERSION="$1" FROZEN="${2:-false}" REVISION=$(git rev-parse HEAD) \
-    PAGES_DIR="$Pr" SKIP_AI=true DATE=2026-07-13 bash "$HERE/run.sh" >/dev/null ); }
+    KEEP=3 PAGES_DIR="$Pr" SKIP_AI=true DATE=2026-07-13 bash "$HERE/run.sh" >/dev/null ); }
 present() { [ -f "$Pr/rd/versions/$1.md" ] && echo yes || echo no; }
 for n in 10 11 12 13 14; do git -C "$rd" commit -q --allow-empty -m "G2P-$n dev $n"; rbuild "0.0.0-develop.$n"; done
 check "develop.14 kept"  yes "$(present 0.0.0-develop.14)"
@@ -240,7 +242,7 @@ contains "has Develop builds section" "$agg" "# Develop builds"
 excludes "table drops pruned develop" "$agg" "0.0.0-develop.10"
 
 echo
-echo "retention: RCs keep last 3 per line; a release deletes that line's RCs"
+echo "retention: RCs keep last KEEP per line; a release deletes that line's RCs"
 git -C "$rd" checkout -q -b 2.0
 for n in 20 21 22 23 24; do git -C "$rd" commit -q --allow-empty -m "G2P-$n rc $n"; rbuild "2.0.0-rc.$n"; done
 check "rc.24 kept"   yes "$(present 2.0.0-rc.24)"
@@ -253,6 +255,23 @@ check "rc.24 deleted by release"   no "$(present 2.0.0-rc.24)"
 check "rc.22 deleted by release"   no "$(present 2.0.0-rc.22)"
 excludes "table has no RCs after release" "$(cat "$Pr/rd/CHANGELOG.md")" "2.0.0-rc."
 rm -rf "$rd" "$Pr"
+
+echo
+echo "retention default for a service is 10 develop builds"
+kd=$(mktemp -d); Pk=$(mktemp -d)
+git -C "$kd" init -q -b develop; git -C "$kd" config user.email t@t; git -C "$kd" config user.name t
+git -C "$kd" commit -q --allow-empty -m base; git -C "$kd" tag 1.0.0
+for n in 1 2 3 4 5 6 7 8 9 10 11 12; do
+  git -C "$kd" commit -q --allow-empty -m "G2P-$n dev $n"
+  ( cd "$kd" && REPO=kd VERSION="0.0.0-develop.$n" FROZEN=false REVISION=$(git rev-parse HEAD) \
+      PAGES_DIR="$Pk" SKIP_AI=true DATE=2026-07-13 bash "$HERE/run.sh" >/dev/null )
+done
+kept=$(ls "$Pk/kd/versions" | grep -c '^0\.0\.0-develop\.' || true)
+check "default keeps exactly 10"   10  "$kept"
+check "newest (12) kept"           yes "$([ -f "$Pk/kd/versions/0.0.0-develop.12.md" ] && echo yes || echo no)"
+check "10th-newest (3) kept"       yes "$([ -f "$Pk/kd/versions/0.0.0-develop.3.md" ] && echo yes || echo no)"
+check "11th-newest (2) pruned"     no  "$([ -f "$Pk/kd/versions/0.0.0-develop.2.md" ] && echo yes || echo no)"
+rm -rf "$kd" "$Pk"
 
 echo
 echo "summary table sorts by datetime (a same-day release below a newer develop build)"

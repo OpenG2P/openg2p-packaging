@@ -36,8 +36,10 @@ REPO_DISPLAY="${REPO_DISPLAY:-$REPO}"
 # kind = service (builds image/chart) | library (code consumed by git ref: no artifact,
 # tracked by branch SHA + tag). render-root-index groups the catalogue by this.
 CHANGELOG_KIND="${CHANGELOG_KIND:-service}"
-# Retention: libraries list the last 5 commits on a branch; services keep 3 build pages.
-if [ "$CHANGELOG_KIND" = library ]; then KEEP="${KEEP:-5}"; else KEEP="${KEEP:-3}"; fi
+# Retention: libraries list the last 5 commits on a branch; services keep the last 10
+# develop builds AND the last 10 RCs per release line (RCs are the audit trail for a
+# release, so they are kept as deep as develop).
+if [ "$CHANGELOG_KIND" = library ]; then KEEP="${KEEP:-5}"; else KEEP="${KEEP:-10}"; fi
 mkdir -p "${PAGES_DIR}/${REPO}"
 {
   echo "name=${REPO_DISPLAY}"
@@ -124,26 +126,6 @@ if [ -z "$FROM" ]; then
   fi
 fi
 
-# Cumulative notes: everything since the last release.
-RANGE_FROM="$FROM" RANGE_TO=HEAD \
-  bash "$HERE/assemble.sh" >"$work/notes.md" || true
-
-# A library's rolling branch page always has recent commits to show, even with no new
-# commits since the last tag, so only services bail here.
-if [ ! -s "$work/notes.md" ] && [ "${CHANGELOG_KIND:-service}" != library ]; then
-  echo "No new change notes since ${FROM:-start of history}; nothing to publish."
-  out published false
-  exit 0
-fi
-
-# Structural digest of the cumulative range — grounds the AI summary in what
-# actually changed (bounded; empty when there is no release baseline).
-DIGEST_FILE=""
-RANGE_FROM="$FROM" RANGE_TO=HEAD bash "$HERE/digest.sh" >"$work/digest.md" 2>/dev/null || true
-[ -s "$work/digest.md" ] && DIGEST_FILE="$work/digest.md"
-
-summarise_into "$work/notes.md" "$work/summary.md"
-
 # MODE decides the page shape:
 #   frozen   -> durable versions/<version>.md, cumulative-only (a release / a tag)
 #   rc       -> durable versions/<version>.md, two diffs (release candidate — last
@@ -171,50 +153,102 @@ if [ "$MODE" = library ]; then
   RECENT_FILE="$work/recent.md"
 fi
 
-# The incremental "new in this build" diff needs the PREVIOUS build's commit, read
-# from a hidden marker. For develop it's the newest existing develop page; for an
-# RC it's the previous RC of the same release line.
-PREV_BUILD=""
-INCR_NOTES_FILE=""
+# ---------------------------------------------------------------- diff baseline
+# What this page diffs against. A develop/RC page shows ONE delta -- the changes since
+# the previous build -- NOT a cumulative "since the last release" list: the cumulative
+# view belongs on the release page, and a per-build delta keeps each page (and its AI
+# summary) short and readable. Resolution order:
+#   1. the previous page of the SAME kind (previous develop build / previous RC)
+#   2. FIRST RC on a new line -> the newest develop build that is an ANCESTOR
+#   3. otherwise the last release tag, else the start of history
+# A frozen release always takes (3): cumulative since the previous tag.
+page_marker(){ grep -oE '<!-- build:[^ ]+ revision:[0-9a-f]+( ts:[0-9]+)? -->' "$1" 2>/dev/null \
+  | head -1 | sed -E 's/<!-- build:([^ ]+) revision:([0-9a-f]+).*/\1 \2/'; }
+# Usable as a baseline only if the commit is still in THIS branch's history (a reset or
+# a rebase can strip it, and a develop build after the release line was cut is not one).
+usable(){ [ -n "${1:-}" ] && git rev-parse -q --verify "${1}^{commit}" >/dev/null 2>&1 \
+  && git merge-base --is-ancestor "$1" HEAD 2>/dev/null; }
+
+vdir="${PAGES_DIR}/${REPO}/versions"
+BASELINE=""; BASE_LABEL=""
+
 prev_page=""
 if [ "$MODE" = develop ]; then
-  cur="${VERSION##*.}"               # N in 0.0.0-develop.N
-  best=-1
-  for f in "${PAGES_DIR}/${REPO}/versions/0.0.0-develop."*.md; do
+  cur="${VERSION##*.}"; best=-1
+  for f in "$vdir"/0.0.0-develop.*.md; do
     [ -e "$f" ] || continue
     m=$(basename "$f" .md); m="${m##*.}"
     case "$m" in ''|*[!0-9]*) continue ;; esac
     if [ "$m" -lt "$cur" ] && [ "$m" -gt "$best" ]; then best="$m"; prev_page="$f"; fi
   done
 elif [ "$MODE" = rc ]; then
-  target="${VERSION%-rc.*}"          # 1.0.0
-  cur="${VERSION##*-rc.}"            # 19
-  best=-1
-  for f in "${PAGES_DIR}/${REPO}/versions/${target}-rc."*.md; do
+  target="${VERSION%-rc.*}"; cur="${VERSION##*-rc.}"; best=-1
+  for f in "$vdir/${target}-rc."*.md; do
     [ -e "$f" ] || continue
     m=$(basename "$f" .md); m="${m##*-rc.}"
     case "$m" in ''|*[!0-9]*) continue ;; esac
     if [ "$m" -lt "$cur" ] && [ "$m" -gt "$best" ]; then best="$m"; prev_page="$f"; fi
   done
 fi
+if [ -n "$prev_page" ]; then
+  set -- $(page_marker "$prev_page")
+  if usable "${2:-}"; then BASELINE="$2"; BASE_LABEL="$1"; fi
+fi
+
+# First RC on a new release line: diff against the branch point. It must be the newest
+# ANCESTOR develop build -- develop keeps moving after the line is cut, so simply taking
+# the highest develop.N would diff against a commit this RC never contained.
+if [ -z "$BASELINE" ] && [ "$MODE" = rc ]; then
+  best=-1
+  for f in "$vdir"/0.0.0-develop.*.md; do
+    [ -e "$f" ] || continue
+    m=$(basename "$f" .md); m="${m##*.}"
+    case "$m" in ''|*[!0-9]*) continue ;; esac
+    set -- $(page_marker "$f")
+    usable "${2:-}" || continue
+    if [ "$m" -gt "$best" ]; then best="$m"; BASELINE="$2"; BASE_LABEL="$1"; fi
+  done
+fi
+
+# Fallback (and the normal path for a release, and for the first RC of a NEW patch line
+# whose predecessor's RC pages were deleted when that release shipped).
+if [ "$MODE" = frozen ] || [ -z "$BASELINE" ]; then
+  BASELINE="$FROM"; BASE_LABEL="${PREV_VERSION:-}"
+fi
+[ -n "$BASE_LABEL" ] || BASE_LABEL="the start"
+
+# ---- the notes for THIS page: exactly the range decided above
+RANGE_FROM="$BASELINE" RANGE_TO=HEAD bash "$HERE/assemble.sh" >"$work/notes.md" || true
+
+# An empty delta on develop means the pipeline re-ran on the same commit -- nothing to
+# publish. An RC branched at the same commit as the last develop build legitimately has
+# an empty delta and STILL gets its page (the version exists), as does a release.
+if [ ! -s "$work/notes.md" ] && [ "$MODE" = develop ]; then
+  echo "No new commits since ${BASE_LABEL}; nothing to publish."
+  out published false
+  exit 0
+fi
+
+# Structural digest of this page's range -- grounds the summary in what actually changed.
+DIGEST_FILE=""
+RANGE_FROM="$BASELINE" RANGE_TO=HEAD bash "$HERE/digest.sh" >"$work/digest.md" 2>/dev/null || true
+[ -s "$work/digest.md" ] && DIGEST_FILE="$work/digest.md"
+
+# Summarise -- except for a trivial delta: with per-build deltas a 0/1-commit page's
+# "summary" would only restate the commit, so the commit list IS the summary. Releases
+# (and library pages) always get one; their range is the whole cumulative story.
+SUMMARY_OMIT=false
+ncommits=$(grep -c '^- ' "$work/notes.md" 2>/dev/null || true); ncommits=${ncommits:-0}
+if [ "$ncommits" -lt 2 ] && { [ "$MODE" = develop ] || [ "$MODE" = rc ]; }; then
+  SUMMARY_OMIT=true; SUMMARY_OK=false
+  echo "delta is ${ncommits} commit(s); skipping the AI summary"
+else
+  summarise_into "$work/notes.md" "$work/summary.md"
+fi
 
 # Commit time (epoch) -> the aggregate sorts the summary table by this, so versions
 # published the same day still order correctly. Reproducible from the revision.
 TS=$(git show -s --format=%ct "$REVISION" 2>/dev/null || echo 0)
-
-if [ -n "$prev_page" ]; then
-  marker=$(grep -oE '<!-- build:[^ ]+ revision:[0-9a-f]+( ts:[0-9]+)? -->' "$prev_page" | head -1 || true)
-  if [ -n "$marker" ]; then
-    PREV_BUILD=$(printf '%s' "$marker" | sed -E 's/.*build:([^ ]+) revision:.*/\1/')
-    prev_rev=$(printf '%s' "$marker" | sed -E 's/.*revision:([0-9a-f]+).*/\1/')
-    if [ -n "$prev_rev" ] && git rev-parse -q --verify "${prev_rev}^{commit}" >/dev/null 2>&1; then
-      RANGE_FROM="$prev_rev" RANGE_TO=HEAD bash "$HERE/assemble.sh" >"$work/incr.md" || true
-      INCR_NOTES_FILE="$work/incr.md"
-    else
-      PREV_BUILD=""   # previous build's commit not in history (e.g. after a reset)
-    fi
-  fi
-fi
 
 # Release notes shown at the top of a release page. Two sources, in priority order:
 #   1. An externally provided RELEASE_NOTES_FILE — the wrapper fetches the editable
@@ -256,7 +290,7 @@ fi
 PAGES_DIR="$PAGES_DIR" REPO="$REPO" REPO_DISPLAY="$REPO_DISPLAY" VERSION="$VERSION" REVISION="$REVISION" TS="$TS" \
   PREV_VERSION="$PREV_VERSION" DATE="$DATE" MODE="$MODE" \
   NOTES_FILE="$work/notes.md" SUMMARY_FILE="$work/summary.md" SUMMARY_OK="$SUMMARY_OK" \
-  INCR_NOTES_FILE="$INCR_NOTES_FILE" PREV_BUILD="$PREV_BUILD" \
+  BASE_LABEL="$BASE_LABEL" SUMMARY_OMIT="$SUMMARY_OMIT" \
   RELEASE_NOTES_FILE="$RELEASE_NOTES_FILE" \
   BRANCH="${BRANCH:-}" RECENT_FILE="$RECENT_FILE" KEEP="$KEEP" \
   bash "$HERE/render.sh"

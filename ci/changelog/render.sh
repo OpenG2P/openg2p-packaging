@@ -3,21 +3,26 @@
 # Write a version's human-readable page and regenerate the repo's CHANGELOG.md.
 # Everything is markdown; Gitbook / GitHub Pages render it.
 #
-# Catalogue retention (KEEP, default 3) keeps the published page count bounded:
+# Catalogue retention (KEEP, default 10) keeps the published page count bounded:
 #
 #   release  N.N.N           durable, ALL kept
 #   RC       N.N.N-rc.M      durable, last KEEP per release line; DELETED once that
 #                            release N.N.N is published (the release supersedes them)
-#   develop  0.0.0-develop.N durable, last KEEP kept (was a single rolling page)
+#   develop  0.0.0-develop.N durable, last KEEP kept
+#
+# Page shape: a RELEASE is cumulative (everything since the previous tag -- the "what
+# shipped" view). A develop/RC page is a single DELTA since its baseline (previous
+# build, or the branch point for the first RC of a line), which keeps each page and its
+# summary short; the cumulative view is not repeated on every build.
 #
 #   env: PAGES_DIR REPO REPO_DISPLAY VERSION REVISION PREV_VERSION DATE TS MODE(…)
-#        NOTES_FILE            cumulative notes since PREV_VERSION (last release)
+#        NOTES_FILE            the notes for THIS page's range (delta, or cumulative
+#                              for a release)
+#        BASE_LABEL            what the range is measured from, as shown on the page
 #        SUMMARY_FILE SUMMARY_OK
+#        SUMMARY_OMIT          true -> trivial delta, render no Summary section at all
 #        RELEASE_NOTES_FILE    (frozen only) annotated-tag message -> "Release notes"
-#   rc/develop also use:
-#        INCR_NOTES_FILE       notes since the previous build (incremental)
-#        PREV_BUILD            previous build's version string (may be empty)
-#        KEEP                  how many rc/develop pages to keep (default 3)
+#        KEEP                  how many rc/develop pages to keep (default 10)
 #   library (a library repo's non-tag build) also uses:
 #        BRANCH                the moving branch being tracked (page id)
 #        RECENT_FILE           the last KEEP commits, as a bullet list
@@ -33,7 +38,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_dir="${PAGES_DIR}/${REPO}"
 vdir="${repo_dir}/versions"
 mkdir -p "$vdir"
-KEEP="${KEEP:-3}"
+KEEP="${KEEP:-10}"
 
 short_rev=$(printf '%s' "${REVISION:-}" | cut -c1-7)
 marker="<!-- build:${VERSION} revision:${REVISION} ts:${TS:-0} -->"
@@ -49,6 +54,8 @@ fi
 
 cum_notes=$(bash "$HERE/linkify.sh" <"$NOTES_FILE")
 rel_label="${PREV_VERSION:-the start}"
+# What this page's notes are measured from (previous build / branch point / last tag).
+base_label="${BASE_LABEL:-$rel_label}"
 
 # Where the artifacts for this version live (shown in the header). Empty -> hidden.
 art=""
@@ -66,34 +73,30 @@ prune() {
     | while IFS= read -r f; do [ -n "$f" ] && rm -f "$f"; done || true
 }
 
-# Emit a two-diff body (Summary + New-in-this-build + Since-last-release).
-two_diff_body() {   # $1 = heading line
-  local incr_notes=""
-  if [ -n "${INCR_NOTES_FILE:-}" ] && [ -s "$INCR_NOTES_FILE" ]; then
-    incr_notes=$(bash "$HERE/linkify.sh" <"$INCR_NOTES_FILE")
-  fi
+# Emit a single-delta body: what changed since BASE_LABEL, and nothing else. Develop and
+# RC pages are deliberately NOT cumulative -- the cumulative "what shipped" view lives on
+# the release page, and a per-build delta keeps the page (and its summary) readable.
+delta_body() {   # $1 = heading line
   echo "## $1"
   echo
-  local base="_commit \`${short_rev}\` · baseline: release ${rel_label}"
-  [ -n "${PREV_BUILD:-}" ] && base="${base} · previous build ${PREV_BUILD}"
-  echo "${base}${art}_"
+  echo "_commit \`${short_rev}\` · changes since ${base_label}${art}_"
   echo "${marker}"
   echo
-  echo "### Summary"
-  echo
-  echo "_All changes since release ${rel_label}:_"
-  echo
-  printf '%s\n' "$summary"
-  echo
-  if [ -n "${PREV_BUILD:-}" ] && [ -n "$incr_notes" ] && [ "$incr_notes" != "$cum_notes" ]; then
-    echo "### New in this build (since ${PREV_BUILD})"
+  # A trivial delta (0-1 commits) skips the AI summary: the commit list IS the summary.
+  if [ "${SUMMARY_OMIT:-false}" != true ]; then
+    echo "### Summary"
     echo
-    printf '%s\n' "$incr_notes"
+    printf '%s\n' "$summary"
     echo
   fi
-  echo "### Since last release (${rel_label})"
+  echo "### Changes since ${base_label}"
   echo
-  printf '%s\n' "$cum_notes"
+  if [ -n "$cum_notes" ]; then
+    printf '%s\n' "$cum_notes"
+  else
+    # e.g. a release line cut at the same commit as the last develop build.
+    echo "_No new commits since ${base_label}._"
+  fi
 }
 
 case "$MODE" in
@@ -126,7 +129,7 @@ case "$MODE" in
     rm -f "${vdir}/${VERSION}-rc."*.md
     ;;
   rc)
-    two_diff_body "${disp} ${VERSION} — ${DATE}" > "${vdir}/${VERSION}.md"
+    delta_body "${disp} ${VERSION} — ${DATE}" > "${vdir}/${VERSION}.md"
     prune "${VERSION%-rc.*}-rc"        # keep the last KEEP RCs of this release line
     ;;
   library)
@@ -157,7 +160,7 @@ case "$MODE" in
     } > "${vdir}/branch-${safe}.md"
     ;;
   *)  # develop build (MODE=develop): durable per-N page, last KEEP kept
-    two_diff_body "${disp} — develop ${VERSION} (${DATE})" > "${vdir}/${VERSION}.md"
+    delta_body "${disp} — develop ${VERSION} (${DATE})" > "${vdir}/${VERSION}.md"
     rm -f "${vdir}/unreleased.md"      # retire the legacy single rolling page
     prune "0.0.0-develop"
     ;;

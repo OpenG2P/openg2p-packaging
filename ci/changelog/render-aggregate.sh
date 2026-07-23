@@ -17,7 +17,7 @@ set -euo pipefail
 
 repo_dir="${PAGES_DIR}/${REPO}"
 vdir="${repo_dir}/versions"
-KEEP="${KEEP:-3}"
+KEEP="${KEEP:-10}"   # matches run.sh's service default; render.sh passes the real value
 [ -d "$vdir" ] || { echo "no versions/ for ${REPO}"; exit 0; }
 
 list_versions() { ls "$vdir" 2>/dev/null | sed 's/\.md$//'; }
