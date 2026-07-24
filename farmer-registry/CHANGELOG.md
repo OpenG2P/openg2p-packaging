@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.132`](#v-0-0-0-develop-132) | 2026-07-24 | develop |
 | [`0.0.0-develop.129`](#v-0-0-0-develop-129) | 2026-07-24 | develop |
 | [`0.0.0-develop.128`](#v-0-0-0-develop-128) | 2026-07-24 | develop |
 | [`0.0.0-develop.127`](#v-0-0-0-develop-127) | 2026-07-24 | develop |
@@ -15,6 +16,24 @@ _Published automatically._
 | [`0.0.0-develop.122`](#v-0-0-0-develop-122) | 2026-07-23 | develop |
 
 # Develop builds
+
+<a id="v-0-0-0-develop-132"></a>
+
+## farmer-registry — develop 0.0.0-develop.132 (2026-07-24)
+
+_commit `7055a71` · changes since 0.0.0-develop.129_
+<!-- build:0.0.0-develop.132 revision:7055a710a25bca297f8a1cbd6c2cb64664840b20 ts:1784886389 -->
+
+### Summary
+
+- Tooling enhancements: introduced `bump-rp-version.sh` script for atomic updates of the openg2p-registry pin in Dockerfiles and Helm charts, including a CI lockstep guard to ensure version consistency across builds.
+- Version update: bumped the openg2p-registry version to the latest published in both the Helm index and Docker Hub.
+
+### Changes since 0.0.0-develop.129
+
+- Bumped up RP version ([`7055a71`](https://github.com/OpenG2P/farmer-registry/commit/7055a710a25bca297f8a1cbd6c2cb64664840b20))
+- [G2P-5383](https://openg2p.atlassian.net/browse/G2P-5383) Tooling: add scripts/bump-rp-version.sh (with -n dry-run and -h help) to move the openg2p-registry pin — Dockerfiles + chart dependency together — to the latest version published in BOTH the Helm index and Docker Hub, plus a CI lockstep guard (test/test_rp_pin_lockstep.py + checks.yml) that fails the build if the pins ever split ([`90ec640`](https://github.com/OpenG2P/farmer-registry/commit/90ec64034ee4bea339f9109dd8ee6cb388a8bc76))
+- [G2P-5383](https://openg2p.atlassian.net/browse/G2P-5383) Tooling: add scripts/bump-rp-version.sh to move the openg2p-registry pin (Dockerfiles + chart dependency) atomically to the latest version published in both the Helm index and Docker Hub, plus a CI lockstep guard (test/test_rp_pin_lockstep.py + checks.yml) that fails the build if the pins ever split ([`d4770e3`](https://github.com/OpenG2P/farmer-registry/commit/d4770e3a3c9b6fe250d2ab5b17be1d3c6ca393d3))
 
 <a id="v-0-0-0-develop-129"></a>
 
