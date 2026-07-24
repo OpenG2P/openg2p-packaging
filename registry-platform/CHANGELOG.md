@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.296`](#v-0-0-0-develop-296) | 2026-07-24 | develop |
 | [`0.0.0-develop.295`](#v-0-0-0-develop-295) | 2026-07-24 | develop |
 | [`0.0.0-develop.294`](#v-0-0-0-develop-294) | 2026-07-24 | develop |
 | [`0.0.0-develop.292`](#v-0-0-0-develop-292) | 2026-07-23 | develop |
@@ -16,6 +17,17 @@ _Published automatically._
 | [`develop`](#v-branch-develop) | 2026-07-20 | branch |
 
 # Develop builds
+
+<a id="v-0-0-0-develop-296"></a>
+
+## registry-platform — develop 0.0.0-develop.296 (2026-07-24)
+
+_commit `6ec5f56` · changes since 0.0.0-develop.295_
+<!-- build:0.0.0-develop.296 revision:6ec5f56c97c3744ac71f6bb0594db12d864203a1 ts:1784883549 -->
+
+### Changes since 0.0.0-develop.295
+
+- [G2P-5383](https://openg2p.atlassian.net/browse/G2P-5383) db-seed: make sample-data loading idempotent — add ON CONFLICT (internal_record_id) DO NOTHING to the register/sub-table inserts so a re-install over an already-seeded database is a no-op instead of failing on g2p_register_*_pkey ([`6ec5f56`](https://github.com/OpenG2P/registry-platform/commit/6ec5f56c97c3744ac71f6bb0594db12d864203a1))
 
 <a id="v-0-0-0-develop-295"></a>
 
