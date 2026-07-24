@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.168`](#v-0-0-0-develop-168) | 2026-07-24 | develop |
 | [`0.0.0-develop.165`](#v-0-0-0-develop-165) | 2026-07-23 | develop |
 | [`0.0.0-develop.164`](#v-0-0-0-develop-164) | 2026-07-23 | develop |
 | [`0.0.0-develop.162`](#v-0-0-0-develop-162) | 2026-07-23 | develop |
@@ -13,6 +14,25 @@ _Published automatically._
 | [`0.0.0-develop.158`](#v-0-0-0-develop-158) | 2026-07-23 | develop |
 
 # Develop builds
+
+<a id="v-0-0-0-develop-168"></a>
+
+## national-social-registry — develop 0.0.0-develop.168 (2026-07-24)
+
+_commit `fadeb93` · changes since 0.0.0-develop.165_
+<!-- build:0.0.0-develop.168 revision:fadeb930499679d144cacc7980cf3e250508602e ts:1784860556 -->
+
+### Summary
+
+- **Major:** Updated registry platform version, ensuring compatibility with the latest features and fixes.
+- Error handling enhancement: Implemented retry logic for DCI searches on 5xx errors, maintaining fail-closed behavior for genuine policy denials.
+- Testing stability: Preserved inherited fixture symbol names in sanity/dci.py to prevent breaking changes in e2e tests, resolving AttributeError issues.
+
+### Changes since 0.0.0-develop.165
+
+- Bumped up registry platform version. ([`fadeb93`](https://github.com/OpenG2P/national-social-registry/commit/fadeb930499679d144cacc7980cf3e250508602e))
+- [G2P-5383](https://openg2p.atlassian.net/browse/G2P-5383) Sanity: retry a DCI search only when a dependency returns 5xx (e.g. Consent Manager stale-connection 500) — a genuine policy denial is never retried, so fail-closed behaviour is still asserted ([`4138fb2`](https://github.com/OpenG2P/national-social-registry/commit/4138fb2df13747d7b58fdbfc7edd1d859461a118))
+- [G2P-5383](https://openg2p.atlassian.net/browse/G2P-5383) NSR sanity: keep the inherited fixture symbol names (FARMER_*) and change only their values — sanity/dci.py is inherited and imports FARMER_FOUNDATIONAL_ID, so the rename broke all five e2e tests with AttributeError ([`f965ed5`](https://github.com/OpenG2P/national-social-registry/commit/f965ed504145b390c817cc8e64ed668b203da438))
 
 <a id="v-0-0-0-develop-165"></a>
 
