@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.295`](#v-0-0-0-develop-295) | 2026-07-24 | develop |
 | [`0.0.0-develop.294`](#v-0-0-0-develop-294) | 2026-07-24 | develop |
 | [`0.0.0-develop.292`](#v-0-0-0-develop-292) | 2026-07-23 | develop |
 | [`0.0.0-develop.291`](#v-0-0-0-develop-291) | 2026-07-23 | develop |
@@ -15,6 +16,17 @@ _Published automatically._
 | [`develop`](#v-branch-develop) | 2026-07-20 | branch |
 
 # Develop builds
+
+<a id="v-0-0-0-develop-295"></a>
+
+## registry-platform — develop 0.0.0-develop.295 (2026-07-24)
+
+_commit `c5214fc` · changes since 0.0.0-develop.294_
+<!-- build:0.0.0-develop.295 revision:c5214fc0ea55c590df3599b2b82c7245ac967417 ts:1784868682 -->
+
+### Changes since 0.0.0-develop.294
+
+- [G2P-5383](https://openg2p.atlassian.net/browse/G2P-5383) Sanity: make the DCI overlay tolerant of an older pinned harness — probe for post_search and fall back to a plain POST instead of failing collection with ImportError ([`c5214fc`](https://github.com/OpenG2P/registry-platform/commit/c5214fc0ea55c590df3599b2b82c7245ac967417))
 
 <a id="v-0-0-0-develop-294"></a>
 
