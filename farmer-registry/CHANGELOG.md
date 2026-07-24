@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.128`](#v-0-0-0-develop-128) | 2026-07-24 | develop |
 | [`0.0.0-develop.127`](#v-0-0-0-develop-127) | 2026-07-24 | develop |
 | [`0.0.0-develop.125`](#v-0-0-0-develop-125) | 2026-07-23 | develop |
 | [`0.0.0-develop.124`](#v-0-0-0-develop-124) | 2026-07-23 | develop |
@@ -13,6 +14,17 @@ _Published automatically._
 | [`0.0.0-develop.122`](#v-0-0-0-develop-122) | 2026-07-23 | develop |
 
 # Develop builds
+
+<a id="v-0-0-0-develop-128"></a>
+
+## farmer-registry — develop 0.0.0-develop.128 (2026-07-24)
+
+_commit `f4ad365` · changes since 0.0.0-develop.127_
+<!-- build:0.0.0-develop.128 revision:f4ad365cb12d27dad053909817a3b3572b59f276 ts:1784868736 -->
+
+### Changes since 0.0.0-develop.127
+
+- [G2P-5383](https://openg2p.atlassian.net/browse/G2P-5383) Align RP_VERSION in all Dockerfiles with the chart dependency at 0.0.0-develop.294 — the chart had been bumped but the images were still built FROM .288, so the sanity overlay imported post_search from a harness that predated it ([`f4ad365`](https://github.com/OpenG2P/farmer-registry/commit/f4ad365cb12d27dad053909817a3b3572b59f276))
 
 <a id="v-0-0-0-develop-127"></a>
 
