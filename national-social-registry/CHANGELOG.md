@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.171`](#v-0-0-0-develop-171) | 2026-07-24 | develop |
 | [`0.0.0-develop.169`](#v-0-0-0-develop-169) | 2026-07-24 | develop |
 | [`0.0.0-develop.168`](#v-0-0-0-develop-168) | 2026-07-24 | develop |
 | [`0.0.0-develop.165`](#v-0-0-0-develop-165) | 2026-07-23 | develop |
@@ -15,6 +16,24 @@ _Published automatically._
 | [`0.0.0-develop.158`](#v-0-0-0-develop-158) | 2026-07-23 | develop |
 
 # Develop builds
+
+<a id="v-0-0-0-develop-171"></a>
+
+## national-social-registry — develop 0.0.0-develop.171 (2026-07-24)
+
+_commit `ddfda05` · changes since 0.0.0-develop.169_
+<!-- build:0.0.0-develop.171 revision:ddfda05a04784413bccfefeb7a635d86ebb709bc ts:1784886289 -->
+
+### Summary
+
+- Tooling enhancements: introduced `scripts/bump-rp-version.sh` for atomic updates of the openg2p-registry pin across Dockerfiles and Helm charts, along with a CI lockstep guard in `checks.yml` and `test/test_rp_pin_lockstep.py` to ensure build integrity.
+- CI improvements: added a new GitHub Actions workflow in `.github/workflows/checks.yml` to automate checks related to version pinning.
+- Testing updates: created `test/test_rp_pin_lockstep.py` to validate the CI lockstep functionality, ensuring that version pins remain synchronized.
+
+### Changes since 0.0.0-develop.169
+
+- [G2P-5383](https://openg2p.atlassian.net/browse/G2P-5383) Tooling: add scripts/bump-rp-version.sh (with -n dry-run and -h help) to move the openg2p-registry pin — Dockerfiles + chart dependency together — to the latest version published in BOTH the Helm index and Docker Hub, plus a CI lockstep guard (test/test_rp_pin_lockstep.py + checks.yml) that fails the build if the pins ever split ([`ddfda05`](https://github.com/OpenG2P/national-social-registry/commit/ddfda05a04784413bccfefeb7a635d86ebb709bc))
+- [G2P-5383](https://openg2p.atlassian.net/browse/G2P-5383) Tooling: add scripts/bump-rp-version.sh to move the openg2p-registry pin (Dockerfiles + chart dependency) atomically to the latest version published in both the Helm index and Docker Hub, plus a CI lockstep guard (test/test_rp_pin_lockstep.py + checks.yml) that fails the build if the pins ever split ([`e099711`](https://github.com/OpenG2P/national-social-registry/commit/e09971118daa5813188065667008de78fb5924d0))
 
 <a id="v-0-0-0-develop-169"></a>
 
