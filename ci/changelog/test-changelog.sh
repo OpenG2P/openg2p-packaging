@@ -132,6 +132,29 @@ contains "annotated: aggregate carries release notes" "$(cat "$Pa/an/CHANGELOG.m
 rm -rf "$at" "$Pa"
 
 echo
+echo "annotated tag survives actions/checkout clobbering the ref to a lightweight tag"
+# actions/checkout fetches a tag as `+<commit-sha>:refs/tags/<name>`, which REPLACES the
+# annotated tag object with a lightweight ref -- the message then isn't in the clone.
+# run.sh must re-fetch the tag ref from origin and still render the release notes.
+cb=$(mktemp -d); cbwork=$(mktemp -d); Pcb=$(mktemp -d)
+git -C "$cb" init -q -b develop; git -C "$cb" config user.email t@t; git -C "$cb" config user.name t
+git -C "$cb" commit -q --allow-empty -m "G2P-80 the feature"
+git -C "$cb" tag -a 5.0.0 -m "Annotated notes that must survive."
+git clone -q "$cb" "$cbwork/clone" 2>/dev/null
+git -C "$cbwork/clone" config user.email t@t; git -C "$cbwork/clone" config user.name t
+# simulate actions/checkout: force the tag ref to point straight at the COMMIT
+sha=$(git -C "$cbwork/clone" rev-list -n1 5.0.0)
+git -C "$cbwork/clone" tag -f 5.0.0 "$sha" >/dev/null 2>&1
+check "precondition: tag is lightweight in the clone" commit \
+  "$(git -C "$cbwork/clone" for-each-ref refs/tags/5.0.0 --format='%(objecttype)')"
+( cd "$cbwork/clone" && REPO=cb VERSION=5.0.0 FROZEN=true REVISION=$(git rev-parse HEAD) \
+    PAGES_DIR="$Pcb" SKIP_AI=true DATE=2026-07-25 bash "$HERE/run.sh" >/dev/null )
+cbp=$(cat "$Pcb/cb/versions/5.0.0.md")
+contains "clobbered tag: Release notes still rendered" "$cbp" "### Release notes"
+contains "clobbered tag: message recovered"           "$cbp" "Annotated notes that must survive."
+rm -rf "$cb" "$cbwork" "$Pcb"
+
+echo
 echo "external release notes (editable platform Release description) override the tag"
 ov=$(mktemp -d); Pov=$(mktemp -d)
 git -C "$ov" init -q -b develop; git -C "$ov" config user.email t@t; git -C "$ov" config user.name t

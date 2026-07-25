@@ -267,11 +267,19 @@ notes_src=""
 if [ -n "${RELEASE_NOTES_FILE:-}" ] && [ -s "${RELEASE_NOTES_FILE}" ] \
    && grep -q '[^[:space:]]' "${RELEASE_NOTES_FILE}" 2>/dev/null; then
   notes_src="${RELEASE_NOTES_FILE}"   # editable platform Release description
-elif [ "${FROZEN:-false}" = true ] \
-   && [ "$(git for-each-ref "refs/tags/${VERSION}" --format='%(objecttype)' 2>/dev/null || true)" = tag ]; then
-  git for-each-ref "refs/tags/${VERSION}" \
-      --format='%(contents:subject)%0a%0a%(contents:body)' 2>/dev/null > "$work/tagmsg.md" || true
-  notes_src="$work/tagmsg.md"
+elif [ "${FROZEN:-false}" = true ]; then
+  # Restore the real tag OBJECT before reading it. actions/checkout fetches a tag as
+  # `+<commit-sha>:refs/tags/<name>`, which replaces the annotated tag object with a
+  # LIGHTWEIGHT ref -- the message is then absent from the clone and every release
+  # would silently lose its notes. Re-fetching the tag ref itself brings the annotated
+  # object back. No-op where the clone is already correct; failures are ignored (the
+  # tag may be local-only, or origin unreachable) and we simply fall through.
+  git fetch -q --force origin "refs/tags/${VERSION}:refs/tags/${VERSION}" >/dev/null 2>&1 || true
+  if [ "$(git for-each-ref "refs/tags/${VERSION}" --format='%(objecttype)' 2>/dev/null || true)" = tag ]; then
+    git for-each-ref "refs/tags/${VERSION}" \
+        --format='%(contents:subject)%0a%0a%(contents:body)' 2>/dev/null > "$work/tagmsg.md" || true
+    notes_src="$work/tagmsg.md"
+  fi
 fi
 RELEASE_NOTES_FILE=""
 if [ -n "$notes_src" ] && [ -s "$notes_src" ]; then
