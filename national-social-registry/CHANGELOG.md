@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`1.0.1-rc.172`](#v-1-0-1-rc-172) | 2026-07-25 | release candidate |
 | [`1.0.0`](#v-1-0-0) | 2026-07-25 | release |
 | [`0.0.0-develop.171`](#v-0-0-0-develop-171) | 2026-07-24 | develop |
 | [`0.0.0-develop.169`](#v-0-0-0-develop-169) | 2026-07-24 | develop |
@@ -170,6 +171,19 @@ _commit `ddfda05` · first release_
 - [G2P-4635](https://openg2p.atlassian.net/browse/G2P-4635) Renaming. ([`2240576`](https://github.com/OpenG2P/national-social-registry/commit/2240576c5740ef4d64dda461b65c3bc172cc2364))
 - [G2P-4635](https://openg2p.atlassian.net/browse/G2P-4635) Initial verison. WIP. ([`ae94976`](https://github.com/OpenG2P/national-social-registry/commit/ae94976963aa1918f29471e495438adcd492d7e0))
 - Initial commit ([`c2126d7`](https://github.com/OpenG2P/national-social-registry/commit/c2126d7e3adbd68af0bdbf579b67cb53cfd8ae49))
+
+# Release candidates (in progress)
+
+<a id="v-1-0-1-rc-172"></a>
+
+## national-social-registry 1.0.1-rc.172 — 2026-07-25
+
+_commit `32bc8b9` · changes since 0.0.0-develop.171_
+<!-- build:1.0.1-rc.172 revision:32bc8b9bd5f21ef13041c1400dda87be2072f0e2 ts:1784945171 -->
+
+### Changes since 0.0.0-develop.171
+
+- Bumped up RP version. ([`32bc8b9`](https://github.com/OpenG2P/national-social-registry/commit/32bc8b9bd5f21ef13041c1400dda87be2072f0e2))
 
 # Develop builds
 
