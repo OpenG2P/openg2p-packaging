@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`1.2.0-rc.132`](#v-1-2-0-rc-132) | 2026-07-25 | release candidate |
 | [`0.0.0-develop.132`](#v-0-0-0-develop-132) | 2026-07-24 | develop |
 | [`0.0.0-develop.129`](#v-0-0-0-develop-129) | 2026-07-24 | develop |
 | [`0.0.0-develop.128`](#v-0-0-0-develop-128) | 2026-07-24 | develop |
@@ -14,6 +15,19 @@ _Published automatically._
 | [`0.0.0-develop.124`](#v-0-0-0-develop-124) | 2026-07-23 | develop |
 | [`0.0.0-develop.123`](#v-0-0-0-develop-123) | 2026-07-23 | develop |
 | [`0.0.0-develop.122`](#v-0-0-0-develop-122) | 2026-07-23 | develop |
+
+# Release candidates (in progress)
+
+<a id="v-1-2-0-rc-132"></a>
+
+## farmer-registry 1.2.0-rc.132 — 2026-07-25
+
+_commit `7055a71` · changes since 0.0.0-develop.132_
+<!-- build:1.2.0-rc.132 revision:7055a710a25bca297f8a1cbd6c2cb64664840b20 ts:1784886389 -->
+
+### Changes since 0.0.0-develop.132
+
+_No new commits since 0.0.0-develop.132._
 
 # Develop builds
 
