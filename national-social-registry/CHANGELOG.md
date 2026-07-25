@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`1.0.0-rc.171`](#v-1-0-0-rc-171) | 2026-07-25 | release candidate |
 | [`0.0.0-develop.171`](#v-0-0-0-develop-171) | 2026-07-24 | develop |
 | [`0.0.0-develop.169`](#v-0-0-0-develop-169) | 2026-07-24 | develop |
 | [`0.0.0-develop.168`](#v-0-0-0-develop-168) | 2026-07-24 | develop |
@@ -14,6 +15,19 @@ _Published automatically._
 | [`0.0.0-develop.162`](#v-0-0-0-develop-162) | 2026-07-23 | develop |
 | [`0.0.0-develop.159`](#v-0-0-0-develop-159) | 2026-07-23 | develop |
 | [`0.0.0-develop.158`](#v-0-0-0-develop-158) | 2026-07-23 | develop |
+
+# Release candidates (in progress)
+
+<a id="v-1-0-0-rc-171"></a>
+
+## national-social-registry 1.0.0-rc.171 — 2026-07-25
+
+_commit `ddfda05` · changes since 0.0.0-develop.171_
+<!-- build:1.0.0-rc.171 revision:ddfda05a04784413bccfefeb7a635d86ebb709bc ts:1784886289 -->
+
+### Changes since 0.0.0-develop.171
+
+_No new commits since 0.0.0-develop.171._
 
 # Develop builds
 
