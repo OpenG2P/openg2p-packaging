@@ -1,1 +1,3 @@
+name=openg2p-commons-deployment
+kind=service
 repo=https://github.com/OpenG2P/openg2p-commons-deployment

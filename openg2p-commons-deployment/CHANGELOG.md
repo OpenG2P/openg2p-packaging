@@ -1,4 +1,4 @@
-# openg2p-commons-deployment changelog
+# openg2p-commons-deployment
 
 _Published automatically._
 
@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`2.2.0-rc.184`](#v-2-2-0-rc-184) | 2026-07-26 | release candidate |
 | [`0.0.0-develop.183`](#v-0-0-0-develop-183) | 2026-07-18 | develop |
 | [`0.0.0-develop.182`](#v-0-0-0-develop-182) | 2026-07-18 | develop |
 | [`0.0.0-develop.181`](#v-0-0-0-develop-181) | 2026-07-18 | develop |
@@ -189,6 +190,19 @@ _commit `44278e8` · first release_
 - [[G2P-3267](https://openg2p.atlassian.net/browse/G2P-3267)] Added OpenG2P-commons Helm Charts in to openg2p-deployment-commons repo. ([`bf14317`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/bf14317de2261ad192ecdf1980711eeebd315002))
 - Initial commit ([`04cc8c6`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/04cc8c6f16ae3132d62a9b80087c0cea81ce472d))
 
+# Release candidates (in progress)
+
+<a id="v-2-2-0-rc-184"></a>
+
+## openg2p-commons-deployment 2.2.0-rc.184 — 2026-07-26
+
+_commit `a8ef10b` · changes since 0.0.0-develop.183_
+<!-- build:2.2.0-rc.184 revision:a8ef10b701799c2bf9c1aceb6bf4623dbc52261b ts:1785037958 -->
+
+### Changes since 0.0.0-develop.183
+
+- [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) Use the shared version policy (derive-version.sh) so release-line branches publish RCs and get changelogs ([`a8ef10b`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/a8ef10b701799c2bf9c1aceb6bf4623dbc52261b))
+
 # Develop builds
 
 <a id="v-0-0-0-develop-183"></a>
@@ -321,7 +335,7 @@ _All changes since release 2.1.0:_
 ---
 
 > **What's shown here.** This catalogue lists **every stable release**, plus
-> the **latest 3 develop builds** and the **latest 3 release
+> the **latest 10 develop builds** and the **latest 10 release
 > candidates** per release line. Older develop builds and release candidates
 > are pruned as they are superseded, and a release's candidates are removed
 > once it ships. Those versions still exist in the container and Helm
