@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.186`](#v-0-0-0-develop-186) | 2026-07-28 | develop |
 | [`0.0.0-develop.185`](#v-0-0-0-develop-185) | 2026-07-28 | develop |
 | [`2.2.0`](#v-2-2-0) | 2026-07-26 | release |
 | [`0.0.0-develop.183`](#v-0-0-0-develop-183) | 2026-07-18 | develop |
@@ -230,6 +231,17 @@ _commit `44278e8` · first release_
 - Initial commit ([`04cc8c6`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/04cc8c6f16ae3132d62a9b80087c0cea81ce472d))
 
 # Develop builds
+
+<a id="v-0-0-0-develop-186"></a>
+
+## openg2p-commons-deployment — develop 0.0.0-develop.186 (2026-07-28)
+
+_commit `cf8be83` · changes since 0.0.0-develop.185_
+<!-- build:0.0.0-develop.186 revision:cf8be838ab40c768a5a002d62dd47616c0562fa9 ts:1785240326 -->
+
+### Changes since 0.0.0-develop.185
+
+- Bumped up master data chart to 0.0.0-develop.30 ([`cf8be83`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/cf8be838ab40c768a5a002d62dd47616c0562fa9))
 
 <a id="v-0-0-0-develop-185"></a>
 
