@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.179`](#v-0-0-0-develop-179) | 2026-07-28 | develop |
 | [`0.0.0-develop.177`](#v-0-0-0-develop-177) | 2026-07-28 | develop |
 | [`1.0.1`](#v-1-0-1) | 2026-07-25 | release |
 | [`1.0.0`](#v-1-0-0) | 2026-07-25 | release |
@@ -194,6 +195,23 @@ _commit `ddfda05` · first release_
 - Initial commit ([`c2126d7`](https://github.com/OpenG2P/national-social-registry/commit/c2126d7e3adbd68af0bdbf579b67cb53cfd8ae49))
 
 # Develop builds
+
+<a id="v-0-0-0-develop-179"></a>
+
+## national-social-registry — develop 0.0.0-develop.179 (2026-07-28)
+
+_commit `bc41b45` · changes since 0.0.0-develop.177_
+<!-- build:0.0.0-develop.179 revision:bc41b45b94f341e7078d242fbe03ef2f52f51654 ts:1785239698 -->
+
+### Summary
+
+- **Major:** Upgraded Registry Platform to version 0.0.0-develop.297, introducing significant changes to the underlying architecture.
+- Analytics enhancement: packaged the analytics chain including openg2p-data paths, reporting views, and a dashboard bundle for improved data visualization and reporting.
+
+### Changes since 0.0.0-develop.177
+
+- Bumped up Registry Platform version to 0.0.0-develop.297 ([`bc41b45`](https://github.com/OpenG2P/national-social-registry/commit/bc41b45b94f341e7078d242fbe03ef2f52f51654))
+- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Package the analytics chain: openg2p-data paths, reporting views, dashboard bundle. ([`9625edb`](https://github.com/OpenG2P/national-social-registry/commit/9625edb475d959510e1f2f3c0efea611c2deb158))
 
 <a id="v-0-0-0-develop-177"></a>
 
