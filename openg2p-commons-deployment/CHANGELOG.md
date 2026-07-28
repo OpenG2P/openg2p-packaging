@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.185`](#v-0-0-0-develop-185) | 2026-07-28 | develop |
 | [`2.2.0`](#v-2-2-0) | 2026-07-26 | release |
 | [`0.0.0-develop.183`](#v-0-0-0-develop-183) | 2026-07-18 | develop |
 | [`0.0.0-develop.182`](#v-0-0-0-develop-182) | 2026-07-18 | develop |
@@ -229,6 +230,22 @@ _commit `44278e8` · first release_
 - Initial commit ([`04cc8c6`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/04cc8c6f16ae3132d62a9b80087c0cea81ce472d))
 
 # Develop builds
+
+<a id="v-0-0-0-develop-185"></a>
+
+## openg2p-commons-deployment — develop 0.0.0-develop.185 (2026-07-28)
+
+_commit `0e52ebf` · changes since 0.0.0-develop.183_
+<!-- build:0.0.0-develop.185 revision:0e52ebf19de3fd2ac8af3c4dd128e0f2857f7162 ts:1785238479 -->
+
+### Summary
+
+- Version management: Updated Master Data Service version and implemented a shared version policy for release-line branches to publish release candidates and generate changelogs.
+
+### Changes since 0.0.0-develop.183
+
+- Bumped up Master Data Service version. ([`0e52ebf`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/0e52ebf19de3fd2ac8af3c4dd128e0f2857f7162))
+- [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) Use the shared version policy (derive-version.sh) so release-line branches publish RCs and get changelogs ([`a8ef10b`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/a8ef10b701799c2bf9c1aceb6bf4623dbc52261b))
 
 <a id="v-0-0-0-develop-183"></a>
 
