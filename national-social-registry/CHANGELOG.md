@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.184`](#v-0-0-0-develop-184) | 2026-07-29 | develop |
 | [`0.0.0-develop.183`](#v-0-0-0-develop-183) | 2026-07-29 | develop |
 | [`0.0.0-develop.181`](#v-0-0-0-develop-181) | 2026-07-28 | develop |
 | [`0.0.0-develop.180`](#v-0-0-0-develop-180) | 2026-07-28 | develop |
@@ -17,7 +18,6 @@ _Published automatically._
 | [`0.0.0-develop.169`](#v-0-0-0-develop-169) | 2026-07-24 | develop |
 | [`0.0.0-develop.168`](#v-0-0-0-develop-168) | 2026-07-24 | develop |
 | [`0.0.0-develop.165`](#v-0-0-0-develop-165) | 2026-07-23 | develop |
-| [`0.0.0-develop.164`](#v-0-0-0-develop-164) | 2026-07-23 | develop |
 
 # Releases
 
@@ -196,6 +196,17 @@ _commit `ddfda05` · first release_
 
 # Develop builds
 
+<a id="v-0-0-0-develop-184"></a>
+
+## national-social-registry — develop 0.0.0-develop.184 (2026-07-29)
+
+_commit `6bb70bb` · changes since 0.0.0-develop.183_
+<!-- build:0.0.0-develop.184 revision:6bb70bb6e4c64c99fab99b0104048fb58a6adcd2 ts:1785290690 -->
+
+### Changes since 0.0.0-develop.183
+
+- Bumped up RP version to 0.0.0-develop.298. (previous checking had errors) ([`6bb70bb`](https://github.com/OpenG2P/national-social-registry/commit/6bb70bb6e4c64c99fab99b0104048fb58a6adcd2))
+
 <a id="v-0-0-0-develop-183"></a>
 
 ## national-social-registry — develop 0.0.0-develop.183 (2026-07-29)
@@ -333,17 +344,6 @@ _commit `e3e331a` · changes since 0.0.0-develop.164_
 ### Changes since 0.0.0-develop.164
 
 - Registry platform version updated. ([`e3e331a`](https://github.com/OpenG2P/national-social-registry/commit/e3e331a9ec68e4e37d63e4657e3bf7f60926b3a9))
-
-<a id="v-0-0-0-develop-164"></a>
-
-## national-social-registry — develop 0.0.0-develop.164 (2026-07-23)
-
-_commit `31ec1a5` · changes since 0.0.0-develop.162_
-<!-- build:0.0.0-develop.164 revision:31ec1a5c96663789fec454ba889aaae73753bf57 ts:1784806499 -->
-
-### Changes since 0.0.0-develop.162
-
-- [G2P-5383](https://openg2p.atlassian.net/browse/G2P-5383) NSR db-seed: update the restored loaders for the v1.1.0 document refactor — record_image_storage_id was renamed to record_image_document_id, which made load_sample_data.py fail on g2p_register_individuals and g2p_register_households; verified against the live schema and by running both loaders in-cluster ([`a5634a1`](https://github.com/OpenG2P/national-social-registry/commit/a5634a16993f77cc3411bbf0f0ac65b669fccf73))
 
 ---
 
