@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.298`](#v-0-0-0-develop-298) | 2026-07-29 | develop |
 | [`0.0.0-develop.297`](#v-0-0-0-develop-297) | 2026-07-28 | develop |
 | [`0.0.0-develop.296`](#v-0-0-0-develop-296) | 2026-07-24 | develop |
 | [`0.0.0-develop.295`](#v-0-0-0-develop-295) | 2026-07-24 | develop |
@@ -18,6 +19,17 @@ _Published automatically._
 | [`develop`](#v-branch-develop) | 2026-07-20 | branch |
 
 # Develop builds
+
+<a id="v-0-0-0-develop-298"></a>
+
+## registry-platform — develop 0.0.0-develop.298 (2026-07-29)
+
+_commit `80e5002` · changes since 0.0.0-develop.297_
+<!-- build:0.0.0-develop.298 revision:80e5002bdd7cf922b118aeed74b479e6a3d9fdbe ts:1785289432 -->
+
+### Changes since 0.0.0-develop.297
+
+- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Pin the db-seed image to openg2p-data develop in CI. ([`80e5002`](https://github.com/OpenG2P/registry-platform/commit/80e5002bdd7cf922b118aeed74b479e6a3d9fdbe))
 
 <a id="v-0-0-0-develop-297"></a>
 
