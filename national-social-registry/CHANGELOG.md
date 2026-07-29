@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.188`](#v-0-0-0-develop-188) | 2026-07-29 | develop |
 | [`0.0.0-develop.185`](#v-0-0-0-develop-185) | 2026-07-29 | develop |
 | [`0.0.0-develop.184`](#v-0-0-0-develop-184) | 2026-07-29 | develop |
 | [`0.0.0-develop.183`](#v-0-0-0-develop-183) | 2026-07-29 | develop |
@@ -17,7 +18,6 @@ _Published automatically._
 | [`1.0.0`](#v-1-0-0) | 2026-07-25 | release |
 | [`0.0.0-develop.171`](#v-0-0-0-develop-171) | 2026-07-24 | develop |
 | [`0.0.0-develop.169`](#v-0-0-0-develop-169) | 2026-07-24 | develop |
-| [`0.0.0-develop.168`](#v-0-0-0-develop-168) | 2026-07-24 | develop |
 
 # Releases
 
@@ -196,6 +196,24 @@ _commit `ddfda05` · first release_
 
 # Develop builds
 
+<a id="v-0-0-0-develop-188"></a>
+
+## national-social-registry — develop 0.0.0-develop.188 (2026-07-29)
+
+_commit `36a87e2` · changes since 0.0.0-develop.185_
+<!-- build:0.0.0-develop.188 revision:36a87e27db022365e32013bfa70833f2dc7be097 ts:1785304301 -->
+
+### Summary
+
+- Dashboard enhancements: implemented adhoc SQL COUNT(*) for improved chart metrics and dataset column validation, and automated service user creation during dashboard imports.
+- Version update: bumped RP version to 0.0.0-develop.299.
+
+### Changes since 0.0.0-develop.185
+
+- Bumped up RP version 0.0.0-develop.299 ([`36a87e2`](https://github.com/OpenG2P/national-social-registry/commit/36a87e27db022365e32013bfa70833f2dc7be097))
+- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Use adhoc SQL COUNT(*) in charts; make the dashboard import create its service user and replace stale charts. ([`d1862a8`](https://github.com/OpenG2P/national-social-registry/commit/d1862a82dd8a869e983f94c09732f05b780228d1))
+- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Use an adhoc SQL COUNT(*) metric so charts pass dataset column validation. ([`b80cf1e`](https://github.com/OpenG2P/national-social-registry/commit/b80cf1e4037de7ed5e764a1d236ef42576962b1f))
+
 <a id="v-0-0-0-develop-185"></a>
 
 ## national-social-registry — develop 0.0.0-develop.185 (2026-07-29)
@@ -325,25 +343,6 @@ _commit `7294267` · changes since 0.0.0-develop.168_
 ### Changes since 0.0.0-develop.168
 
 - [G2P-5383](https://openg2p.atlassian.net/browse/G2P-5383) Bump openg2p-registry pin to 0.0.0-develop.295 in all Dockerfiles and the chart dependency (kept in lockstep) ([`7294267`](https://github.com/OpenG2P/national-social-registry/commit/72942673f747074b7ad42670887e40a6f25d2561))
-
-<a id="v-0-0-0-develop-168"></a>
-
-## national-social-registry — develop 0.0.0-develop.168 (2026-07-24)
-
-_commit `fadeb93` · changes since 0.0.0-develop.165_
-<!-- build:0.0.0-develop.168 revision:fadeb930499679d144cacc7980cf3e250508602e ts:1784860556 -->
-
-### Summary
-
-- **Major:** Updated registry platform version, ensuring compatibility with the latest features and fixes.
-- Error handling enhancement: Implemented retry logic for DCI searches on 5xx errors, maintaining fail-closed behavior for genuine policy denials.
-- Testing stability: Preserved inherited fixture symbol names in sanity/dci.py to prevent breaking changes in e2e tests, resolving AttributeError issues.
-
-### Changes since 0.0.0-develop.165
-
-- Bumped up registry platform version. ([`fadeb93`](https://github.com/OpenG2P/national-social-registry/commit/fadeb930499679d144cacc7980cf3e250508602e))
-- [G2P-5383](https://openg2p.atlassian.net/browse/G2P-5383) Sanity: retry a DCI search only when a dependency returns 5xx (e.g. Consent Manager stale-connection 500) — a genuine policy denial is never retried, so fail-closed behaviour is still asserted ([`4138fb2`](https://github.com/OpenG2P/national-social-registry/commit/4138fb2df13747d7b58fdbfc7edd1d859461a118))
-- [G2P-5383](https://openg2p.atlassian.net/browse/G2P-5383) NSR sanity: keep the inherited fixture symbol names (FARMER_*) and change only their values — sanity/dci.py is inherited and imports FARMER_FOUNDATIONAL_ID, so the rename broke all five e2e tests with AttributeError ([`f965ed5`](https://github.com/OpenG2P/national-social-registry/commit/f965ed504145b390c817cc8e64ed668b203da438))
 
 ---
 
