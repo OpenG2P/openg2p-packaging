@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.187`](#v-0-0-0-develop-187) | 2026-07-29 | develop |
 | [`0.0.0-develop.186`](#v-0-0-0-develop-186) | 2026-07-28 | develop |
 | [`0.0.0-develop.185`](#v-0-0-0-develop-185) | 2026-07-28 | develop |
 | [`2.2.0`](#v-2-2-0) | 2026-07-26 | release |
@@ -231,6 +232,17 @@ _commit `44278e8` · first release_
 - Initial commit ([`04cc8c6`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/04cc8c6f16ae3132d62a9b80087c0cea81ce472d))
 
 # Develop builds
+
+<a id="v-0-0-0-develop-187"></a>
+
+## openg2p-commons-deployment — develop 0.0.0-develop.187 (2026-07-29)
+
+_commit `ab1f277` · changes since 0.0.0-develop.186_
+<!-- build:0.0.0-develop.187 revision:ab1f2779a2549309c037007fbe4bf7739db657cc ts:1785291018 -->
+
+### Changes since 0.0.0-develop.186
+
+- Bumped up Master Data Service version to 0.0.0-develop.31 ([`ab1f277`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/ab1f2779a2549309c037007fbe4bf7739db657cc))
 
 <a id="v-0-0-0-develop-186"></a>
 
