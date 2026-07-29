@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.185`](#v-0-0-0-develop-185) | 2026-07-29 | develop |
 | [`0.0.0-develop.184`](#v-0-0-0-develop-184) | 2026-07-29 | develop |
 | [`0.0.0-develop.183`](#v-0-0-0-develop-183) | 2026-07-29 | develop |
 | [`0.0.0-develop.181`](#v-0-0-0-develop-181) | 2026-07-28 | develop |
@@ -17,7 +18,6 @@ _Published automatically._
 | [`0.0.0-develop.171`](#v-0-0-0-develop-171) | 2026-07-24 | develop |
 | [`0.0.0-develop.169`](#v-0-0-0-develop-169) | 2026-07-24 | develop |
 | [`0.0.0-develop.168`](#v-0-0-0-develop-168) | 2026-07-24 | develop |
-| [`0.0.0-develop.165`](#v-0-0-0-develop-165) | 2026-07-23 | develop |
 
 # Releases
 
@@ -196,6 +196,17 @@ _commit `ddfda05` · first release_
 
 # Develop builds
 
+<a id="v-0-0-0-develop-185"></a>
+
+## national-social-registry — develop 0.0.0-develop.185 (2026-07-29)
+
+_commit `ba1ee1b` · changes since 0.0.0-develop.184_
+<!-- build:0.0.0-develop.185 revision:ba1ee1b72913d6ee21da5e14cf2e653f9a2b5f31 ts:1785299661 -->
+
+### Changes since 0.0.0-develop.184
+
+- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Pass Master Data credentials to the bulk-sample job; sweep unlabelled jobs on uninstall. ([`ba1ee1b`](https://github.com/OpenG2P/national-social-registry/commit/ba1ee1b72913d6ee21da5e14cf2e653f9a2b5f31))
+
 <a id="v-0-0-0-develop-184"></a>
 
 ## national-social-registry — develop 0.0.0-develop.184 (2026-07-29)
@@ -333,17 +344,6 @@ _commit `fadeb93` · changes since 0.0.0-develop.165_
 - Bumped up registry platform version. ([`fadeb93`](https://github.com/OpenG2P/national-social-registry/commit/fadeb930499679d144cacc7980cf3e250508602e))
 - [G2P-5383](https://openg2p.atlassian.net/browse/G2P-5383) Sanity: retry a DCI search only when a dependency returns 5xx (e.g. Consent Manager stale-connection 500) — a genuine policy denial is never retried, so fail-closed behaviour is still asserted ([`4138fb2`](https://github.com/OpenG2P/national-social-registry/commit/4138fb2df13747d7b58fdbfc7edd1d859461a118))
 - [G2P-5383](https://openg2p.atlassian.net/browse/G2P-5383) NSR sanity: keep the inherited fixture symbol names (FARMER_*) and change only their values — sanity/dci.py is inherited and imports FARMER_FOUNDATIONAL_ID, so the rename broke all five e2e tests with AttributeError ([`f965ed5`](https://github.com/OpenG2P/national-social-registry/commit/f965ed504145b390c817cc8e64ed668b203da438))
-
-<a id="v-0-0-0-develop-165"></a>
-
-## national-social-registry — develop 0.0.0-develop.165 (2026-07-23)
-
-_commit `e3e331a` · changes since 0.0.0-develop.164_
-<!-- build:0.0.0-develop.165 revision:e3e331a9ec68e4e37d63e4657e3bf7f60926b3a9 ts:1784807914 -->
-
-### Changes since 0.0.0-develop.164
-
-- Registry platform version updated. ([`e3e331a`](https://github.com/OpenG2P/national-social-registry/commit/e3e331a9ec68e4e37d63e4657e3bf7f60926b3a9))
 
 ---
 
