@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.134`](#v-0-0-0-develop-134) | 2026-07-30 | develop |
 | [`1.2.0`](#v-1-2-0) | 2026-07-25 | release |
 | [`0.0.0-develop.132`](#v-0-0-0-develop-132) | 2026-07-24 | develop |
 | [`0.0.0-develop.129`](#v-0-0-0-develop-129) | 2026-07-24 | develop |
@@ -141,6 +142,17 @@ _commit `7055a71` · first release_
 - Initial commit ([`6e3cf83`](https://github.com/OpenG2P/farmer-registry/commit/6e3cf838809c5522a8b0cda15b87f726683ec175))
 
 # Develop builds
+
+<a id="v-0-0-0-develop-134"></a>
+
+## farmer-registry — develop 0.0.0-develop.134 (2026-07-30)
+
+_commit `004b275` · changes since 0.0.0-develop.132_
+<!-- build:0.0.0-develop.134 revision:004b2752eca61f1bfea80777465055f82828c7ef ts:1785392643 -->
+
+### Changes since 0.0.0-develop.132
+
+- [G2P-5412](https://openg2p.atlassian.net/browse/G2P-5412) Refactor: Remove unused async methods for linking internal record IDs in various models (crop, farm inputs, farmer, household member, land, livestock, membership details) to streamline code and improve maintainability. ([`c5ab693`](https://github.com/OpenG2P/farmer-registry/commit/c5ab69323dd7435a93ae3572213fd5dfdec6a71f))
 
 <a id="v-0-0-0-develop-132"></a>
 
