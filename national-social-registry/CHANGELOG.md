@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.189`](#v-0-0-0-develop-189) | 2026-07-30 | develop |
 | [`0.0.0-develop.188`](#v-0-0-0-develop-188) | 2026-07-29 | develop |
 | [`0.0.0-develop.185`](#v-0-0-0-develop-185) | 2026-07-29 | develop |
 | [`0.0.0-develop.184`](#v-0-0-0-develop-184) | 2026-07-29 | develop |
@@ -17,7 +18,6 @@ _Published automatically._
 | [`1.0.1`](#v-1-0-1) | 2026-07-25 | release |
 | [`1.0.0`](#v-1-0-0) | 2026-07-25 | release |
 | [`0.0.0-develop.171`](#v-0-0-0-develop-171) | 2026-07-24 | develop |
-| [`0.0.0-develop.169`](#v-0-0-0-develop-169) | 2026-07-24 | develop |
 
 # Releases
 
@@ -196,6 +196,17 @@ _commit `ddfda05` · first release_
 
 # Develop builds
 
+<a id="v-0-0-0-develop-189"></a>
+
+## national-social-registry — develop 0.0.0-develop.189 (2026-07-30)
+
+_commit `76e2da2` · changes since 0.0.0-develop.188_
+<!-- build:0.0.0-develop.189 revision:76e2da2d384e5e4867ec9a3e3be03c3007997312 ts:1785382413 -->
+
+### Changes since 0.0.0-develop.188
+
+- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Raise the default bulk sample to 250k individuals, sized against Kamuntu's 668 villages so leaf-level percentages are reportable rather than suppressed. Clarify that expectedCountry is the root P-code (XK/ET), not the pack name. ([`76e2da2`](https://github.com/OpenG2P/national-social-registry/commit/76e2da2d384e5e4867ec9a3e3be03c3007997312))
+
 <a id="v-0-0-0-develop-188"></a>
 
 ## national-social-registry — develop 0.0.0-develop.188 (2026-07-29)
@@ -332,17 +343,6 @@ _commit `ddfda05` · changes since 0.0.0-develop.169_
 
 - [G2P-5383](https://openg2p.atlassian.net/browse/G2P-5383) Tooling: add scripts/bump-rp-version.sh (with -n dry-run and -h help) to move the openg2p-registry pin — Dockerfiles + chart dependency together — to the latest version published in BOTH the Helm index and Docker Hub, plus a CI lockstep guard (test/test_rp_pin_lockstep.py + checks.yml) that fails the build if the pins ever split ([`ddfda05`](https://github.com/OpenG2P/national-social-registry/commit/ddfda05a04784413bccfefeb7a635d86ebb709bc))
 - [G2P-5383](https://openg2p.atlassian.net/browse/G2P-5383) Tooling: add scripts/bump-rp-version.sh to move the openg2p-registry pin (Dockerfiles + chart dependency) atomically to the latest version published in both the Helm index and Docker Hub, plus a CI lockstep guard (test/test_rp_pin_lockstep.py + checks.yml) that fails the build if the pins ever split ([`e099711`](https://github.com/OpenG2P/national-social-registry/commit/e09971118daa5813188065667008de78fb5924d0))
-
-<a id="v-0-0-0-develop-169"></a>
-
-## national-social-registry — develop 0.0.0-develop.169 (2026-07-24)
-
-_commit `7294267` · changes since 0.0.0-develop.168_
-<!-- build:0.0.0-develop.169 revision:72942673f747074b7ad42670887e40a6f25d2561 ts:1784869244 -->
-
-### Changes since 0.0.0-develop.168
-
-- [G2P-5383](https://openg2p.atlassian.net/browse/G2P-5383) Bump openg2p-registry pin to 0.0.0-develop.295 in all Dockerfiles and the chart dependency (kept in lockstep) ([`7294267`](https://github.com/OpenG2P/national-social-registry/commit/72942673f747074b7ad42670887e40a6f25d2561))
 
 ---
 
