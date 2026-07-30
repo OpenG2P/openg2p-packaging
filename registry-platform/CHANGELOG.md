@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.329`](#v-0-0-0-develop-329) | 2026-07-30 | develop |
 | [`0.0.0-develop.316`](#v-0-0-0-develop-316) | 2026-07-30 | develop |
 | [`0.0.0-develop.311`](#v-0-0-0-develop-311) | 2026-07-30 | develop |
 | [`0.0.0-develop.299`](#v-0-0-0-develop-299) | 2026-07-29 | develop |
@@ -15,10 +16,33 @@ _Published automatically._
 | [`0.0.0-develop.295`](#v-0-0-0-develop-295) | 2026-07-24 | develop |
 | [`0.0.0-develop.294`](#v-0-0-0-develop-294) | 2026-07-24 | develop |
 | [`0.0.0-develop.292`](#v-0-0-0-develop-292) | 2026-07-23 | develop |
-| [`0.0.0-develop.291`](#v-0-0-0-develop-291) | 2026-07-23 | develop |
 | [`develop`](#v-branch-develop) | 2026-07-20 | branch |
 
 # Develop builds
+
+<a id="v-0-0-0-develop-329"></a>
+
+## registry-platform — develop 0.0.0-develop.329 (2026-07-30)
+
+_commit `7da37f9` · changes since 0.0.0-develop.316_
+<!-- build:0.0.0-develop.329 revision:7da37f9dc8fc274140b490673cd77d28c157e975 ts:1785406111 -->
+
+### Summary
+
+- **Major:** Version bump to 1.1.1 for the registry platform, including an update to ui widget version 1.1.4-dev.4.
+- Refactoring improvements: streamlined history field handling in g2p_register, fixed audit details in the table widget, and recreated widget store on version change in VersionHistoryPage to prevent stale data.
+- Feature enhancements: added unsaved changes warning in intake-form and improved permissions handling in DataPoliciesListPage.
+- Dependency updates: modified package-lock.json and package.json for staff-ui, reflecting changes in dependencies.
+
+### Changes since 0.0.0-develop.316
+
+- [G2P-5365](https://openg2p.atlassian.net/browse/G2P-5365) refactor(useCrViewData): fix audit details in table widget ([`a71fb67`](https://github.com/OpenG2P/registry-platform/commit/a71fb679b913cabf8988c5b4f568f61b8feaf939))
+- [G2P-5382](https://openg2p.atlassian.net/browse/G2P-5382) refactor(VersionHistoryPage): recreate widget store on version change to prevent stale data ([`b622225`](https://github.com/OpenG2P/registry-platform/commit/b6222259a0c84b503b85467f78fa503bb8238455))
+- [G2P-5365](https://openg2p.atlassian.net/browse/G2P-5365) refactor(g2p_register): streamline history field handling - update base fields to exclude from current register data - add last approved by and approved at fields to current register data ([`102b30b`](https://github.com/OpenG2P/registry-platform/commit/102b30bf51eb76e73c103af2735138cb6bf83295))
+- bumped up the version to 1.1.1 for registry platform ([`6367bae`](https://github.com/OpenG2P/registry-platform/commit/6367bae50d7ef6c6a31700324311620d67c7d44a))
+- feat(DataPoliciesListPage): update registry-widgets version and enhance permissions handling ([`aa86b28`](https://github.com/OpenG2P/registry-platform/commit/aa86b28ce26915ac4b8e78695462f15c7917cc58))
+- published and updated ui widget version to 1.1.4-dev.4 ([`3abf27c`](https://github.com/OpenG2P/registry-platform/commit/3abf27c95df473313630476afa24d82e73ff7e1a))
+- [G2P-5381](https://openg2p.atlassian.net/browse/G2P-5381) feat(intake-form): add unsaved changes warning before submit ([`9b664e1`](https://github.com/OpenG2P/registry-platform/commit/9b664e1fa37246c91e73262a82341ff299d82dfe))
 
 <a id="v-0-0-0-develop-316"></a>
 
@@ -141,24 +165,6 @@ _commit `dd25651` · changes since 0.0.0-develop.291_
 ### Changes since 0.0.0-develop.291
 
 - [G2P-5383](https://openg2p.atlassian.net/browse/G2P-5383) Sanity: fail instead of silently passing — default SANITY_FAIL_ON_ERROR/failOnError to true so a failing suite fails the Job and the install, and make fixtures FAIL when a dependency is configured but broken (unconfigured dependencies still skip), so a run cannot go green having dropped every consent and signature test ([`dd25651`](https://github.com/OpenG2P/registry-platform/commit/dd256515449c69dd3290db2d9ddbc2f9c9fefbea))
-
-<a id="v-0-0-0-develop-291"></a>
-
-## registry-platform — develop 0.0.0-develop.291 (2026-07-23)
-
-_commit `a46a5e4` · changes since 0.0.0-develop.288_
-<!-- build:0.0.0-develop.291 revision:a46a5e47bd790eb64d514c92c73d056fb909eca1 ts:1784807328 -->
-
-### Summary
-
-- Bug fix: resolved an issue in Partner Management where HTTP 400 responses for already-onboarded partners were not triggering the correct status code, leading to silent skips in consent/signature tests.
-- Dependency updates: synchronized `staff-portal-ui` to version `1.1.6-dev.2` and made changes to the `package-lock.json` and `package.json` files for `ui-widgets`.
-- Testing improvements: enhanced error handling by surfacing response bodies on failure for better debugging.
-
-### Changes since 0.0.0-develop.288
-
-- [G2P-5383](https://openg2p.atlassian.net/browse/G2P-5383) Sanity: fix PM partner seeding — Partner Management returns HTTP 400 with body code PM-PRT-409 for an already-onboarded partner, so the status_code==409 branch never fired and every consent/signature test silently SKIPPED; also surface the response body on failure ([`112378f`](https://github.com/OpenG2P/registry-platform/commit/112378f8f3edd5c16060b079b35551ce1f20129f))
-- chore(ui-widgets): version for npm next publish, sync staff-portal-ui @1.1.6-dev.2 [skip ci] ([`7b30e97`](https://github.com/OpenG2P/registry-platform/commit/7b30e979cbc9e443e8dadce4a61a5f97dc19b6c2))
 
 # Branches (moving)
 
