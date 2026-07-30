@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.191`](#v-0-0-0-develop-191) | 2026-07-30 | develop |
 | [`0.0.0-develop.189`](#v-0-0-0-develop-189) | 2026-07-30 | develop |
 | [`0.0.0-develop.188`](#v-0-0-0-develop-188) | 2026-07-29 | develop |
 | [`0.0.0-develop.185`](#v-0-0-0-develop-185) | 2026-07-29 | develop |
@@ -17,7 +18,6 @@ _Published automatically._
 | [`0.0.0-develop.177`](#v-0-0-0-develop-177) | 2026-07-28 | develop |
 | [`1.0.1`](#v-1-0-1) | 2026-07-25 | release |
 | [`1.0.0`](#v-1-0-0) | 2026-07-25 | release |
-| [`0.0.0-develop.171`](#v-0-0-0-develop-171) | 2026-07-24 | develop |
 
 # Releases
 
@@ -196,6 +196,17 @@ _commit `ddfda05` · first release_
 
 # Develop builds
 
+<a id="v-0-0-0-develop-191"></a>
+
+## national-social-registry — develop 0.0.0-develop.191 (2026-07-30)
+
+_commit `22bd74f` · changes since 0.0.0-develop.189_
+<!-- build:0.0.0-develop.191 revision:22bd74f5b30f4f351227d7ec89d9b02c2be5bc3d ts:1785392656 -->
+
+### Changes since 0.0.0-develop.189
+
+- [G2P-5412](https://openg2p.atlassian.net/browse/G2P-5412) Refactor household and individual models by removing unused async methods for linking internal record IDs and cleaning up imports. This improves code clarity and maintainability across multiple model files. ([`c49a881`](https://github.com/OpenG2P/national-social-registry/commit/c49a8811bbb404ad4201ccacc96b7df9a49517ad))
+
 <a id="v-0-0-0-develop-189"></a>
 
 ## national-social-registry — develop 0.0.0-develop.189 (2026-07-30)
@@ -325,24 +336,6 @@ _commit `fc58562` · changes since 0.0.0-develop.171_
 - NSR-xxxx Added the NSR reporting foundation: a scalable canonical-schema sample generator (~1M individuals plus vulnerability, livelihoods, housing, programme and score records), two indexed materialized views that flatten geography positionally so nothing assumes a country, level naming or depth, and a nested-GeoJSON generator that derives drill-down boundaries from the deployment's own MDS hierarchy. Poverty drives deprivation, enrolment and ID coverage and is spatially clustered, so targeting and map dashboards have real signal; quintile 1 is the poorest by convention, documented because a proxy-means test scores the other way and reversing it silently inverts every chart. Loads run in-cluster via bulk-seed-job.yaml since a load this size does not survive kubectl port-forward, and --purge makes any load reversible. ([`1888d40`](https://github.com/OpenG2P/national-social-registry/commit/1888d40afd454b4eafb436f12a786a3f27c52fd9))
 - NSR-xxxx Added a scalable sample-data generator for NSR (docker/db-seed/generate_bulk_sample.py) that loads ~1M individuals / 250k households plus vulnerability, livelihoods, housing-services, programme and score records. Complements the hand-written 500-row fixture in load_sample_data.py, which cannot scale. Geography is read from the deployment's own MDS hierarchy so nothing is tied to a country, level naming or depth; attribute marginals come from a committed distributions.json extracted (counts only, no PII) from a real 20M-row registry. Column lists are introspected per table so the loader tolerates schema drift, poverty correlates with deprivation and enrolment so targeting dashboards have signal, --purge makes a load reversible, and bulk-seed-job.yaml runs it in-cluster because a load this size does not survive kubectl port-forward. ([`bbd255f`](https://github.com/OpenG2P/national-social-registry/commit/bbd255ff47f3bdc4103019a734fca972d26c4d0a))
 - Bumped up RP version. ([`32bc8b9`](https://github.com/OpenG2P/national-social-registry/commit/32bc8b9bd5f21ef13041c1400dda87be2072f0e2))
-
-<a id="v-0-0-0-develop-171"></a>
-
-## national-social-registry — develop 0.0.0-develop.171 (2026-07-24)
-
-_commit `ddfda05` · changes since 0.0.0-develop.169_
-<!-- build:0.0.0-develop.171 revision:ddfda05a04784413bccfefeb7a635d86ebb709bc ts:1784886289 -->
-
-### Summary
-
-- Tooling enhancements: introduced `scripts/bump-rp-version.sh` for atomic updates of the openg2p-registry pin across Dockerfiles and Helm charts, along with a CI lockstep guard in `checks.yml` and `test/test_rp_pin_lockstep.py` to ensure build integrity.
-- CI improvements: added a new GitHub Actions workflow in `.github/workflows/checks.yml` to automate checks related to version pinning.
-- Testing updates: created `test/test_rp_pin_lockstep.py` to validate the CI lockstep functionality, ensuring that version pins remain synchronized.
-
-### Changes since 0.0.0-develop.169
-
-- [G2P-5383](https://openg2p.atlassian.net/browse/G2P-5383) Tooling: add scripts/bump-rp-version.sh (with -n dry-run and -h help) to move the openg2p-registry pin — Dockerfiles + chart dependency together — to the latest version published in BOTH the Helm index and Docker Hub, plus a CI lockstep guard (test/test_rp_pin_lockstep.py + checks.yml) that fails the build if the pins ever split ([`ddfda05`](https://github.com/OpenG2P/national-social-registry/commit/ddfda05a04784413bccfefeb7a635d86ebb709bc))
-- [G2P-5383](https://openg2p.atlassian.net/browse/G2P-5383) Tooling: add scripts/bump-rp-version.sh to move the openg2p-registry pin (Dockerfiles + chart dependency) atomically to the latest version published in both the Helm index and Docker Hub, plus a CI lockstep guard (test/test_rp_pin_lockstep.py + checks.yml) that fails the build if the pins ever split ([`e099711`](https://github.com/OpenG2P/national-social-registry/commit/e09971118daa5813188065667008de78fb5924d0))
 
 ---
 
