@@ -91,9 +91,10 @@ jobs:
   withdraw:
     runs-on: ubuntu-latest
     # Serialise against itself: both indexes are rewritten wholesale, so two
-    # concurrent withdrawals could lose one another's edits.
+    # concurrent withdrawals could lose one another's edits. The group is a literal --
+    # the `env` context is not available in `concurrency`, only inside steps.
     concurrency:
-      group: withdraw-${{ env.HELM_REPO }}
+      group: withdraw-helm-repo
     steps:
       - name: Checkout packaging (the withdraw scripts)
         uses: actions/checkout@v4
