@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.331`](#v-0-0-0-develop-331) | 2026-07-31 | develop |
 | [`0.0.0-develop.329`](#v-0-0-0-develop-329) | 2026-07-30 | develop |
 | [`0.0.0-develop.316`](#v-0-0-0-develop-316) | 2026-07-30 | develop |
 | [`0.0.0-develop.311`](#v-0-0-0-develop-311) | 2026-07-30 | develop |
@@ -15,10 +16,26 @@ _Published automatically._
 | [`0.0.0-develop.296`](#v-0-0-0-develop-296) | 2026-07-24 | develop |
 | [`0.0.0-develop.295`](#v-0-0-0-develop-295) | 2026-07-24 | develop |
 | [`0.0.0-develop.294`](#v-0-0-0-develop-294) | 2026-07-24 | develop |
-| [`0.0.0-develop.292`](#v-0-0-0-develop-292) | 2026-07-23 | develop |
 | [`develop`](#v-branch-develop) | 2026-07-20 | branch |
 
 # Develop builds
+
+<a id="v-0-0-0-develop-331"></a>
+
+## registry-platform — develop 0.0.0-develop.331 (2026-07-31)
+
+_commit `ed1d67a` · changes since 0.0.0-develop.329_
+<!-- build:0.0.0-develop.331 revision:ed1d67a83ef73da194289862a47d61662724c3c1 ts:1785412578 -->
+
+### Summary
+
+- Dependency updates: synchronized `staff-portal-ui` to version `1.1.6-dev.3` and updated related package manifests for `ui-widgets`.
+- Documentation improvement: clarified geo-join functionality in `load_sample_data.py`, addressing discrepancies between master data and demographic records.
+
+### Changes since 0.0.0-develop.329
+
+- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Correct the geo-join comment in load_sample_data.py. It claimed the slug-path id keeps the registry<->master-data join working, but master data is now seeded from P-coded country packs, so demography-seeded records carry ids MDS has never heard of and never appear on a map. Documents the mismatch and the two-part fix. ([`ed1d67a`](https://github.com/OpenG2P/registry-platform/commit/ed1d67a83ef73da194289862a47d61662724c3c1))
+- chore(ui-widgets): version for npm next publish, sync staff-portal-ui @1.1.6-dev.3 [skip ci] ([`0169c66`](https://github.com/OpenG2P/registry-platform/commit/0169c661a768770067d044ae1d3b67acdfd741cc))
 
 <a id="v-0-0-0-develop-329"></a>
 
@@ -154,17 +171,6 @@ _commit `9ded7ac` · changes since 0.0.0-develop.292_
 
 - [G2P-5383](https://openg2p.atlassian.net/browse/G2P-5383) Sanity: retry a DCI search only when a dependency returns 5xx (e.g. Consent Manager stale-connection 500) — a genuine policy denial is never retried, so fail-closed behaviour is still asserted ([`9ded7ac`](https://github.com/OpenG2P/registry-platform/commit/9ded7ac1e08c7fba279ff4b8cb71e844fd4bc7a2))
 - [G2P-5383](https://openg2p.atlassian.net/browse/G2P-5383) Sanity: add a contract test asserting a variant's fixtures overlay satisfies every fixtures.<SYMBOL> the inherited harness imports — renaming a symbol in an overlay silently breaks sanity/dci.py and friends at collection time ([`23c58b3`](https://github.com/OpenG2P/registry-platform/commit/23c58b3fb72a204db6a6694142b34005e7918f02))
-
-<a id="v-0-0-0-develop-292"></a>
-
-## registry-platform — develop 0.0.0-develop.292 (2026-07-23)
-
-_commit `dd25651` · changes since 0.0.0-develop.291_
-<!-- build:0.0.0-develop.292 revision:dd256515449c69dd3290db2d9ddbc2f9c9fefbea ts:1784807418 -->
-
-### Changes since 0.0.0-develop.291
-
-- [G2P-5383](https://openg2p.atlassian.net/browse/G2P-5383) Sanity: fail instead of silently passing — default SANITY_FAIL_ON_ERROR/failOnError to true so a failing suite fails the Job and the install, and make fixtures FAIL when a dependency is configured but broken (unconfigured dependencies still skip), so a run cannot go green having dropped every consent and signature test ([`dd25651`](https://github.com/OpenG2P/registry-platform/commit/dd256515449c69dd3290db2d9ddbc2f9c9fefbea))
 
 # Branches (moving)
 
