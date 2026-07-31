@@ -213,6 +213,30 @@ jobs:
             bash .openg2p-ci/ci/version/derive-version.sh
           fi
 
+      # A withdrawn version must never come back. `0.0.0-develop.N` is derived from the
+      # commit COUNT, so after a force-push a different commit can land on a withdrawn
+      # N -- and with the artifact already deleted, the immutability guard (which only
+      # trips when the version still EXISTS from another commit) would not notice.
+      # Anyone still pinning that version would then silently get different bytes.
+      # Fail-open on a fetch error: this must never block a build for a network blip.
+      - name: Refuse a withdrawn version
+        env:
+          VERSION: ${{ steps.v.outputs.version }}
+          REPO: ${{ github.event.repository.name }}
+          CL_REPO: ${{ inputs.changelog-repo }}
+          CL_BRANCH: ${{ inputs.changelog-branch }}
+        run: |
+          url="https://raw.githubusercontent.com/${CL_REPO}/${CL_BRANCH}/${REPO}/.withdrawn"
+          body=$(curl -fsSL --max-time 20 "$url" 2>/dev/null || true)
+          [ -n "$body" ] || exit 0
+          if printf '%s\n' "$body" | grep -q "^${VERSION}|"; then
+            line=$(printf '%s\n' "$body" | grep -m1 "^${VERSION}|")
+            echo "::error::${VERSION} was WITHDRAWN and must not be republished — ${line#*|}"
+            echo "Its artifacts were deleted on purpose. If this is a force-push that reused the"
+            echo "commit count, push an empty commit so the build gets a fresh version."
+            exit 1
+          fi
+
       - name: Summary
         run: |
           echo "### \`${{ steps.v.outputs.version }}\`" >> "$GITHUB_STEP_SUMMARY"

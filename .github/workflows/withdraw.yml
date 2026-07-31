@@ -1,0 +1,300 @@
+# Withdraw published develop builds (charts + images) — GitHub side.
+#
+# One central button for every GitHub repo, on purpose: the credentials this needs
+# can DELETE artifacts, so they live here rather than being copied into ~20 repos.
+#
+# What it does, for each selected version:
+#   1. deletes <chart>-<version>.tgz from the openg2p-helm gh-pages branch
+#   2. regenerates index.yaml (a full re-index drops the entry automatically) and
+#      SURGICALLY removes the entry from rancher/index.yaml -- that one is built with
+#      `helm repo index --merge`, which only ever appends, so re-indexing would never
+#      remove it and the version would keep showing up in Rancher
+#   3. deletes every image tag equal to that version from Docker Hub (the image list
+#      is read from the chart being withdrawn, so it cannot drift)
+#   4. records a tombstone in the catalogue -> a "Withdrawn" section, and the build
+#      pipeline refuses to publish that version again
+#
+# Releases (N.N.N) and release candidates (N.N.N-rc.M) are REFUSED by ci/withdraw/
+# select.sh, as is the newest develop build (the moving `:develop` alias points at it).
+#
+# Dry run is ON by default: run it once to see exactly what would go, then re-run
+# with dry-run off and `confirm` set to the same version/range.
+
+name: Withdraw versions
+
+on:
+  workflow_dispatch:
+    inputs:
+      repo:
+        description: 'Service repo whose versions are withdrawn, e.g. pbms (no owner).'
+        required: true
+        type: string
+      chart:
+        description: 'Chart name as published, e.g. openg2p-pbms. Leave EMPTY for an image-only repo.'
+        required: false
+        type: string
+        default: ''
+      mode:
+        description: 'single = one version · range = every develop build between two numbers · keep = trim, keeping the newest N.'
+        required: true
+        type: choice
+        options: [single, range, keep]
+        default: single
+      version:
+        description: 'single: the version, e.g. 0.0.0-develop.297'
+        required: false
+        type: string
+        default: ''
+      from:
+        description: 'range: first build number to withdraw, e.g. 100'
+        required: false
+        type: string
+        default: ''
+      to:
+        description: 'range: last build number to withdraw, e.g. 200'
+        required: false
+        type: string
+        default: ''
+      keep_last:
+        description: 'keep: how many of the newest develop builds to KEEP, e.g. 10'
+        required: false
+        type: string
+        default: '10'
+      reason:
+        description: 'Why (shown verbatim in the catalogue), e.g. "bad migration, do not deploy".'
+        required: true
+        type: string
+      delete_images:
+        description: 'Also delete the matching image tags from Docker Hub.'
+        required: false
+        type: boolean
+        default: true
+      dry_run:
+        description: 'Show what WOULD be deleted and change nothing. Leave ON first.'
+        required: false
+        type: boolean
+        default: true
+      confirm:
+        description: 'To actually delete, retype the version (single) or the word DELETE (range/keep).'
+        required: false
+        type: string
+        default: ''
+
+env:
+  HELM_REPO: openg2p/openg2p-helm
+  HELM_BRANCH: gh-pages
+  HELM_URL: https://openg2p.github.io/openg2p-helm
+  CHANGELOG_REPO: openg2p/openg2p-packaging
+  CHANGELOG_BRANCH: gh-pages
+
+jobs:
+  withdraw:
+    runs-on: ubuntu-latest
+    # Serialise against itself: both indexes are rewritten wholesale, so two
+    # concurrent withdrawals could lose one another's edits.
+    concurrency:
+      group: withdraw-${{ env.HELM_REPO }}
+    steps:
+      - name: Checkout packaging (the withdraw scripts)
+        uses: actions/checkout@v4
+        with:
+          path: .openg2p-ci
+          sparse-checkout: ci
+
+      - name: Confirmation gate
+        if: ${{ !inputs.dry_run }}
+        env:
+          MODE: ${{ inputs.mode }}
+          VERSION: ${{ inputs.version }}
+          CONFIRM: ${{ inputs.confirm }}
+        run: |
+          if [ "$MODE" = single ]; then expected="$VERSION"; else expected="DELETE"; fi
+          if [ "$CONFIRM" != "$expected" ]; then
+            echo "::error::confirm must be '$expected' to delete (got '${CONFIRM:-<empty>}'). Nothing was changed."
+            exit 1
+          fi
+
+      - name: Checkout the helm repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.HELM_REPO }}
+          ref: ${{ env.HELM_BRANCH }}
+          token: ${{ secrets.OPENG2P_BOT_GITHUB_PAT }}
+          path: chart-repo
+
+      - uses: azure/setup-helm@v4
+      - name: Install yq (mikefarah)
+        run: |
+          sudo curl -fsSL -o /usr/local/bin/yq \
+            https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+      # ---------------------------------------------------------------- select
+      - name: Select versions
+        id: sel
+        env:
+          CHART: ${{ inputs.chart }}
+          MODE: ${{ inputs.mode }}
+          VERSION: ${{ inputs.version }}
+          FROM: ${{ inputs.from }}
+          TO: ${{ inputs.to }}
+          KEEP_LAST: ${{ inputs.keep_last }}
+        run: |
+          set -euo pipefail
+          if [ -n "$CHART" ]; then
+            # Every version this chart has published, from the index we are about to edit.
+            NAME="$CHART" yq -r '.entries[strenv(NAME)][]?.version // ""' chart-repo/index.yaml \
+              | sed '/^$/d' | sort -u > /tmp/published.txt
+          else
+            echo "::error::chart is empty. An image-only repo is not supported yet -- withdrawal reads the image list from the published chart."
+            exit 1
+          fi
+          echo "published versions: $(wc -l < /tmp/published.txt)"
+          MODE="$MODE" VERSION="$VERSION" FROM="$FROM" TO="$TO" KEEP_LAST="$KEEP_LAST" \
+            bash .openg2p-ci/ci/withdraw/select.sh < /tmp/published.txt > /tmp/selected.txt
+          echo "--- will withdraw ---"; cat /tmp/selected.txt
+          echo "count=$(wc -l < /tmp/selected.txt)" >> "$GITHUB_OUTPUT"
+
+      # ------------------------------------------------- images from the chart
+      - name: Resolve image tags to delete
+        if: ${{ inputs.delete_images }}
+        env:
+          CHART: ${{ inputs.chart }}
+        run: |
+          set -euo pipefail
+          : > /tmp/images.txt
+          while IFS= read -r v; do
+            [ -n "$v" ] || continue
+            tgz="chart-repo/${CHART}-${v}.tgz"
+            if [ ! -f "$tgz" ]; then
+              echo "::warning::$tgz is not in the helm repo; cannot read its images (already deleted?)"
+              continue
+            fi
+            CHART_TGZ="$tgz" VERSION="$v" bash .openg2p-ci/ci/withdraw/chart-images.sh \
+              | while IFS= read -r img; do [ -n "$img" ] && echo "${img}|${v}"; done >> /tmp/images.txt
+          done < /tmp/selected.txt
+          echo "--- image tags to delete ---"; cat /tmp/images.txt || true
+
+      # ---------------------------------------------------------------- dry run
+      - name: Dry run summary
+        if: ${{ inputs.dry_run }}
+        run: |
+          {
+            echo "### Dry run — nothing was deleted"
+            echo
+            echo "**Versions (${{ steps.sel.outputs.count }}):**"
+            echo '```'; cat /tmp/selected.txt; echo '```'
+            echo "**Chart archives:** \`${{ inputs.chart }}-<version>.tgz\` + their entries in \`index.yaml\` and \`rancher/index.yaml\`"
+            if [ -f /tmp/images.txt ] && [ -s /tmp/images.txt ]; then
+              echo "**Image tags:**"; echo '```'; sed 's/|/:/' /tmp/images.txt; echo '```'
+            fi
+            echo
+            echo "Re-run with **dry_run off** and **confirm** set to actually delete."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # ------------------------------------------------------- delete: registry
+      - name: Delete image tags (Docker Hub)
+        if: ${{ !inputs.dry_run && inputs.delete_images }}
+        env:
+          DH_USER: ${{ secrets.docker_hub_actor }}
+          DH_TOKEN: ${{ secrets.DOCKERHUB_DELETE_TOKEN || secrets.docker_hub_token }}
+        run: |
+          set -euo pipefail
+          [ -s /tmp/images.txt ] || { echo "no image tags to delete"; exit 0; }
+          jwt=$(curl -fsSL -H "Content-Type: application/json" \
+            -d "{\"username\":\"${DH_USER}\",\"password\":\"${DH_TOKEN}\"}" \
+            https://hub.docker.com/v2/users/login/ | jq -r .token)
+          [ -n "$jwt" ] && [ "$jwt" != null ] || { echo "::error::Docker Hub login failed"; exit 1; }
+          while IFS='|' read -r img tag; do
+            [ -n "$img" ] || continue
+            # Only Docker Hub images (namespace/name) are deletable here.
+            case "$img" in */*/*) echo "::warning::skipping non-Docker-Hub image $img"; continue ;; esac
+            code=$(curl -s -o /dev/null -w '%{http_code}' -X DELETE \
+              -H "Authorization: JWT ${jwt}" \
+              "https://hub.docker.com/v2/repositories/${img}/tags/${tag}/")
+            case "$code" in
+              204|202) echo "deleted ${img}:${tag}" ;;
+              404)     echo "already gone ${img}:${tag}" ;;
+              *)       echo "::warning::could not delete ${img}:${tag} (HTTP $code)" ;;
+            esac
+          done < /tmp/images.txt
+
+      # ---------------------------------------------------- delete: helm charts
+      - name: Delete charts + reindex
+        if: ${{ !inputs.dry_run }}
+        env:
+          CHART: ${{ inputs.chart }}
+        run: |
+          set -euo pipefail
+          cd chart-repo
+          git config user.name "openg2p-bot"; git config user.email "bot@openg2p.org"
+          attempt() {
+            git fetch -q origin "$HELM_BRANCH"; git reset -q --hard "origin/$HELM_BRANCH"
+            while IFS= read -r v; do
+              [ -n "$v" ] || continue
+              rm -f "${CHART}-${v}.tgz"
+              # rancher/index.yaml is produced with `--merge`, which NEVER removes an
+              # entry -- so it has to be edited directly or Rancher keeps listing it.
+              if [ -f rancher/index.yaml ]; then
+                NAME="$CHART" VER="$v" yq -i \
+                  'del(.entries[strenv(NAME)][] | select(.version == strenv(VER)))' rancher/index.yaml
+              fi
+            done < /tmp/selected.txt
+            # Full regeneration from the .tgz files still present -> the deleted
+            # versions drop out of the main index by construction.
+            helm repo index . --url "$HELM_URL"
+            git add -A
+            git diff --quiet --cached && { echo "nothing to delete"; return 0; }
+            git commit -q -m "withdraw ${CHART}: $(tr '\n' ' ' < /tmp/selected.txt)"
+            git push -q origin "HEAD:$HELM_BRANCH"
+          }
+          for i in 1 2 3 4 5; do
+            attempt && exit 0
+            echo "::warning::push rejected (attempt $i), retrying"; sleep $(( RANDOM % 10 + 5 ))
+          done
+          echo "::error::could not update the helm repo after 5 attempts"; exit 1
+
+      # ------------------------------------------------------ tombstone + pages
+      - name: Checkout the catalogue
+        if: ${{ !inputs.dry_run }}
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.CHANGELOG_REPO }}
+          ref: ${{ env.CHANGELOG_BRANCH }}
+          token: ${{ secrets.OPENG2P_BOT_GITHUB_PAT }}
+          path: changelog-pages
+
+      - name: Record the withdrawal
+        if: ${{ !inputs.dry_run }}
+        env:
+          REPO: ${{ inputs.repo }}
+          REASON: ${{ inputs.reason }}
+        run: |
+          set -euo pipefail
+          cd changelog-pages
+          git config user.name "openg2p-bot"; git config user.email "bot@openg2p.org"
+          attempt() {
+            git fetch -q origin "$CHANGELOG_BRANCH"; git reset -q --hard "origin/$CHANGELOG_BRANCH"
+            PAGES_DIR="$PWD" REPO="$REPO" REASON="$REASON" DATE="$(date -u +%Y-%m-%d)" \
+              bash ../.openg2p-ci/ci/withdraw/tombstone.sh < /tmp/selected.txt
+            PAGES_DIR="$PWD" REPO="$REPO" bash ../.openg2p-ci/ci/changelog/render-aggregate.sh
+            PAGES_DIR="$PWD" bash ../.openg2p-ci/ci/changelog/render-root-index.sh
+            git add -A
+            git diff --quiet --cached && { echo "catalogue already up to date"; return 0; }
+            git commit -q -m "withdraw: ${REPO} $(tr '\n' ' ' < /tmp/selected.txt)"
+            git push -q origin "HEAD:$CHANGELOG_BRANCH"
+          }
+          for i in 1 2 3 4 5; do
+            attempt && exit 0
+            echo "::warning::push rejected (attempt $i), retrying"; sleep $(( RANDOM % 10 + 5 ))
+          done
+          echo "::error::could not update the catalogue after 5 attempts"; exit 1
+
+      - name: Summary
+        if: ${{ !inputs.dry_run }}
+        run: |
+          {
+            echo "### Withdrawn from \`${{ inputs.repo }}\`"
+            echo '```'; cat /tmp/selected.txt; echo '```'
+            echo "Reason: ${{ inputs.reason }}"
+          } >> "$GITHUB_STEP_SUMMARY"

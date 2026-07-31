@@ -32,6 +32,12 @@ branches=$(list_versions | grep -E '^branch-' | sort || true)
 kind=$(grep -m1 '^kind=' "${repo_dir}/.meta" 2>/dev/null | sed 's/^kind=//' || true)
 [ -n "$kind" ] || kind=service
 
+# Withdrawn versions (ci/withdraw): "<version>|<date>|<reason>" per line. Their pages
+# are KEPT -- deleting them would dangle the "changes since <previous build>" thread --
+# so a withdrawn version stays in its normal section and is flagged in the table.
+withdrawn_file="${repo_dir}/.withdrawn"
+is_withdrawn() { [ -f "$withdrawn_file" ] && grep -q "^${1}|" "$withdrawn_file" 2>/dev/null; }
+
 rcs_all=$(list_versions | grep -E '^[0-9]+\.[0-9]+\.[0-9]+-rc\.[0-9]+$' || true)
 inprogress=""
 while IFS= read -r v; do
@@ -107,6 +113,7 @@ section() {  # $1 = heading  $2 = newline list of versions
     [ -n "$v" ] || continue
     [ -n "$d" ] || d="—"
     label="$v"; case "$v" in branch-*) label="${v#branch-}" ;; esac   # show branch name, not the file key
+    if is_withdrawn "$v"; then t="${t} · **withdrawn**"; fi
     echo "| [\`$label\`](#$(anchor "$v")) | $d | $t |"
   done
   rm -f "$tbl"
@@ -116,6 +123,23 @@ section() {  # $1 = heading  $2 = newline list of versions
   section "Release candidates (in progress)" "$inprogress"
   section "Develop builds" "$develop"
   section "Branches (moving)" "$branches"
+
+  # ---- withdrawn versions: deleted artifacts, but the history is kept ----
+  if [ -s "$withdrawn_file" ]; then
+    echo "# Withdrawn"
+    echo
+    echo "These versions were **deleted from the registries** and can no longer be"
+    echo "pulled or installed. Their entries above are kept so the history stays"
+    echo "continuous, and they are never re-published under the same version."
+    echo
+    echo "| Version | Withdrawn | Reason |"
+    echo "| --- | --- | --- |"
+    while IFS='|' read -r wv wd wr; do
+      [ -n "$wv" ] || continue
+      echo "| \`${wv}\` | ${wd:-—} | ${wr:-—} |"
+    done < "$withdrawn_file"
+    echo
+  fi
 
   # ---- retention footnote: make it clear what is (and isn't) listed ----
   echo "---"
