@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.135`](#v-0-0-0-develop-135) | 2026-08-01 | develop |
 | [`0.0.0-develop.134`](#v-0-0-0-develop-134) | 2026-07-30 | develop |
 | [`1.2.0`](#v-1-2-0) | 2026-07-25 | release |
 | [`0.0.0-develop.132`](#v-0-0-0-develop-132) | 2026-07-24 | develop |
@@ -142,6 +143,17 @@ _commit `7055a71` · first release_
 - Initial commit ([`6e3cf83`](https://github.com/OpenG2P/farmer-registry/commit/6e3cf838809c5522a8b0cda15b87f726683ec175))
 
 # Develop builds
+
+<a id="v-0-0-0-develop-135"></a>
+
+## farmer-registry — develop 0.0.0-develop.135 (2026-08-01)
+
+_commit `79edff5` · changes since 0.0.0-develop.134_
+<!-- build:0.0.0-develop.135 revision:79edff5679c097d400c4ce645f28b383ceae32cc ts:1785557643 -->
+
+### Changes since 0.0.0-develop.134
+
+- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Fix the two geo dropdowns. They carried a hardcoded dev-environment URL and no service/endpoint, so the widget layer bailed before making the request and the dropdowns never populated. Now resolved through master-data like every other api widget, with levels that match the default country pack. ([`79edff5`](https://github.com/OpenG2P/farmer-registry/commit/79edff5679c097d400c4ce645f28b383ceae32cc))
 
 <a id="v-0-0-0-develop-134"></a>
 
