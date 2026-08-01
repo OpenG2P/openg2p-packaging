@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.203`](#v-0-0-0-develop-203) | 2026-08-01 | develop |
 | [`0.0.0-develop.194`](#v-0-0-0-develop-194) | 2026-07-30 | develop |
 | [`0.0.0-develop.191`](#v-0-0-0-develop-191) | 2026-07-30 | develop |
 | [`0.0.0-develop.189`](#v-0-0-0-develop-189) | 2026-07-30 | develop |
@@ -15,7 +16,6 @@ _Published automatically._
 | [`0.0.0-develop.183`](#v-0-0-0-develop-183) | 2026-07-29 | develop |
 | [`0.0.0-develop.181`](#v-0-0-0-develop-181) | 2026-07-28 | develop |
 | [`0.0.0-develop.180`](#v-0-0-0-develop-180) | 2026-07-28 | develop |
-| [`0.0.0-develop.179`](#v-0-0-0-develop-179) | 2026-07-28 | develop |
 | [`1.0.1`](#v-1-0-1) | 2026-07-25 | release |
 | [`1.0.0`](#v-1-0-0) | 2026-07-25 | release |
 
@@ -196,6 +196,31 @@ _commit `ddfda05` · first release_
 
 # Develop builds
 
+<a id="v-0-0-0-develop-203"></a>
+
+## national-social-registry — develop 0.0.0-develop.203 (2026-08-01)
+
+_commit `31fb59f` · changes since 0.0.0-develop.194_
+<!-- build:0.0.0-develop.203 revision:31fb59fd8202e6f33bf0cb8ac22596cca6bc5303 ts:1785577135 -->
+
+### Summary
+
+- **Major:** Configuration overhaul for Superset integration: added environment variable wiring, ensured proper database connection instead of SQLite, and enabled REST API embedding for dashboard rendering.
+- Data loading improvements: fixed sub-table fixture associations to prevent orphaned data, updated the sample loader to support Master Data paths, and aligned reporting views with updated enums to eliminate invalid values.
+- Enhanced reporting clarity: updated NA labels for better self-explanation in charts and individual reporting views, ensuring null values are clearly marked to avoid misinterpretation as missing data.
+- Service account enhancements: replaced randomly generated passwords with a consistent secret for Superset access, ensuring machine clients can reliably connect to the Superset API.
+
+### Changes since 0.0.0-develop.194
+
+- Bumped up RP version to 0.0.0-develop.336 ([`31fb59f`](https://github.com/OpenG2P/national-social-registry/commit/31fb59fd8202e6f33bf0cb8ac22596cca6bc5303))
+- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Attach the sub-table fixtures to whoever was actually loaded — same fix as the platform loader, which NSR overrides with its own copy. Its ten sub-tables all link to the demography CSV's id space, so on a country pack every livelihood, shock, asset and housing row orphaned silently. ([`6f425c4`](https://github.com/OpenG2P/national-social-registry/commit/6f425c4bb0e734a8eac0d1b46aa21fe6510d9cc7))
+- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Take the country out of NSR's sample loader and turn on the Master Data path. NSR overrides the platform's load_sample_data.py with its own copy, so the country-agnostic fix did not reach it and it would fail on any pack that is not five levels called country..village — Ethiopia has four, ending at woreda. People and their whole ancestry now come from Master Data, CSV as fallback. Chart enables loadAttributes and syncGeoWidgets, both of which take whatever pack the environment loaded. ([`99c07eb`](https://github.com/OpenG2P/national-social-registry/commit/99c07eb8cdda41c562e8fc2981f72e2972aba3a0))
+- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Make the NA labels self-explanatory — "NA (not working age)", "NA (under 5)", "NA (no ID)". The chart description carrying that explanation only renders on a dashboard when the chart is in the dashboard's expanded_slices metadata, so it was invisible; the label shows on the axis itself. ([`91d7ae7`](https://github.com/OpenG2P/national-social-registry/commit/91d7ae7cab1f03c9d70852377f7f1b8572e7f269))
+- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Label not-applicable nulls as NA in the individual reporting view — employment_status and primary_livelihood are null for every under-5 and school-age child, education_level for every under-5, secondary_livelihood for the 84% with one, fid_verification_status for the half with no ID. Superset rendered these as "null", reading as missing data. Derived booleans still test the raw column, so their meaning is unchanged. ([`07f18a6`](https://github.com/OpenG2P/national-social-registry/commit/07f18a6b7f5e1e92da2779bba44b718d023e63a8))
+- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Align the NSR sample generator and reporting views to the extension's enums. [G2P-5412](https://openg2p.atlassian.net/browse/G2P-5412)'s ProgramEnum rework dropped URBAN_PSNP and DIRECT_SUPPORT, which the generator still wrote; checking that surfaced nine more invalid values predating it (HEAD vs SELF, SETTLED vs HOST_COMMUNITY, the pastoralist/tenure/water/sanitation/lighting/cooking ladders, age_method, citizenship, identity evidence). These are String columns so invalid values inserted silently. The views hardcoded the same invented names, so fixing the generator alone would have made is_head false for every household and is_displaced true for all of them — both sides moved together. Views must be re-applied, not refreshed. ([`804b823`](https://github.com/OpenG2P/national-social-registry/commit/804b82325cda9381d501bb438af940c7fbeeb6b2))
+- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Give the dashboards job Superset's own configuration. It ran Superset's CLI and ORM with no config, so Superset fell back to a SQLite file in the job's pod: the service account and all 8 dashboards were imported into a throwaway database and the job exited 0, leaving the real Superset empty. Adds envFrom/config-secret wiring, an abort if the metadata DB still resolves to sqlite, and enables embedding over the REST API so Insights can actually render the imported dashboards. ([`a0c1b72`](https://github.com/OpenG2P/national-social-registry/commit/a0c1b720f25872151c34b7802142a9709d581eef))
+- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Make the Superset service account usable by machine clients: supersetAdminPasswordSecret replaces the random password the dashboards job generated and discarded, converging the account onto the Secret on each run. Under AUTH_OAUTH provider=db is the only way G2P Insights can reach the Superset API, so a thrown-away password locked it out permanently. ([`14d6269`](https://github.com/OpenG2P/national-social-registry/commit/14d62695fce2468e56ff71e679b53989f7ae7d91))
+
 <a id="v-0-0-0-develop-194"></a>
 
 ## national-social-registry — develop 0.0.0-develop.194 (2026-07-30)
@@ -312,23 +337,6 @@ _commit `c87c722` · changes since 0.0.0-develop.179_
 ### Changes since 0.0.0-develop.179
 
 -  Bumped up Registry Platform version to 0.0.0-develop.297 ([`c87c722`](https://github.com/OpenG2P/national-social-registry/commit/c87c72213bbda32d8c93b974584be0e8c75b8bda))
-
-<a id="v-0-0-0-develop-179"></a>
-
-## national-social-registry — develop 0.0.0-develop.179 (2026-07-28)
-
-_commit `bc41b45` · changes since 0.0.0-develop.177_
-<!-- build:0.0.0-develop.179 revision:bc41b45b94f341e7078d242fbe03ef2f52f51654 ts:1785239698 -->
-
-### Summary
-
-- **Major:** Upgraded Registry Platform to version 0.0.0-develop.297, introducing significant changes to the underlying architecture.
-- Analytics enhancement: packaged the analytics chain including openg2p-data paths, reporting views, and a dashboard bundle for improved data visualization and reporting.
-
-### Changes since 0.0.0-develop.177
-
-- Bumped up Registry Platform version to 0.0.0-develop.297 ([`bc41b45`](https://github.com/OpenG2P/national-social-registry/commit/bc41b45b94f341e7078d242fbe03ef2f52f51654))
-- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Package the analytics chain: openg2p-data paths, reporting views, dashboard bundle. ([`9625edb`](https://github.com/OpenG2P/national-social-registry/commit/9625edb475d959510e1f2f3c0efea611c2deb158))
 
 ---
 
