@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.336`](#v-0-0-0-develop-336) | 2026-08-01 | develop |
 | [`0.0.0-develop.335`](#v-0-0-0-develop-335) | 2026-08-01 | develop |
 | [`0.0.0-develop.334`](#v-0-0-0-develop-334) | 2026-08-01 | develop |
 | [`0.0.0-develop.331`](#v-0-0-0-develop-331) | 2026-07-31 | develop |
@@ -15,10 +16,20 @@ _Published automatically._
 | [`0.0.0-develop.299`](#v-0-0-0-develop-299) | 2026-07-29 | develop |
 | [`0.0.0-develop.298`](#v-0-0-0-develop-298) | 2026-07-29 | develop |
 | [`0.0.0-develop.297`](#v-0-0-0-develop-297) | 2026-07-28 | develop |
-| [`0.0.0-develop.296`](#v-0-0-0-develop-296) | 2026-07-24 | develop |
 | [`develop`](#v-branch-develop) | 2026-07-20 | branch |
 
 # Develop builds
+
+<a id="v-0-0-0-develop-336"></a>
+
+## registry-platform — develop 0.0.0-develop.336 (2026-08-01)
+
+_commit `cd8845f` · changes since 0.0.0-develop.335_
+<!-- build:0.0.0-develop.336 revision:cd8845ff72c92519207b3a23eeea948c0adfb82f ts:1785559322 -->
+
+### Changes since 0.0.0-develop.335
+
+- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Attach the sub-table fixtures to whoever was actually loaded. They link to the demography CSV's id space, so once people come from a country pack every land parcel, crop, housing and programme row pointed at a record that does not exist — and with no foreign key to violate they landed as orphans, leaving farmers who own nothing and households with no housing data. Links are remapped onto the loaded records, cycling when a pack carries fewer samples than the fixtures assume, and a table that had one row per record keeps one. Links pointing within the fixture set — a crop's parcel — are left alone. No-op when the ids already match. ([`cd8845f`](https://github.com/OpenG2P/registry-platform/commit/cd8845ff72c92519207b3a23eeea948c0adfb82f))
 
 <a id="v-0-0-0-develop-335"></a>
 
@@ -162,17 +173,6 @@ _commit `dc2dc8d` · changes since 0.0.0-develop.296_
 ### Changes since 0.0.0-develop.296
 
 - [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Track openg2p-data develop for the db-seed image. ([`dc2dc8d`](https://github.com/OpenG2P/registry-platform/commit/dc2dc8d64a905b3b632139aa99b7660420acc4b4))
-
-<a id="v-0-0-0-develop-296"></a>
-
-## registry-platform — develop 0.0.0-develop.296 (2026-07-24)
-
-_commit `6ec5f56` · changes since 0.0.0-develop.295_
-<!-- build:0.0.0-develop.296 revision:6ec5f56c97c3744ac71f6bb0594db12d864203a1 ts:1784883549 -->
-
-### Changes since 0.0.0-develop.295
-
-- [G2P-5383](https://openg2p.atlassian.net/browse/G2P-5383) db-seed: make sample-data loading idempotent — add ON CONFLICT (internal_record_id) DO NOTHING to the register/sub-table inserts so a re-install over an already-seeded database is a no-op instead of failing on g2p_register_*_pkey ([`6ec5f56`](https://github.com/OpenG2P/registry-platform/commit/6ec5f56c97c3744ac71f6bb0594db12d864203a1))
 
 # Branches (moving)
 
