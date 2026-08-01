@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.334`](#v-0-0-0-develop-334) | 2026-08-01 | develop |
 | [`0.0.0-develop.331`](#v-0-0-0-develop-331) | 2026-07-31 | develop |
 | [`0.0.0-develop.329`](#v-0-0-0-develop-329) | 2026-07-30 | develop |
 | [`0.0.0-develop.316`](#v-0-0-0-develop-316) | 2026-07-30 | develop |
@@ -15,10 +16,28 @@ _Published automatically._
 | [`0.0.0-develop.297`](#v-0-0-0-develop-297) | 2026-07-28 | develop |
 | [`0.0.0-develop.296`](#v-0-0-0-develop-296) | 2026-07-24 | develop |
 | [`0.0.0-develop.295`](#v-0-0-0-develop-295) | 2026-07-24 | develop |
-| [`0.0.0-develop.294`](#v-0-0-0-develop-294) | 2026-07-24 | develop |
 | [`develop`](#v-branch-develop) | 2026-07-20 | branch |
 
 # Develop builds
+
+<a id="v-0-0-0-develop-334"></a>
+
+## registry-platform — develop 0.0.0-develop.334 (2026-08-01)
+
+_commit `782fa19` · changes since 0.0.0-develop.331_
+<!-- build:0.0.0-develop.334 revision:782fa19fafd11251d7fd737058e14b3834667862 ts:1785557598 -->
+
+### Summary
+
+- **Major:** Data model overhaul: removed country dependency from sample seeding and geo widgets, introducing a new sync_geo_widgets step to align dropdowns with actual hierarchy, and validating coded values against seeded country lists.
+- Registry enhancement: seeded registry code lists from Master Data at install time, establishing MDS as a dependency, and ensuring roles are stored in a new table to avoid issues with existing columns.
+- Improved data integrity: resolved sample-data geo IDs against master data instead of relying on slug-paths, with fallback mechanisms in place, and ensured validation on both change-request and intake-form paths.
+
+### Changes since 0.0.0-develop.331
+
+- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Take the country out of sample seeding and the geo widgets. load_sample_data no longer assumes five levels called country..village — that describes Kamuntu and nothing else, and Ethiopia has four ending at woreda; people and their whole ancestry now come from Master Data, with the CSV as fallback. New sync_geo_widgets step (SYNC_GEO_WIDGETS, default false) matches a register's geo dropdowns to the hierarchy actually loaded, since an extension's hardcoded level names produce dropdowns that silently return nothing against a country that names them differently. Labels are left alone but reported when they name the wrong level. ([`782fa19`](https://github.com/OpenG2P/registry-platform/commit/782fa19fafd11251d7fd737058e14b3834667862))
+- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Validate coded values against the seeded country lists, behind registry_core_validate_attribute_values (default false). This is the check the compiled enums do today, and it is what lets them be deleted: an enum is fixed at image build time, so a registry validating against one can only serve the country it was built for. Fields map to lists by convention — 30 of Ethiopia's 34 already match a column name — with a field_map for the few that don't. Applied on both the change-request and intake-form paths. Also resolve sample-data geo ids against master-data instead of computing slug-paths, which match nothing once master-data is seeded from a P-coded pack; slug-paths remain the fallback and the outcome is always reported. ([`b806b8a`](https://github.com/OpenG2P/registry-platform/commit/b806b8aee6845b8cf0594e40634542ffb710feb5))
+- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Seed registry code lists from Master Data, behind LOAD_ATTRIBUTES (default false). The registry copies the country pack's lists into its own tables at install and validates against that copy after, so MDS is an install-time dependency, not a runtime one. Roles go in a new table, not a new column: create_all never adds columns to existing tables, so a column would be declared by the ORM and missing from every upgraded database. Where an extension fixture and the pack define the same list, the pack replaces it — merging left PROGRAM_NAME with 18 values and a dropdown showing every programme twice — and each replaced value is logged. ([`62dee1a`](https://github.com/OpenG2P/registry-platform/commit/62dee1a537ef6ccc6303c21219c755368d7281ae))
 
 <a id="v-0-0-0-develop-331"></a>
 
@@ -154,23 +173,6 @@ _commit `c5214fc` · changes since 0.0.0-develop.294_
 ### Changes since 0.0.0-develop.294
 
 - [G2P-5383](https://openg2p.atlassian.net/browse/G2P-5383) Sanity: make the DCI overlay tolerant of an older pinned harness — probe for post_search and fall back to a plain POST instead of failing collection with ImportError ([`c5214fc`](https://github.com/OpenG2P/registry-platform/commit/c5214fc0ea55c590df3599b2b82c7245ac967417))
-
-<a id="v-0-0-0-develop-294"></a>
-
-## registry-platform — develop 0.0.0-develop.294 (2026-07-24)
-
-_commit `9ded7ac` · changes since 0.0.0-develop.292_
-<!-- build:0.0.0-develop.294 revision:9ded7ac1e08c7fba279ff4b8cb71e844fd4bc7a2 ts:1784860124 -->
-
-### Summary
-
-- Sanity enhancements: implemented retry logic for DCI searches on 5xx errors while maintaining fail-closed behavior for genuine policy denials, and added a contract test to ensure variant fixtures integrity during collection.
-- Testing improvements: introduced a new contract test file to validate the overlay of fixtures, enhancing the robustness of the testing framework.
-
-### Changes since 0.0.0-develop.292
-
-- [G2P-5383](https://openg2p.atlassian.net/browse/G2P-5383) Sanity: retry a DCI search only when a dependency returns 5xx (e.g. Consent Manager stale-connection 500) — a genuine policy denial is never retried, so fail-closed behaviour is still asserted ([`9ded7ac`](https://github.com/OpenG2P/registry-platform/commit/9ded7ac1e08c7fba279ff4b8cb71e844fd4bc7a2))
-- [G2P-5383](https://openg2p.atlassian.net/browse/G2P-5383) Sanity: add a contract test asserting a variant's fixtures overlay satisfies every fixtures.<SYMBOL> the inherited harness imports — renaming a symbol in an overlay silently breaks sanity/dci.py and friends at collection time ([`23c58b3`](https://github.com/OpenG2P/registry-platform/commit/23c58b3fb72a204db6a6694142b34005e7918f02))
 
 # Branches (moving)
 
