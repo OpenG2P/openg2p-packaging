@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.335`](#v-0-0-0-develop-335) | 2026-08-01 | develop |
 | [`0.0.0-develop.334`](#v-0-0-0-develop-334) | 2026-08-01 | develop |
 | [`0.0.0-develop.331`](#v-0-0-0-develop-331) | 2026-07-31 | develop |
 | [`0.0.0-develop.329`](#v-0-0-0-develop-329) | 2026-07-30 | develop |
@@ -15,10 +16,20 @@ _Published automatically._
 | [`0.0.0-develop.298`](#v-0-0-0-develop-298) | 2026-07-29 | develop |
 | [`0.0.0-develop.297`](#v-0-0-0-develop-297) | 2026-07-28 | develop |
 | [`0.0.0-develop.296`](#v-0-0-0-develop-296) | 2026-07-24 | develop |
-| [`0.0.0-develop.295`](#v-0-0-0-develop-295) | 2026-07-24 | develop |
 | [`develop`](#v-branch-develop) | 2026-07-20 | branch |
 
 # Develop builds
+
+<a id="v-0-0-0-develop-335"></a>
+
+## registry-platform — develop 0.0.0-develop.335 (2026-08-01)
+
+_commit `35bf698` · changes since 0.0.0-develop.334_
+<!-- build:0.0.0-develop.335 revision:35bf698cfd4cd9afcd8b635c3c308e5d8797d49d ts:1785558195 -->
+
+### Changes since 0.0.0-develop.334
+
+- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Supply head_individual_id, headship_type and adult/elderly counts with the master-data samples. Registries differ in what they record about a household and NSR needs these four; supplying the union costs nothing since each loader takes only the keys it asks for. ([`35bf698`](https://github.com/OpenG2P/registry-platform/commit/35bf698cfd4cd9afcd8b635c3c308e5d8797d49d))
 
 <a id="v-0-0-0-develop-334"></a>
 
@@ -162,17 +173,6 @@ _commit `6ec5f56` · changes since 0.0.0-develop.295_
 ### Changes since 0.0.0-develop.295
 
 - [G2P-5383](https://openg2p.atlassian.net/browse/G2P-5383) db-seed: make sample-data loading idempotent — add ON CONFLICT (internal_record_id) DO NOTHING to the register/sub-table inserts so a re-install over an already-seeded database is a no-op instead of failing on g2p_register_*_pkey ([`6ec5f56`](https://github.com/OpenG2P/registry-platform/commit/6ec5f56c97c3744ac71f6bb0594db12d864203a1))
-
-<a id="v-0-0-0-develop-295"></a>
-
-## registry-platform — develop 0.0.0-develop.295 (2026-07-24)
-
-_commit `c5214fc` · changes since 0.0.0-develop.294_
-<!-- build:0.0.0-develop.295 revision:c5214fc0ea55c590df3599b2b82c7245ac967417 ts:1784868682 -->
-
-### Changes since 0.0.0-develop.294
-
-- [G2P-5383](https://openg2p.atlassian.net/browse/G2P-5383) Sanity: make the DCI overlay tolerant of an older pinned harness — probe for post_search and fall back to a plain POST instead of failing collection with ImportError ([`c5214fc`](https://github.com/OpenG2P/registry-platform/commit/c5214fc0ea55c590df3599b2b82c7245ac967417))
 
 # Branches (moving)
 
