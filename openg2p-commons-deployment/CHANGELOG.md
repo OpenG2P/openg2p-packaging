@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.188`](#v-0-0-0-develop-188) | 2026-08-01 | develop |
 | [`0.0.0-develop.187`](#v-0-0-0-develop-187) | 2026-07-29 | develop |
 | [`0.0.0-develop.186`](#v-0-0-0-develop-186) | 2026-07-28 | develop |
 | [`0.0.0-develop.185`](#v-0-0-0-develop-185) | 2026-07-28 | develop |
@@ -232,6 +233,17 @@ _commit `44278e8` · first release_
 - Initial commit ([`04cc8c6`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/04cc8c6f16ae3132d62a9b80087c0cea81ce472d))
 
 # Develop builds
+
+<a id="v-0-0-0-develop-188"></a>
+
+## openg2p-commons-deployment — develop 0.0.0-develop.188 (2026-08-01)
+
+_commit `e77c23a` · changes since 0.0.0-develop.187_
+<!-- build:0.0.0-develop.188 revision:e77c23ab167cd469a4da463c04fa3befe79af849 ts:1785561484 -->
+
+### Changes since 0.0.0-develop.187
+
+- Bumped up MDS version to 0.0.0-develop.36 ([`e77c23a`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/e77c23ab167cd469a4da463c04fa3befe79af849))
 
 <a id="v-0-0-0-develop-187"></a>
 
