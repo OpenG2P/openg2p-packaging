@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.207`](#v-0-0-0-develop-207) | 2026-08-02 | develop |
 | [`0.0.0-develop.205`](#v-0-0-0-develop-205) | 2026-08-02 | develop |
 | [`0.0.0-develop.203`](#v-0-0-0-develop-203) | 2026-08-01 | develop |
 | [`0.0.0-develop.194`](#v-0-0-0-develop-194) | 2026-07-30 | develop |
@@ -15,7 +16,6 @@ _Published automatically._
 | [`0.0.0-develop.185`](#v-0-0-0-develop-185) | 2026-07-29 | develop |
 | [`0.0.0-develop.184`](#v-0-0-0-develop-184) | 2026-07-29 | develop |
 | [`0.0.0-develop.183`](#v-0-0-0-develop-183) | 2026-07-29 | develop |
-| [`0.0.0-develop.181`](#v-0-0-0-develop-181) | 2026-07-28 | develop |
 | [`1.0.1`](#v-1-0-1) | 2026-07-25 | release |
 | [`1.0.0`](#v-1-0-0) | 2026-07-25 | release |
 
@@ -196,6 +196,24 @@ _commit `ddfda05` · first release_
 
 # Develop builds
 
+<a id="v-0-0-0-develop-207"></a>
+
+## national-social-registry — develop 0.0.0-develop.207 (2026-08-02)
+
+_commit `4329f3e` · changes since 0.0.0-develop.205_
+<!-- build:0.0.0-develop.207 revision:4329f3e4a6f71e47b984e3b568f5e4d113ed140f ts:1785676162 -->
+
+### Summary
+
+- Data integrity improvements: filtered housing ladder values to match defined registry codes, ensuring only valid entries are emitted and correcting the head of household identification to use the appropriate role.
+- Bug fix: resolved a critical use-before-define error that prevented the bulk sample job from starting, ensuring proper execution of the script.
+- Docker updates: modifications made to the Docker configuration, enhancing the build process and environment setup.
+
+### Changes since 0.0.0-develop.205
+
+- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Generate only values this registry's code lists contain, and find the head of household by role. The housing ladders emitted TRADITIONAL_HUT, APARTMENT and IRON_SHEET, none of which any list defines — no foreign key to catch it, so they landed as codes nothing resolves and charts grouped by them showed categories that do not exist. Lists are now filtered against g2p_attribute_values, not replaced by it: their order is the deprivation gradient deprived_pick reads, which a code list's display order does not carry. Head of household was RELATIONSHIPS[0], correct only while a country used SELF in that slot; it now asks for the head_of_household role. Values the registry defines but this script never emits are reported rather than injected. ([`4329f3e`](https://github.com/OpenG2P/national-social-registry/commit/4329f3e4a6f71e47b984e3b568f5e4d113ed140f))
+- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Fix a use-before-define that stopped the bulk sample job from starting. DISPLACEMENT and PASTORALIST were read by names_and_weights two lines above their assignment, at module level, so the script raised NameError on import and the job never ran. Introduced when those lists were moved below their use. ([`20a10ea`](https://github.com/OpenG2P/national-social-registry/commit/20a10ea106eb705e7097042b776db73341b96ec8))
+
 <a id="v-0-0-0-develop-205"></a>
 
 ## national-social-registry — develop 0.0.0-develop.205 (2026-08-02)
@@ -333,17 +351,6 @@ _commit `fc58cb3` · changes since 0.0.0-develop.181_
 
 - Bumped up RP version. ([`fc58cb3`](https://github.com/OpenG2P/national-social-registry/commit/fc58cb36cc64fc572278c9abdd3475eb2ce8d802))
 - [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Label analytics jobs and bundle ConfigMap so uninstall sweeps them. ([`92c85a1`](https://github.com/OpenG2P/national-social-registry/commit/92c85a11578ee90bfc387e002a1f5f6b5ef2af61))
-
-<a id="v-0-0-0-develop-181"></a>
-
-## national-social-registry — develop 0.0.0-develop.181 (2026-07-28)
-
-_commit `1f0e89d` · changes since 0.0.0-develop.180_
-<!-- build:0.0.0-develop.181 revision:1f0e89dde8e367aa1db6e6c12f2b4521160e7a1b ts:1785250030 -->
-
-### Changes since 0.0.0-develop.180
-
-- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Inherit the db-seed image in analytics jobs so CI tag rewriting applies. ([`1f0e89d`](https://github.com/OpenG2P/national-social-registry/commit/1f0e89dde8e367aa1db6e6c12f2b4521160e7a1b))
 
 ---
 
