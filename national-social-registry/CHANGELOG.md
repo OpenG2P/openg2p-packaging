@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.205`](#v-0-0-0-develop-205) | 2026-08-02 | develop |
 | [`0.0.0-develop.203`](#v-0-0-0-develop-203) | 2026-08-01 | develop |
 | [`0.0.0-develop.194`](#v-0-0-0-develop-194) | 2026-07-30 | develop |
 | [`0.0.0-develop.191`](#v-0-0-0-develop-191) | 2026-07-30 | develop |
@@ -15,7 +16,6 @@ _Published automatically._
 | [`0.0.0-develop.184`](#v-0-0-0-develop-184) | 2026-07-29 | develop |
 | [`0.0.0-develop.183`](#v-0-0-0-develop-183) | 2026-07-29 | develop |
 | [`0.0.0-develop.181`](#v-0-0-0-develop-181) | 2026-07-28 | develop |
-| [`0.0.0-develop.180`](#v-0-0-0-develop-180) | 2026-07-28 | develop |
 | [`1.0.1`](#v-1-0-1) | 2026-07-25 | release |
 | [`1.0.0`](#v-1-0-0) | 2026-07-25 | release |
 
@@ -196,6 +196,24 @@ _commit `ddfda05` · first release_
 
 # Develop builds
 
+<a id="v-0-0-0-develop-205"></a>
+
+## national-social-registry — develop 0.0.0-develop.205 (2026-08-02)
+
+_commit `36b9530` · changes since 0.0.0-develop.203_
+<!-- build:0.0.0-develop.205 revision:36b953084900f014436823443271f4ef185811d7 ts:1785672871 -->
+
+### Summary
+
+- **Major:** Transitioned code-list dropdowns to read directly from the database, enabling dynamic updates via the registry's attribute table and API, while maintaining backward compatibility for installations without a country pack.
+- Version bump to RP 0.0.0-develop.338, indicating ongoing development and potential upcoming features.
+- Improved admin UI functionality by allowing edits to code lists directly in the portal, enhancing usability and flexibility.
+
+### Changes since 0.0.0-develop.203
+
+- Bumped up RP version to 0.0.0-develop.338 ([`36b9530`](https://github.com/OpenG2P/national-social-registry/commit/36b953084900f014436823443271f4ef185811d7))
+- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Read code-list dropdowns from the database instead of the widget. Each widget carried its own option array, so the values could only be changed by a release — the registry's attribute table, its API and the admin UI all existed but nothing on the form consulted them, and editing a list in the portal changed nothing on screen. Widgets now name their list; the same values are seeded as rows, where a country pack replaces them at install and an admin can edit them. No value changed, so an install without a pack behaves as before. Yes/no toggles stay static — a boolean is not a code list. ([`2251acf`](https://github.com/OpenG2P/national-social-registry/commit/2251acfc5820b9eb057dcf623f2ef46416aa780b))
+
 <a id="v-0-0-0-develop-203"></a>
 
 ## national-social-registry — develop 0.0.0-develop.203 (2026-08-01)
@@ -326,17 +344,6 @@ _commit `1f0e89d` · changes since 0.0.0-develop.180_
 ### Changes since 0.0.0-develop.180
 
 - [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Inherit the db-seed image in analytics jobs so CI tag rewriting applies. ([`1f0e89d`](https://github.com/OpenG2P/national-social-registry/commit/1f0e89dde8e367aa1db6e6c12f2b4521160e7a1b))
-
-<a id="v-0-0-0-develop-180"></a>
-
-## national-social-registry — develop 0.0.0-develop.180 (2026-07-28)
-
-_commit `c87c722` · changes since 0.0.0-develop.179_
-<!-- build:0.0.0-develop.180 revision:c87c72213bbda32d8c93b974584be0e8c75b8bda ts:1785239819 -->
-
-### Changes since 0.0.0-develop.179
-
--  Bumped up Registry Platform version to 0.0.0-develop.297 ([`c87c722`](https://github.com/OpenG2P/national-social-registry/commit/c87c72213bbda32d8c93b974584be0e8c75b8bda))
 
 ---
 
