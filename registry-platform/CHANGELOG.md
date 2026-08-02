@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.339`](#v-0-0-0-develop-339) | 2026-08-02 | develop |
 | [`0.0.0-develop.338`](#v-0-0-0-develop-338) | 2026-08-02 | develop |
 | [`0.0.0-develop.336`](#v-0-0-0-develop-336) | 2026-08-01 | develop |
 | [`0.0.0-develop.335`](#v-0-0-0-develop-335) | 2026-08-01 | develop |
@@ -15,10 +16,20 @@ _Published automatically._
 | [`0.0.0-develop.316`](#v-0-0-0-develop-316) | 2026-07-30 | develop |
 | [`0.0.0-develop.311`](#v-0-0-0-develop-311) | 2026-07-30 | develop |
 | [`0.0.0-develop.299`](#v-0-0-0-develop-299) | 2026-07-29 | develop |
-| [`0.0.0-develop.298`](#v-0-0-0-develop-298) | 2026-07-29 | develop |
 | [`develop`](#v-branch-develop) | 2026-07-20 | branch |
 
 # Develop builds
+
+<a id="v-0-0-0-develop-339"></a>
+
+## registry-platform — develop 0.0.0-develop.339 (2026-08-02)
+
+_commit `b890549` · changes since 0.0.0-develop.338_
+<!-- build:0.0.0-develop.339 revision:b890549d41cb2e9fdba8eb811291594a6f6c74dd ts:1785674347 -->
+
+### Changes since 0.0.0-develop.338
+
+- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Surface the country pack in questions.yaml. None of the geo-seed options were in the Rancher form, so the one place a deployment declares its country was reachable only by hand-editing values — an installer had no way to know the choice existed, and every install silently took the fictitious default. ([`b890549`](https://github.com/OpenG2P/registry-platform/commit/b890549d41cb2e9fdba8eb811291594a6f6c74dd))
 
 <a id="v-0-0-0-develop-338"></a>
 
@@ -168,17 +179,6 @@ _commit `525b84f` · changes since 0.0.0-develop.298_
 ### Changes since 0.0.0-develop.298
 
 - Just to take latest version of openg2p-data ([`525b84f`](https://github.com/OpenG2P/registry-platform/commit/525b84f27a6029cc6882a208a98b154e35271a37))
-
-<a id="v-0-0-0-develop-298"></a>
-
-## registry-platform — develop 0.0.0-develop.298 (2026-07-29)
-
-_commit `80e5002` · changes since 0.0.0-develop.297_
-<!-- build:0.0.0-develop.298 revision:80e5002bdd7cf922b118aeed74b479e6a3d9fdbe ts:1785289432 -->
-
-### Changes since 0.0.0-develop.297
-
-- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Pin the db-seed image to openg2p-data develop in CI. ([`80e5002`](https://github.com/OpenG2P/registry-platform/commit/80e5002bdd7cf922b118aeed74b479e6a3d9fdbe))
 
 # Branches (moving)
 
