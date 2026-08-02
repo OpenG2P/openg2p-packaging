@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.338`](#v-0-0-0-develop-338) | 2026-08-02 | develop |
 | [`0.0.0-develop.336`](#v-0-0-0-develop-336) | 2026-08-01 | develop |
 | [`0.0.0-develop.335`](#v-0-0-0-develop-335) | 2026-08-01 | develop |
 | [`0.0.0-develop.334`](#v-0-0-0-develop-334) | 2026-08-01 | develop |
@@ -15,10 +16,26 @@ _Published automatically._
 | [`0.0.0-develop.311`](#v-0-0-0-develop-311) | 2026-07-30 | develop |
 | [`0.0.0-develop.299`](#v-0-0-0-develop-299) | 2026-07-29 | develop |
 | [`0.0.0-develop.298`](#v-0-0-0-develop-298) | 2026-07-29 | develop |
-| [`0.0.0-develop.297`](#v-0-0-0-develop-297) | 2026-07-28 | develop |
 | [`develop`](#v-branch-develop) | 2026-07-20 | branch |
 
 # Develop builds
+
+<a id="v-0-0-0-develop-338"></a>
+
+## registry-platform — develop 0.0.0-develop.338 (2026-08-02)
+
+_commit `495542f` · changes since 0.0.0-develop.336_
+<!-- build:0.0.0-develop.338 revision:495542f02dbafc3b3cc7159d428b6597b01e6222 ts:1785661762 -->
+
+### Summary
+
+- Data handling improvements: Updated geo data loading to reflect the new master-data structure, enabling a five-level slug-path hierarchy, and modified code-list dropdowns to read from the database, eliminating truncation and allowing full selection of options.
+- User interface enhancements: Resolved issues with dropdown rendering by removing the default page size limit, ensuring all options are visible and selectable.
+
+### Changes since 0.0.0-develop.336
+
+- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Correct the loadGeoData comment. It still described the old direction, where the registry pushed geo into master-data because master-data shipped none — so it read as though the flag were needed for sample data. Master Data seeds its own geography from a country pack now, and enabling this writes a second, five-level slug-path hierarchy over it. ([`495542f`](https://github.com/OpenG2P/registry-platform/commit/495542f02dbafc3b3cc7159d428b6597b01e6222))
+- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Read code-list dropdowns from the database instead of the widget, in the reference extension, and stop truncating them. The attributes route defaulted to page_size 20, so a longer list rendered 20 options with nothing to indicate the rest existed and the missing values simply could not be chosen. ([`22c1d78`](https://github.com/OpenG2P/registry-platform/commit/22c1d78693bae934355b57868858e7132f939f0f))
 
 <a id="v-0-0-0-develop-336"></a>
 
@@ -162,17 +179,6 @@ _commit `80e5002` · changes since 0.0.0-develop.297_
 ### Changes since 0.0.0-develop.297
 
 - [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Pin the db-seed image to openg2p-data develop in CI. ([`80e5002`](https://github.com/OpenG2P/registry-platform/commit/80e5002bdd7cf922b118aeed74b479e6a3d9fdbe))
-
-<a id="v-0-0-0-develop-297"></a>
-
-## registry-platform — develop 0.0.0-develop.297 (2026-07-28)
-
-_commit `dc2dc8d` · changes since 0.0.0-develop.296_
-<!-- build:0.0.0-develop.297 revision:dc2dc8d64a905b3b632139aa99b7660420acc4b4 ts:1785239217 -->
-
-### Changes since 0.0.0-develop.296
-
-- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Track openg2p-data develop for the db-seed image. ([`dc2dc8d`](https://github.com/OpenG2P/registry-platform/commit/dc2dc8d64a905b3b632139aa99b7660420acc4b4))
 
 # Branches (moving)
 
