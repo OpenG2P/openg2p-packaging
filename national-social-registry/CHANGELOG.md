@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.211`](#v-0-0-0-develop-211) | 2026-08-03 | develop |
 | [`0.0.0-develop.209`](#v-0-0-0-develop-209) | 2026-08-03 | develop |
 | [`0.0.0-develop.207`](#v-0-0-0-develop-207) | 2026-08-02 | develop |
 | [`0.0.0-develop.205`](#v-0-0-0-develop-205) | 2026-08-02 | develop |
@@ -15,7 +16,6 @@ _Published automatically._
 | [`0.0.0-develop.189`](#v-0-0-0-develop-189) | 2026-07-30 | develop |
 | [`0.0.0-develop.188`](#v-0-0-0-develop-188) | 2026-07-29 | develop |
 | [`0.0.0-develop.185`](#v-0-0-0-develop-185) | 2026-07-29 | develop |
-| [`0.0.0-develop.184`](#v-0-0-0-develop-184) | 2026-07-29 | develop |
 | [`1.0.1`](#v-1-0-1) | 2026-07-25 | release |
 | [`1.0.0`](#v-1-0-0) | 2026-07-25 | release |
 
@@ -196,6 +196,25 @@ _commit `ddfda05` · first release_
 
 # Develop builds
 
+<a id="v-0-0-0-develop-211"></a>
+
+## national-social-registry — develop 0.0.0-develop.211 (2026-08-03)
+
+_commit `491374e` · changes since 0.0.0-develop.209_
+<!-- build:0.0.0-develop.211 revision:491374e25ac6968e01c2a764206d76796077f354 ts:1785747498 -->
+
+### Summary
+
+- **Major:** Migration updates for maps content, including new SQL sources for level summaries and quintiles to support poverty score plotting.
+- Docker enhancements: pinned the maps base image to a published tag to prevent CI build failures and ensured ownership of maps content by eliminating shared Superset Secret conflicts.
+- CI improvements: streamlined the installation process by addressing Helm release conflicts, allowing for successful rendering of the maps chart only when the Superset Secret is absent.
+- New files added to support maps functionality, including Dockerfile and SQL source files for data processing.
+
+### Changes since 0.0.0-develop.209
+
+- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Pin the maps base image to a published tag. The ARG defaulted to 0.0.0-develop, which CI never publishes — it produces 0.0.0-develop.<n> and develop — so the build failed on the pull. Pinned the way the db-seed image pins its registry-platform base. ([`491374e`](https://github.com/OpenG2P/national-social-registry/commit/491374e25ac6968e01c2a764206d76796077f354))
+- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Own the maps content, and stop the shared Superset Secret blocking an install. The queries read nsr_rpt_* and plot a poverty score, none of which exists in another registry, so they belong here — shipped as an image built FROM openg2p-insights-evidence-builder, the same split as db-seed. Separately, both this chart and Insights declared the Superset service-account Secret, and Helm will not adopt another release's object, so whichever installed second failed; it now renders only when absent. ([`ab0580b`](https://github.com/OpenG2P/national-social-registry/commit/ab0580b553ef8c4012f03e09907ef9baf875f8a5))
+
 <a id="v-0-0-0-develop-209"></a>
 
 ## national-social-registry — develop 0.0.0-develop.209 (2026-08-03)
@@ -340,17 +359,6 @@ _commit `ba1ee1b` · changes since 0.0.0-develop.184_
 ### Changes since 0.0.0-develop.184
 
 - [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Pass Master Data credentials to the bulk-sample job; sweep unlabelled jobs on uninstall. ([`ba1ee1b`](https://github.com/OpenG2P/national-social-registry/commit/ba1ee1b72913d6ee21da5e14cf2e653f9a2b5f31))
-
-<a id="v-0-0-0-develop-184"></a>
-
-## national-social-registry — develop 0.0.0-develop.184 (2026-07-29)
-
-_commit `6bb70bb` · changes since 0.0.0-develop.183_
-<!-- build:0.0.0-develop.184 revision:6bb70bb6e4c64c99fab99b0104048fb58a6adcd2 ts:1785290690 -->
-
-### Changes since 0.0.0-develop.183
-
-- Bumped up RP version to 0.0.0-develop.298. (previous checking had errors) ([`6bb70bb`](https://github.com/OpenG2P/national-social-registry/commit/6bb70bb6e4c64c99fab99b0104048fb58a6adcd2))
 
 ---
 
