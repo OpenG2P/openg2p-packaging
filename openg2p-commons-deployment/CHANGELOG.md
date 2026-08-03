@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.196`](#v-0-0-0-develop-196) | 2026-08-03 | develop |
 | [`0.0.0-develop.194`](#v-0-0-0-develop-194) | 2026-08-03 | develop |
 | [`0.0.0-develop.193`](#v-0-0-0-develop-193) | 2026-08-03 | develop |
 | [`0.0.0-develop.192`](#v-0-0-0-develop-192) | 2026-08-03 | develop |
@@ -16,7 +17,6 @@ _Published automatically._
 | [`0.0.0-develop.186`](#v-0-0-0-develop-186) | 2026-07-28 | develop |
 | [`0.0.0-develop.185`](#v-0-0-0-develop-185) | 2026-07-28 | develop |
 | [`2.2.0`](#v-2-2-0) | 2026-07-26 | release |
-| [`0.0.0-develop.183`](#v-0-0-0-develop-183) | 2026-07-18 | develop |
 | [`2.1.0`](#v-2-1-0) | 2026-07-13 | release |
 
 # Releases
@@ -237,6 +237,17 @@ _commit `44278e8` · first release_
 
 # Develop builds
 
+<a id="v-0-0-0-develop-196"></a>
+
+## openg2p-commons-deployment — develop 0.0.0-develop.196 (2026-08-03)
+
+_commit `c38f0b4` · changes since 0.0.0-develop.194_
+<!-- build:0.0.0-develop.196 revision:c38f0b479b052b0660b715a38289a68c40fb185f ts:1785735008 -->
+
+### Changes since 0.0.0-develop.194
+
+- [G2P-5451](https://openg2p.atlassian.net/browse/G2P-5451) Add MinIO configuration to values.yaml, including existing secret reference and read-only user creation ([`b766eea`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/b766eead30783b6e1f531e27937ecde1998e6cb1))
+
 <a id="v-0-0-0-develop-194"></a>
 
 ## openg2p-commons-deployment — develop 0.0.0-develop.194 (2026-08-03)
@@ -346,50 +357,6 @@ _commit `0e52ebf` · changes since 0.0.0-develop.183_
 
 - Bumped up Master Data Service version. ([`0e52ebf`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/0e52ebf19de3fd2ac8af3c4dd128e0f2857f7162))
 - [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) Use the shared version policy (derive-version.sh) so release-line branches publish RCs and get changelogs ([`a8ef10b`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/a8ef10b701799c2bf9c1aceb6bf4623dbc52261b))
-
-<a id="v-0-0-0-develop-183"></a>
-
-## openg2p-commons-deployment — develop 0.0.0-develop.183 (2026-07-18)
-
-_commit `b8ccf09` · baseline: release 2.1.0 · previous build 0.0.0-develop.182_
-<!-- build:0.0.0-develop.183 revision:b8ccf09a8d45ee99827ba2fbb20d82fb0519616f ts:1784351169 -->
-
-### Summary
-
-_All changes since release 2.1.0:_
-
-- Consent Manager (CM) is now enabled by default, streamlining the setup process for users.
-- The consent-manager APIs have been renamed to use the <release>-cm-api and -cm-partner-api format, requiring updates to the baseUrl and partnerBaseUrl for proper functionality.
-- AWE token validation has been fixed by pointing the openg2p-awe issuer to the EXTERNAL Keycloak issuer, resolving the AWE-ERR-006 'Invalid issuer' error during change-request approvals.
-- Master data, AWE, Audit Manager, and PM have all been moved to GitLab, with Helm charts now referred from the GitLab Helm repository.
-- A new toggle, "Run Consent Manager E2E Sanity?", has been added to questions.yaml under the Consent Manager group, allowing for optional end-to-end sanity checks when CM is enabled.
-- The version of the Consent Manager has been bumped up to ensure users have the latest features and fixes.
-- Pre-commit fixes have been implemented to enhance code quality.
-- An incorrect chart path has been fixed to ensure proper deployment.
-- Uninstall scripts have been improved to reflect recent updates and ensure smoother uninstallation processes.
-- The DEFAULT_BRANCH is now passed to the changelog for better version tracking.
-
-### New in this build (since 0.0.0-develop.182)
-
-- Add "Run Consent Manager E2E Sanity?" toggle (openg2p-consent-manager.sanity.runE2e) to questions.yaml under the Consent Manager group, shown when CM is enabled; default stays false ([`b8ccf09`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/b8ccf09a8d45ee99827ba2fbb20d82fb0519616f))
-
-### Since last release (2.1.0)
-
-- Add "Run Consent Manager E2E Sanity?" toggle (openg2p-consent-manager.sanity.runE2e) to questions.yaml under the Consent Manager group, shown when CM is enabled; default stays false ([`b8ccf09`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/b8ccf09a8d45ee99827ba2fbb20d82fb0519616f))
-- Bumped up CM version ([`34c665e`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/34c665ede9c68417c8451fd453fbe38457de1756))
-- The consent-manager APIs are renamed to <release>-cm-api / -cm-partner-api via nameOverride, but the sanity defaulted to <release>-api / -partner-api, so every run failed with "Name or service not known". Override sanity baseUrl/partnerBaseUrl to the cm-prefixed Services, and set sanity.nameOverride=cm so the Jobs render as commons-services-cm-sanity / -cm-pm-seed (consistent with cm-api/cm-ui/...). ([`d2d865d`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/d2d865d7accee20ea2b389465f75e9adeb872b27))
-- PM version updated ([`cf6b753`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/cf6b7539ee91677ecb431812f3c4b9fdc977c656))
-- CM enabled by default ([`032576b`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/032576baa5e6154d4b90fb4bc200d3f3225414fa))
-- Pre-commit fixes. ([`fd11304`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/fd11304430b62b0fcdf8d139da81f9b7a917011d))
-- Incorrect chart path fixed. ([`c5962ae`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/c5962ae81af6c736b643d2cd22a1ad0f53cdd4f1))
-- Uninstall scripts improved as they were not updated since a while. ([`af74872`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/af748720540812724b9dd8b4b004a37658216a51))
-- [G2P-5378](https://openg2p.atlassian.net/browse/G2P-5378) Fix AWE token validation: point openg2p-awe issuer at the EXTERNAL Keycloak issuer (matching PM/CM) so registry-forwarded user tokens validate; jwks stays internal. Resolves AWE-ERR-006 'Invalid issuer' on change-request approvals. And AWE repo and version updated. ([`cf7a980`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/cf7a980294987dcf4a6a4266c81a38046f14523e))
-- Master data moved to Gitlab. ([`9f2a0a6`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/9f2a0a6fd4870ae4da8bead080fc8cff90093474))
-- AWE moved to Gitlab. ([`2195ea8`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/2195ea8188664ef0e4ce771f18a9c085dd05d53a))
-- Audit Manager  moved to Gitlab. Charts referred from Gitlab Helm repo ([`5a80b71`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/5a80b7195c36db2e5371910c3428f0d7ac9f9247))
-- PM moved to Gitlab. Charts referred from Gitlab Helm repo ([`7c7dc4e`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/7c7dc4e948daf9de54034b41c703ed7d7719c448))
-- [G2P-5348](https://openg2p.atlassian.net/browse/G2P-5348) CM moved to Gitlab. New location of Helm charts now. ([`f5a12c1`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/f5a12c1029b149eeeb2f22a07e66e13a3a49cc38))
-- [G2P-5335](https://openg2p.atlassian.net/browse/G2P-5335) commons: pass DEFAULT_BRANCH to changelog ([`c087528`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/c08752886e9ab3fb12f193a04ba3a080efdf2a11))
 
 ---
 
