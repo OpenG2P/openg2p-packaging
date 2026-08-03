@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.192`](#v-0-0-0-develop-192) | 2026-08-03 | develop |
 | [`0.0.0-develop.190`](#v-0-0-0-develop-190) | 2026-08-03 | develop |
 | [`0.0.0-develop.189`](#v-0-0-0-develop-189) | 2026-08-02 | develop |
 | [`0.0.0-develop.188`](#v-0-0-0-develop-188) | 2026-08-01 | develop |
@@ -235,6 +236,23 @@ _commit `44278e8` · first release_
 - Initial commit ([`04cc8c6`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/04cc8c6f16ae3132d62a9b80087c0cea81ce472d))
 
 # Develop builds
+
+<a id="v-0-0-0-develop-192"></a>
+
+## openg2p-commons-deployment — develop 0.0.0-develop.192 (2026-08-03)
+
+_commit `d39f5eb` · changes since 0.0.0-develop.190_
+<!-- build:0.0.0-develop.192 revision:d39f5eb17054534cff3ea552ce48e67386584c05 ts:1785721124 -->
+
+### Summary
+
+- **Major:** Updated MDS version to enhance compatibility and performance.
+- Country configuration: Declared Ethiopia as the default country for the commons environment, enabling dynamic selection of geography, code lists, and sample data directly from the form.
+
+### Changes since 0.0.0-develop.190
+
+- Bumped up MDS version. ([`d39f5eb`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/d39f5eb17054534cff3ea552ce48e67386584c05))
+- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Declare Ethiopia as the country for the commons environment, and surface the choice in the form. This is the one place an environment names its country — registries read the geography, code lists and sample people from Master Data and name none of their own, which is what lets one registry image serve any country. Master Data is installed from here, so the country pack, the code-list and sample switches, and the domain lists are all questions on this chart rather than values only reachable by hand-editing a subchart. ([`e9fba97`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/e9fba97bf72a08e44bb6ec62890758a917ab511f))
 
 <a id="v-0-0-0-develop-190"></a>
 
