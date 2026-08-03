@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.209`](#v-0-0-0-develop-209) | 2026-08-03 | develop |
 | [`0.0.0-develop.207`](#v-0-0-0-develop-207) | 2026-08-02 | develop |
 | [`0.0.0-develop.205`](#v-0-0-0-develop-205) | 2026-08-02 | develop |
 | [`0.0.0-develop.203`](#v-0-0-0-develop-203) | 2026-08-01 | develop |
@@ -15,7 +16,6 @@ _Published automatically._
 | [`0.0.0-develop.188`](#v-0-0-0-develop-188) | 2026-07-29 | develop |
 | [`0.0.0-develop.185`](#v-0-0-0-develop-185) | 2026-07-29 | develop |
 | [`0.0.0-develop.184`](#v-0-0-0-develop-184) | 2026-07-29 | develop |
-| [`0.0.0-develop.183`](#v-0-0-0-develop-183) | 2026-07-29 | develop |
 | [`1.0.1`](#v-1-0-1) | 2026-07-25 | release |
 | [`1.0.0`](#v-1-0-0) | 2026-07-25 | release |
 
@@ -196,6 +196,23 @@ _commit `ddfda05` · first release_
 
 # Develop builds
 
+<a id="v-0-0-0-develop-209"></a>
+
+## national-social-registry — develop 0.0.0-develop.209 (2026-08-03)
+
+_commit `7463cd0` · changes since 0.0.0-develop.207_
+<!-- build:0.0.0-develop.209 revision:7463cd0f7cdc1c469013a4d6aa1a706bdb913296 ts:1785718419 -->
+
+### Summary
+
+- **Major:** Upgraded RP version to 0.0.0-develop.339, introducing significant changes.
+- Authentication enhancement: Superset service-account password is now auto-generated, streamlining access to the REST API and preventing dashboard accessibility issues during upgrades.
+
+### Changes since 0.0.0-develop.207
+
+- Bumped up RP version to 0.0.0-develop.339 ([`7463cd0`](https://github.com/OpenG2P/national-social-registry/commit/7463cd0f7cdc1c469013a4d6aa1a706bdb913296))
+- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Generate the Superset service-account password instead of asking for one. It authenticates a machine to Superset's REST API via provider=db and is never seen by a human, so requiring an operator to invent one only added a step to forget — and forgetting it left the dashboards imported but unreachable from Insights. Adopted rather than regenerated on upgrade, and the Insights chart renders the same Secret name and key, so whichever installs first creates it and the other picks it up. ([`1e62982`](https://github.com/OpenG2P/national-social-registry/commit/1e62982a3931add69414b4c6ec0d3645a0d6f0b6))
+
 <a id="v-0-0-0-develop-207"></a>
 
 ## national-social-registry — develop 0.0.0-develop.207 (2026-08-02)
@@ -334,23 +351,6 @@ _commit `6bb70bb` · changes since 0.0.0-develop.183_
 ### Changes since 0.0.0-develop.183
 
 - Bumped up RP version to 0.0.0-develop.298. (previous checking had errors) ([`6bb70bb`](https://github.com/OpenG2P/national-social-registry/commit/6bb70bb6e4c64c99fab99b0104048fb58a6adcd2))
-
-<a id="v-0-0-0-develop-183"></a>
-
-## national-social-registry — develop 0.0.0-develop.183 (2026-07-29)
-
-_commit `fc58cb3` · changes since 0.0.0-develop.181_
-<!-- build:0.0.0-develop.183 revision:fc58cb36cc64fc572278c9abdd3475eb2ce8d802 ts:1785289969 -->
-
-### Summary
-
-- Dependency updates: upgraded RP version to the latest release.
-- Configuration management: labeled analytics jobs and bundled ConfigMap for streamlined uninstallation.
-
-### Changes since 0.0.0-develop.181
-
-- Bumped up RP version. ([`fc58cb3`](https://github.com/OpenG2P/national-social-registry/commit/fc58cb36cc64fc572278c9abdd3475eb2ce8d802))
-- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Label analytics jobs and bundle ConfigMap so uninstall sweeps them. ([`92c85a1`](https://github.com/OpenG2P/national-social-registry/commit/92c85a11578ee90bfc387e002a1f5f6b5ef2af61))
 
 ---
 
