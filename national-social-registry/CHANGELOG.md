@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.215`](#v-0-0-0-develop-215) | 2026-08-03 | develop |
 | [`0.0.0-develop.213`](#v-0-0-0-develop-213) | 2026-08-03 | develop |
 | [`0.0.0-develop.211`](#v-0-0-0-develop-211) | 2026-08-03 | develop |
 | [`0.0.0-develop.209`](#v-0-0-0-develop-209) | 2026-08-03 | develop |
@@ -15,7 +16,6 @@ _Published automatically._
 | [`0.0.0-develop.194`](#v-0-0-0-develop-194) | 2026-07-30 | develop |
 | [`0.0.0-develop.191`](#v-0-0-0-develop-191) | 2026-07-30 | develop |
 | [`0.0.0-develop.189`](#v-0-0-0-develop-189) | 2026-07-30 | develop |
-| [`0.0.0-develop.188`](#v-0-0-0-develop-188) | 2026-07-29 | develop |
 | [`1.0.1`](#v-1-0-1) | 2026-07-25 | release |
 | [`1.0.0`](#v-1-0-0) | 2026-07-25 | release |
 
@@ -196,6 +196,24 @@ _commit `ddfda05` · first release_
 
 # Develop builds
 
+<a id="v-0-0-0-develop-215"></a>
+
+## national-social-registry — develop 0.0.0-develop.215 (2026-08-03)
+
+_commit `0f78334` · changes since 0.0.0-develop.213_
+<!-- build:0.0.0-develop.215 revision:0f78334e5c2beb107ad563458e64d3abd1c42e15 ts:1785771120 -->
+
+### Summary
+
+- **Major:** Improved bulk seeding process: switched to using `to_regclass` to avoid transaction failures on fresh installs due to undefined tables, and made the bulk seeder idempotent to ensure successful imports without conflicts.
+- Enhanced Superset integration: resolved issues with unattended imports by ensuring the database password is correctly set in the environment, and addressed CSRF token handling by clearing the session cookie before each request to enable successful embedding.
+- Fixed multiple failures in the dashboard import process, ensuring that all components work together seamlessly during upgrades and imports.
+
+### Changes since 0.0.0-develop.213
+
+- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Use to_regclass in the bulk-seed guard instead of querying the table. On a fresh install this hook can run before the registry has created its schema, where a plain SELECT raises UndefinedTable and poisons the transaction, so every later statement fails too — turning Loader's clear "table not found in target schema" into a traceback pointing at the guard rather than the cause. An absent table just means not seeded. ([`0f78334`](https://github.com/OpenG2P/national-social-registry/commit/0f78334e5c2beb107ad563458e64d3abd1c42e15))
+- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Get the dashboards to import unattended. Three stacked failures: the bulk seeder is a post-upgrade hook but was never idempotent — a fixed --seed regenerates the same ids and COPY has no ON CONFLICT — so it died on row 1 and, Helm stopping at a failed hook, took the views and the import with it; seeded now means done. The import then reached Superset's metadata DB with no password: DB_PASS is present but EMPTY in the envFrom Secret, overridden in Superset's own deployment by an explicit env that envFrom cannot beat, so it is rendered explicitly here too. Embedding then failed on all 8 with "CSRF session token is missing", which is not about the token: SESSION_COOKIE_SECURE means the cookie is never sent over the in-cluster http Service. Cleared on our own jar before every request — Superset re-issues it each response, so clearing once embeds one and fails the rest. ([`3506d7c`](https://github.com/OpenG2P/national-social-registry/commit/3506d7c6f42e6057a63e7e043def713d2674be1f))
+
 <a id="v-0-0-0-develop-213"></a>
 
 ## national-social-registry — develop 0.0.0-develop.213 (2026-08-03)
@@ -348,24 +366,6 @@ _commit `76e2da2` · changes since 0.0.0-develop.188_
 ### Changes since 0.0.0-develop.188
 
 - [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Raise the default bulk sample to 250k individuals, sized against Kamuntu's 668 villages so leaf-level percentages are reportable rather than suppressed. Clarify that expectedCountry is the root P-code (XK/ET), not the pack name. ([`76e2da2`](https://github.com/OpenG2P/national-social-registry/commit/76e2da2d384e5e4867ec9a3e3be03c3007997312))
-
-<a id="v-0-0-0-develop-188"></a>
-
-## national-social-registry — develop 0.0.0-develop.188 (2026-07-29)
-
-_commit `36a87e2` · changes since 0.0.0-develop.185_
-<!-- build:0.0.0-develop.188 revision:36a87e27db022365e32013bfa70833f2dc7be097 ts:1785304301 -->
-
-### Summary
-
-- Dashboard enhancements: implemented adhoc SQL COUNT(*) for improved chart metrics and dataset column validation, and automated service user creation during dashboard imports.
-- Version update: bumped RP version to 0.0.0-develop.299.
-
-### Changes since 0.0.0-develop.185
-
-- Bumped up RP version 0.0.0-develop.299 ([`36a87e2`](https://github.com/OpenG2P/national-social-registry/commit/36a87e27db022365e32013bfa70833f2dc7be097))
-- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Use adhoc SQL COUNT(*) in charts; make the dashboard import create its service user and replace stale charts. ([`d1862a8`](https://github.com/OpenG2P/national-social-registry/commit/d1862a82dd8a869e983f94c09732f05b780228d1))
-- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Use an adhoc SQL COUNT(*) metric so charts pass dataset column validation. ([`b80cf1e`](https://github.com/OpenG2P/national-social-registry/commit/b80cf1e4037de7ed5e764a1d236ef42576962b1f))
 
 ---
 
