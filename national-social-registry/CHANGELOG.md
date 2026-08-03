@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.213`](#v-0-0-0-develop-213) | 2026-08-03 | develop |
 | [`0.0.0-develop.211`](#v-0-0-0-develop-211) | 2026-08-03 | develop |
 | [`0.0.0-develop.209`](#v-0-0-0-develop-209) | 2026-08-03 | develop |
 | [`0.0.0-develop.207`](#v-0-0-0-develop-207) | 2026-08-02 | develop |
@@ -15,7 +16,6 @@ _Published automatically._
 | [`0.0.0-develop.191`](#v-0-0-0-develop-191) | 2026-07-30 | develop |
 | [`0.0.0-develop.189`](#v-0-0-0-develop-189) | 2026-07-30 | develop |
 | [`0.0.0-develop.188`](#v-0-0-0-develop-188) | 2026-07-29 | develop |
-| [`0.0.0-develop.185`](#v-0-0-0-develop-185) | 2026-07-29 | develop |
 | [`1.0.1`](#v-1-0-1) | 2026-07-25 | release |
 | [`1.0.0`](#v-1-0-0) | 2026-07-25 | release |
 
@@ -196,6 +196,24 @@ _commit `ddfda05` · first release_
 
 # Develop builds
 
+<a id="v-0-0-0-develop-213"></a>
+
+## national-social-registry — develop 0.0.0-develop.213 (2026-08-03)
+
+_commit `378189f` · changes since 0.0.0-develop.211_
+<!-- build:0.0.0-develop.213 revision:378189f8952e11e039624ce7b197c2ea823ea173 ts:1785763422 -->
+
+### Summary
+
+- Dashboard import functionality: Resolved issues with unattended dashboard imports by sourcing the Superset bootstrap script in the import Job, ensuring proper authentication handling and preventing failures during the import process.
+- Configuration management: Improved the handling of Superset's configuration by correctly mounting the necessary files, allowing for successful execution of the import Job without encountering missing dependencies. 
+- Error handling: Implemented checks for database connection issues post-import, enhancing the robustness of the import process and providing clearer feedback on failures.
+
+### Changes since 0.0.0-develop.211
+
+- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Make the dashboard import work unattended. It never ran: the Job uses the stock Superset image but mounts the deployed config, which sets AUTH_TYPE = AUTH_OAUTH, so flask-appbuilder imported authlib and died in create_app — the bootstrap script that installs it was in the mounted Secret but the volume projected only superset_config.py. It also had no gate on Superset, which is a different Helm release, so a restart failed the whole import; published and embedded every dashboard in a shared Superset rather than its own; capped embedding at a fixed page; and raised on a missing database connection after the import had already succeeded. ([`378189f`](https://github.com/OpenG2P/national-social-registry/commit/378189f8952e11e039624ce7b197c2ea823ea173))
+- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Source Superset's bootstrap script in the dashboard-import Job. The Job runs the stock apache/superset image but mounts the deployed Superset's config, which sets AUTH_TYPE = AUTH_OAUTH — so flask-appbuilder imports authlib while building the security manager and the stock image does not ship it. Every run died in create_app before importing anything. The bootstrap script that installs it was already in the mounted Secret, but the volume projected only superset_config.py, so it never reached the pod. ([`97ce577`](https://github.com/OpenG2P/national-social-registry/commit/97ce577281d72123d3c17cac4b386ce183f6962e))
+
 <a id="v-0-0-0-develop-211"></a>
 
 ## national-social-registry — develop 0.0.0-develop.211 (2026-08-03)
@@ -348,17 +366,6 @@ _commit `36a87e2` · changes since 0.0.0-develop.185_
 - Bumped up RP version 0.0.0-develop.299 ([`36a87e2`](https://github.com/OpenG2P/national-social-registry/commit/36a87e27db022365e32013bfa70833f2dc7be097))
 - [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Use adhoc SQL COUNT(*) in charts; make the dashboard import create its service user and replace stale charts. ([`d1862a8`](https://github.com/OpenG2P/national-social-registry/commit/d1862a82dd8a869e983f94c09732f05b780228d1))
 - [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Use an adhoc SQL COUNT(*) metric so charts pass dataset column validation. ([`b80cf1e`](https://github.com/OpenG2P/national-social-registry/commit/b80cf1e4037de7ed5e764a1d236ef42576962b1f))
-
-<a id="v-0-0-0-develop-185"></a>
-
-## national-social-registry — develop 0.0.0-develop.185 (2026-07-29)
-
-_commit `ba1ee1b` · changes since 0.0.0-develop.184_
-<!-- build:0.0.0-develop.185 revision:ba1ee1b72913d6ee21da5e14cf2e653f9a2b5f31 ts:1785299661 -->
-
-### Changes since 0.0.0-develop.184
-
-- [G2P-4804](https://openg2p.atlassian.net/browse/G2P-4804) Pass Master Data credentials to the bulk-sample job; sweep unlabelled jobs on uninstall. ([`ba1ee1b`](https://github.com/OpenG2P/national-social-registry/commit/ba1ee1b72913d6ee21da5e14cf2e653f9a2b5f31))
 
 ---
 
