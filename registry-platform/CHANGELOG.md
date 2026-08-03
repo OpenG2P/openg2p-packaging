@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.341`](#v-0-0-0-develop-341) | 2026-08-03 | develop |
 | [`0.0.0-develop.339`](#v-0-0-0-develop-339) | 2026-08-02 | develop |
 | [`0.0.0-develop.338`](#v-0-0-0-develop-338) | 2026-08-02 | develop |
 | [`0.0.0-develop.336`](#v-0-0-0-develop-336) | 2026-08-01 | develop |
@@ -15,10 +16,20 @@ _Published automatically._
 | [`0.0.0-develop.329`](#v-0-0-0-develop-329) | 2026-07-30 | develop |
 | [`0.0.0-develop.316`](#v-0-0-0-develop-316) | 2026-07-30 | develop |
 | [`0.0.0-develop.311`](#v-0-0-0-develop-311) | 2026-07-30 | develop |
-| [`0.0.0-develop.299`](#v-0-0-0-develop-299) | 2026-07-29 | develop |
 | [`develop`](#v-branch-develop) | 2026-07-20 | branch |
 
 # Develop builds
+
+<a id="v-0-0-0-develop-341"></a>
+
+## registry-platform — develop 0.0.0-develop.341 (2026-08-03)
+
+_commit `d643f2e` · changes since 0.0.0-develop.339_
+<!-- build:0.0.0-develop.341 revision:d643f2e4a2815c48640a0072ef2ba6418600eff1 ts:1785734706 -->
+
+### Changes since 0.0.0-develop.339
+
+- [G2P-5451](https://openg2p.atlassian.net/browse/G2P-5451) feat(document):  add read only user access for minio client ([`da42213`](https://github.com/OpenG2P/registry-platform/commit/da42213bf2512603a4cbfd3747fc9382dc5e01c8))
 
 <a id="v-0-0-0-develop-339"></a>
 
@@ -168,17 +179,6 @@ _commit `2e95438` · changes since 0.0.0-develop.299_
 - [G2P-5400](https://openg2p.atlassian.net/browse/G2P-5400) refactor (staff-api): Remove legacy tab and section CRUD routes ([`de2db46`](https://github.com/OpenG2P/registry-platform/commit/de2db4656099d3927004a7f7ae7496f4ae776553))
 - [G2P-5400](https://openg2p.atlassian.net/browse/G2P-5400) fix(register): align tab/section service with current ORM columns ([`9bb223b`](https://github.com/OpenG2P/registry-platform/commit/9bb223be957d852468e87d8edfe2de3975ce1f24))
 - [G2P-5206](https://openg2p.atlassian.net/browse/G2P-5206) feat: add upsert functionality for submission search text in intake form data service ([`02a7a34`](https://github.com/OpenG2P/registry-platform/commit/02a7a342cc3ea18249202197a2ebb83089f8bfc8))
-
-<a id="v-0-0-0-develop-299"></a>
-
-## registry-platform — develop 0.0.0-develop.299 (2026-07-29)
-
-_commit `525b84f` · changes since 0.0.0-develop.298_
-<!-- build:0.0.0-develop.299 revision:525b84f27a6029cc6882a208a98b154e35271a37 ts:1785303898 -->
-
-### Changes since 0.0.0-develop.298
-
-- Just to take latest version of openg2p-data ([`525b84f`](https://github.com/OpenG2P/registry-platform/commit/525b84f27a6029cc6882a208a98b154e35271a37))
 
 # Branches (moving)
 
