@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.190`](#v-0-0-0-develop-190) | 2026-08-03 | develop |
 | [`0.0.0-develop.189`](#v-0-0-0-develop-189) | 2026-08-02 | develop |
 | [`0.0.0-develop.188`](#v-0-0-0-develop-188) | 2026-08-01 | develop |
 | [`0.0.0-develop.187`](#v-0-0-0-develop-187) | 2026-07-29 | develop |
@@ -234,6 +235,17 @@ _commit `44278e8` · first release_
 - Initial commit ([`04cc8c6`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/04cc8c6f16ae3132d62a9b80087c0cea81ce472d))
 
 # Develop builds
+
+<a id="v-0-0-0-develop-190"></a>
+
+## openg2p-commons-deployment — develop 0.0.0-develop.190 (2026-08-03)
+
+_commit `e862fe0` · changes since 0.0.0-develop.189_
+<!-- build:0.0.0-develop.190 revision:e862fe0ef3db49cdf4863270990d4a83064bdedb ts:1785719342 -->
+
+### Changes since 0.0.0-develop.189
+
+- Add hook-succeeded to superset init-db hook-delete-policy so the Job and its pods (including a first-attempt deadlock retry) are removed once it succeeds, instead of a stale Error pod making a healthy release look failed; restate the hook keys explicitly since jobAnnotations {} never cleared the subchart defaults. Bumped up consent manager Helm version. ([`e862fe0`](https://github.com/OpenG2P/openg2p-commons-deployment/commit/e862fe0ef3db49cdf4863270990d4a83064bdedb))
 
 <a id="v-0-0-0-develop-189"></a>
 
