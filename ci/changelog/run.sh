@@ -36,10 +36,14 @@ REPO_DISPLAY="${REPO_DISPLAY:-$REPO}"
 # kind = service (builds image/chart) | library (code consumed by git ref: no artifact,
 # tracked by branch SHA + tag). render-root-index groups the catalogue by this.
 CHANGELOG_KIND="${CHANGELOG_KIND:-service}"
-# Retention: libraries list the last 5 commits on a branch; services keep the last 10
-# develop builds AND the last 10 RCs per release line (RCs are the audit trail for a
-# release, so they are kept as deep as develop).
-if [ "$CHANGELOG_KIND" = library ]; then KEEP="${KEEP:-5}"; else KEEP="${KEEP:-10}"; fi
+# Retention. Two separate knobs, because the two serve different purposes: develop
+# builds are the day-to-day integration history (kept deep), while RCs are the audit
+# trail for ONE release line and are deleted outright when that release ships.
+# Releases themselves are never pruned, however long the list grows.
+#   KEEP     develop builds (or, for a library, commits listed on a branch page)
+#   KEEP_RC  release candidates per release line
+if [ "$CHANGELOG_KIND" = library ]; then KEEP="${KEEP:-5}"; else KEEP="${KEEP:-20}"; fi
+KEEP_RC="${KEEP_RC:-10}"
 mkdir -p "${PAGES_DIR}/${REPO}"
 {
   echo "name=${REPO_DISPLAY}"
@@ -300,7 +304,7 @@ PAGES_DIR="$PAGES_DIR" REPO="$REPO" REPO_DISPLAY="$REPO_DISPLAY" VERSION="$VERSI
   NOTES_FILE="$work/notes.md" SUMMARY_FILE="$work/summary.md" SUMMARY_OK="$SUMMARY_OK" \
   BASE_LABEL="$BASE_LABEL" SUMMARY_OMIT="$SUMMARY_OMIT" \
   RELEASE_NOTES_FILE="$RELEASE_NOTES_FILE" \
-  BRANCH="${BRANCH:-}" RECENT_FILE="$RECENT_FILE" KEEP="$KEEP" \
+  BRANCH="${BRANCH:-}" RECENT_FILE="$RECENT_FILE" KEEP="$KEEP" KEEP_RC="$KEEP_RC" \
   bash "$HERE/render.sh"
 
 PAGES_DIR="$PAGES_DIR" bash "$HERE/render-root-index.sh"

@@ -3,10 +3,10 @@
 # Write a version's human-readable page and regenerate the repo's CHANGELOG.md.
 # Everything is markdown; Gitbook / GitHub Pages render it.
 #
-# Catalogue retention (KEEP, default 10) keeps the published page count bounded:
+# Catalogue retention keeps the published page count bounded:
 #
-#   release  N.N.N           durable, ALL kept
-#   RC       N.N.N-rc.M      durable, last KEEP per release line; DELETED once that
+#   release  N.N.N           durable, ALL kept -- never pruned, however long the list
+#   RC       N.N.N-rc.M      durable, last KEEP_RC per release line; DELETED once that
 #                            release N.N.N is published (the release supersedes them)
 #   develop  0.0.0-develop.N durable, last KEEP kept
 #
@@ -22,7 +22,8 @@
 #        SUMMARY_FILE SUMMARY_OK
 #        SUMMARY_OMIT          true -> trivial delta, render no Summary section at all
 #        RELEASE_NOTES_FILE    (frozen only) annotated-tag message -> "Release notes"
-#        KEEP                  how many rc/develop pages to keep (default 10)
+#        KEEP                  how many develop pages to keep (default 20)
+#        KEEP_RC               how many RC pages to keep per line (default 10)
 #   library (a library repo's non-tag build) also uses:
 #        BRANCH                the moving branch being tracked (page id)
 #        RECENT_FILE           the last KEEP commits, as a bullet list
@@ -38,7 +39,8 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_dir="${PAGES_DIR}/${REPO}"
 vdir="${repo_dir}/versions"
 mkdir -p "$vdir"
-KEEP="${KEEP:-10}"
+KEEP="${KEEP:-20}"      # develop builds
+KEEP_RC="${KEEP_RC:-10}"   # release candidates, per release line
 
 short_rev=$(printf '%s' "${REVISION:-}" | cut -c1-7)
 marker="<!-- build:${VERSION} revision:${REVISION} ts:${TS:-0} -->"
@@ -61,15 +63,15 @@ base_label="${BASE_LABEL:-$rel_label}"
 art=""
 [ -n "${ARTIFACT_SOURCE:-}" ] && art=" · artifacts: \`${ARTIFACT_SOURCE}\`"
 
-# Keep only the newest $KEEP pages named "<prefix>.<number>.md"; delete the rest.
-prune() {
-  local prefix="$1" esc
+# Keep only the newest $2 pages named "<prefix>.<number>.md"; delete the rest.
+prune() {   # $1 = filename prefix, $2 = how many to keep
+  local prefix="$1" keep="$2" esc
   esc=$(printf '%s' "$prefix" | sed 's/[.]/\\./g')
   find "$vdir" -maxdepth 1 -type f -name "${prefix}.*.md" 2>/dev/null \
     | sed -E "s#.*/${esc}\.([0-9]+)\.md\$#\1 &#" \
     | grep -E '^[0-9]+ ' \
     | sort -rn \
-    | awk -v k="$KEEP" 'NR>k{print $2}' \
+    | awk -v k="$keep" 'NR>k{print $2}' \
     | while IFS= read -r f; do [ -n "$f" ] && rm -f "$f"; done || true
 }
 
@@ -130,7 +132,7 @@ case "$MODE" in
     ;;
   rc)
     delta_body "${disp} ${VERSION} — ${DATE}" > "${vdir}/${VERSION}.md"
-    prune "${VERSION%-rc.*}-rc"        # keep the last KEEP RCs of this release line
+    prune "${VERSION%-rc.*}-rc" "$KEEP_RC"   # last KEEP_RC RCs of this release line
     ;;
   library)
     # A library's moving branch: one ROLLING page per branch (regenerated each push),
@@ -162,9 +164,9 @@ case "$MODE" in
   *)  # develop build (MODE=develop): durable per-N page, last KEEP kept
     delta_body "${disp} — develop ${VERSION} (${DATE})" > "${vdir}/${VERSION}.md"
     rm -f "${vdir}/unreleased.md"      # retire the legacy single rolling page
-    prune "0.0.0-develop"
+    prune "0.0.0-develop" "$KEEP"
     ;;
 esac
 
-PAGES_DIR="$PAGES_DIR" REPO="$REPO" KEEP="$KEEP" bash "$HERE/render-aggregate.sh"
+PAGES_DIR="$PAGES_DIR" REPO="$REPO" KEEP="$KEEP" KEEP_RC="$KEEP_RC" bash "$HERE/render-aggregate.sh"
 echo "wrote ${repo_dir}/CHANGELOG.md (${MODE} ${VERSION})"

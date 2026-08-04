@@ -253,7 +253,7 @@ rd=$(mktemp -d); Pr=$(mktemp -d)
 git -C "$rd" init -q -b develop; git -C "$rd" config user.email t@t; git -C "$rd" config user.name t
 git -C "$rd" commit -q --allow-empty -m base; git -C "$rd" tag 1.0.0
 rbuild() { ( cd "$rd" && REPO=rd VERSION="$1" FROZEN="${2:-false}" REVISION=$(git rev-parse HEAD) \
-    KEEP=3 PAGES_DIR="$Pr" SKIP_AI=true DATE=2026-07-13 bash "$HERE/run.sh" >/dev/null ); }
+    KEEP=3 KEEP_RC=3 PAGES_DIR="$Pr" SKIP_AI=true DATE=2026-07-13 bash "$HERE/run.sh" >/dev/null ); }
 present() { [ -f "$Pr/rd/versions/$1.md" ] && echo yes || echo no; }
 for n in 10 11 12 13 14; do git -C "$rd" commit -q --allow-empty -m "G2P-$n dev $n"; rbuild "0.0.0-develop.$n"; done
 check "develop.14 kept"  yes "$(present 0.0.0-develop.14)"
@@ -280,20 +280,22 @@ excludes "table has no RCs after release" "$(cat "$Pr/rd/CHANGELOG.md")" "2.0.0-
 rm -rf "$rd" "$Pr"
 
 echo
-echo "retention default for a service is 10 develop builds"
+echo "retention defaults for a service: 20 develop builds, 10 RCs"
 kd=$(mktemp -d); Pk=$(mktemp -d)
 git -C "$kd" init -q -b develop; git -C "$kd" config user.email t@t; git -C "$kd" config user.name t
 git -C "$kd" commit -q --allow-empty -m base; git -C "$kd" tag 1.0.0
-for n in 1 2 3 4 5 6 7 8 9 10 11 12; do
+for n in $(seq 1 22); do
   git -C "$kd" commit -q --allow-empty -m "G2P-$n dev $n"
   ( cd "$kd" && REPO=kd VERSION="0.0.0-develop.$n" FROZEN=false REVISION=$(git rev-parse HEAD) \
       PAGES_DIR="$Pk" SKIP_AI=true DATE=2026-07-13 bash "$HERE/run.sh" >/dev/null )
 done
 kept=$(ls "$Pk/kd/versions" | grep -c '^0\.0\.0-develop\.' || true)
-check "default keeps exactly 10"   10  "$kept"
-check "newest (12) kept"           yes "$([ -f "$Pk/kd/versions/0.0.0-develop.12.md" ] && echo yes || echo no)"
-check "10th-newest (3) kept"       yes "$([ -f "$Pk/kd/versions/0.0.0-develop.3.md" ] && echo yes || echo no)"
-check "11th-newest (2) pruned"     no  "$([ -f "$Pk/kd/versions/0.0.0-develop.2.md" ] && echo yes || echo no)"
+check "default keeps exactly 20"   20  "$kept"
+check "newest (22) kept"           yes "$([ -f "$Pk/kd/versions/0.0.0-develop.22.md" ] && echo yes || echo no)"
+check "20th-newest (3) kept"       yes "$([ -f "$Pk/kd/versions/0.0.0-develop.3.md" ] && echo yes || echo no)"
+check "21st-newest (2) pruned"     no  "$([ -f "$Pk/kd/versions/0.0.0-develop.2.md" ] && echo yes || echo no)"
+contains "footnote states both numbers" "$(cat "$Pk/kd/CHANGELOG.md")" "latest 20 develop builds"
+contains "footnote states RC number"    "$(cat "$Pk/kd/CHANGELOG.md")" "latest 10 release"
 rm -rf "$kd" "$Pk"
 
 echo

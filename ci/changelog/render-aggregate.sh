@@ -17,7 +17,8 @@ set -euo pipefail
 
 repo_dir="${PAGES_DIR}/${REPO}"
 vdir="${repo_dir}/versions"
-KEEP="${KEEP:-10}"   # matches run.sh's service default; render.sh passes the real value
+KEEP="${KEEP:-20}"      # develop builds; render.sh passes the real value
+KEEP_RC="${KEEP_RC:-10}"   # release candidates, per release line
 [ -d "$vdir" ] || { echo "no versions/ for ${REPO}"; exit 0; }
 
 list_versions() { ls "$vdir" 2>/dev/null | sed 's/\.md$//'; }
@@ -153,7 +154,7 @@ section() {  # $1 = heading  $2 = newline list of versions
     echo "> generated automatically from commit history; do not edit it by hand."
   else
     echo "> **What's shown here.** This catalogue lists **every stable release**, plus"
-    echo "> the **latest ${KEEP} develop builds** and the **latest ${KEEP} release"
+    echo "> the **latest ${KEEP} develop builds** and the **latest ${KEEP_RC} release"
     echo "> candidates** per release line. Older develop builds and release candidates"
     echo "> are pruned as they are superseded, and a release's candidates are removed"
     echo "> once it ships. Those versions still exist in the container and Helm"
