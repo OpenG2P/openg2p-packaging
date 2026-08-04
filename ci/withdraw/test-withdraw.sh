@@ -37,6 +37,14 @@ out=$(printf '%s\n' "$PUB" | MODE=single VERSION=0.0.0-develop.12 bash "$HERE/se
 check "single selects exactly one"       "0.0.0-develop.12" "$out"
 out=$(printf '%s\n' "$PUB" | MODE=range FROM=10 TO=12 bash "$HERE/select.sh" 2>/dev/null | tr '\n' ' ')
 check "range is inclusive, newest first" "0.0.0-develop.12 0.0.0-develop.11 0.0.0-develop.10 " "$out"
+# The catalogue shows full version strings, so that is what people paste into the form.
+out=$(printf '%s\n' "$PUB" | MODE=range FROM=0.0.0-develop.10 TO=0.0.0-develop.12 bash "$HERE/select.sh" 2>/dev/null | tr '\n' ' ')
+check "range accepts full version bounds" "0.0.0-develop.12 0.0.0-develop.11 0.0.0-develop.10 " "$out"
+out=$(printf '%s\n' "$PUB" | MODE=range FROM=10 TO=0.0.0-develop.11 bash "$HERE/select.sh" 2>/dev/null | tr '\n' ' ')
+check "range accepts mixed bounds"        "0.0.0-develop.11 0.0.0-develop.10 " "$out"
+out=$(printf '%s\n' "$PUB" | MODE=range FROM=1.0.0 TO=12 bash "$HERE/select.sh" 2>&1); rc=$?
+check "a release as a bound is refused"   1 "$rc"
+contains "bound error is actionable"      "$out" "or the full version"
 out=$(printf '%s\n' "$PUB" | MODE=keep KEEP_LAST=2 bash "$HERE/select.sh" 2>/dev/null | tr '\n' ' ')
 check "keep keeps the newest N"          "0.0.0-develop.12 0.0.0-develop.11 0.0.0-develop.10 " "$out"
 out=$(printf '%s\n' "$PUB" | MODE=keep KEEP_LAST=99 bash "$HERE/select.sh" 2>&1); rc=$?

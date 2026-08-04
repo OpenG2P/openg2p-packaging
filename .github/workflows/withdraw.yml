@@ -46,12 +46,12 @@ on:
         type: string
         default: ''
       from:
-        description: 'range: first build number to withdraw, e.g. 100'
+        description: 'range: first version to withdraw — 0.0.0-develop.205 or just 205'
         required: false
         type: string
         default: ''
       to:
-        description: 'range: last build number to withdraw, e.g. 200'
+        description: 'range: last version to withdraw — 0.0.0-develop.211 or just 211'
         required: false
         type: string
         default: ''

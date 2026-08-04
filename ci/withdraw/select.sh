@@ -48,8 +48,21 @@ Releases (N.N.N) are permanent and release candidates (N.N.N-rc.M) are en route 
     selected="$VERSION"
     ;;
   range)
-    [ -n "${FROM:-}" ] && [ -n "${TO:-}" ] || die "MODE=range needs FROM and TO (the N bounds)"
-    case "$FROM$TO" in *[!0-9]*) die "FROM/TO must be plain numbers, e.g. FROM=100 TO=200" ;; esac
+    [ -n "${FROM:-}" ] && [ -n "${TO:-}" ] || die "MODE=range needs FROM and TO"
+    # Accept either the bare build number (205) or the full version string
+    # (0.0.0-develop.205) -- the catalogue shows the latter, so that is what people
+    # naturally paste in.
+    bound() {
+      case "$1" in
+        *[!0-9]*)
+          printf '%s' "$1" | grep -qE "$DEV_RE" \
+            || die "'$1' is not a build number or a develop version.
+Give either the number (e.g. 205) or the full version (e.g. 0.0.0-develop.205)."
+          printf '%s' "${1##*.}" ;;
+        *) printf '%s' "$1" ;;
+      esac
+    }
+    FROM=$(bound "$FROM"); TO=$(bound "$TO")
     [ "$FROM" -le "$TO" ] || die "FROM ($FROM) is greater than TO ($TO)"
     selected=$(printf '%s\n' "$sorted" | awk -F. -v a="$FROM" -v b="$TO" '$4>=a && $4<=b')
     ;;
