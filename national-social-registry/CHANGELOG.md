@@ -6,6 +6,7 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.216`](#v-0-0-0-develop-216) | 2026-08-04 | develop |
 | [`0.0.0-develop.215`](#v-0-0-0-develop-215) | 2026-08-03 | develop |
 | [`0.0.0-develop.213`](#v-0-0-0-develop-213) | 2026-08-03 | develop |
 | [`0.0.0-develop.211`](#v-0-0-0-develop-211) | 2026-08-03 | develop |
@@ -196,6 +197,17 @@ _commit `ddfda05` · first release_
 
 # Develop builds
 
+<a id="v-0-0-0-develop-216"></a>
+
+## national-social-registry — develop 0.0.0-develop.216 (2026-08-04)
+
+_commit `6aff652` · changes since 0.0.0-develop.215_
+<!-- build:0.0.0-develop.216 revision:6aff652f710502255164033e076da4962135384e ts:1785805781 -->
+
+### Changes since 0.0.0-develop.215
+
+- Bumped up RP version to 0.0.0-develop.341. ([`6aff652`](https://github.com/OpenG2P/national-social-registry/commit/6aff652f710502255164033e076da4962135384e))
+
 <a id="v-0-0-0-develop-215"></a>
 
 ## national-social-registry — develop 0.0.0-develop.215 (2026-08-03)
@@ -370,7 +382,7 @@ _commit `76e2da2` · changes since 0.0.0-develop.188_
 ---
 
 > **What's shown here.** This catalogue lists **every stable release**, plus
-> the **latest 10 develop builds** and the **latest 10 release
+> the **latest 20 develop builds** and the **latest 10 release
 > candidates** per release line. Older develop builds and release candidates
 > are pruned as they are superseded, and a release's candidates are removed
 > once it ships. Those versions still exist in the container and Helm
