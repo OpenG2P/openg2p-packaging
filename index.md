@@ -20,7 +20,7 @@ See the **[versioning & CI docs](https://docs.openg2p.org/operations/deployment/
 - **[master-data-service](./master-data-service/CHANGELOG)**
 - **[national-social-registry](./national-social-registry/CHANGELOG)** · [repository ↗](https://github.com/OpenG2P/national-social-registry)
 - **[openg2p-commons-deployment](./openg2p-commons-deployment/CHANGELOG)** · [repository ↗](https://github.com/OpenG2P/openg2p-commons-deployment)
-- **[openg2p-staff-portal-ui](./openg2p-staff-portal-ui/CHANGELOG)**
+- **[openg2p-staff-portal-ui](./openg2p-staff-portal-ui/CHANGELOG)** · [repository ↗](https://github.com/OpenG2P/openg2p-staff-portal-ui)
 - **[partner-management](./partner-management/CHANGELOG)**
 - **[pbms](./pbms/CHANGELOG)** · [repository ↗](https://github.com/OpenG2P/pbms)
 - **[registry-platform](./registry-platform/CHANGELOG)** · [repository ↗](https://github.com/OpenG2P/registry-platform)
