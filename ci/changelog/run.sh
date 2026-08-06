@@ -38,7 +38,7 @@ REPO_DISPLAY="${REPO_DISPLAY:-$REPO}"
 CHANGELOG_KIND="${CHANGELOG_KIND:-service}"
 # Retention. Two separate knobs, because the two serve different purposes: develop
 # builds are the day-to-day integration history (kept deep), while RCs are the audit
-# trail for ONE release line and are deleted outright when that release ships.
+# trail for ONE release line and are KEPT after that release ships.
 # Releases themselves are never pruned, however long the list grows.
 #   KEEP     develop builds (or, for a library, commits listed on a branch page)
 #   KEEP_RC  release candidates per release line
@@ -305,6 +305,7 @@ PAGES_DIR="$PAGES_DIR" REPO="$REPO" REPO_DISPLAY="$REPO_DISPLAY" VERSION="$VERSI
   BASE_LABEL="$BASE_LABEL" SUMMARY_OMIT="$SUMMARY_OMIT" \
   RELEASE_NOTES_FILE="$RELEASE_NOTES_FILE" \
   BRANCH="${BRANCH:-}" RECENT_FILE="$RECENT_FILE" KEEP="$KEEP" KEEP_RC="$KEEP_RC" \
+  CHART_PACKAGE_URL="${CHART_PACKAGE_URL:-}" CHART_LABEL="${CHART_LABEL:-}" \
   bash "$HERE/render.sh"
 
 PAGES_DIR="$PAGES_DIR" bash "$HERE/render-root-index.sh"

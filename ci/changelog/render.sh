@@ -6,8 +6,8 @@
 # Catalogue retention keeps the published page count bounded:
 #
 #   release  N.N.N           durable, ALL kept -- never pruned, however long the list
-#   RC       N.N.N-rc.M      durable, last KEEP_RC per release line; DELETED once that
-#                            release N.N.N is published (the release supersedes them)
+#   RC       N.N.N-rc.M      durable, last KEEP_RC per release line; KEPT after the
+#                            release ships (the audit trail of that release run)
 #   develop  0.0.0-develop.N durable, last KEEP kept
 #
 # Page shape: a RELEASE is cumulative (everything since the previous tag -- the "what
@@ -24,6 +24,11 @@
 #        RELEASE_NOTES_FILE    (frozen only) annotated-tag message -> "Release notes"
 #        KEEP                  how many develop pages to keep (default 20)
 #        KEEP_RC               how many RC pages to keep per line (default 10)
+#        CHART_PACKAGE_URL     direct link to this version's packaged chart, so the
+#                              page points at the artifact (open it to see exactly
+#                              what the version contains -- pinned dependencies,
+#                              image tags). Empty -> the line is omitted.
+#        CHART_LABEL           what to call it, e.g. "openg2p-nsr 1.1.0"
 #   library (a library repo's non-tag build) also uses:
 #        BRANCH                the moving branch being tracked (page id)
 #        RECENT_FILE           the last KEEP commits, as a bullet list
@@ -84,6 +89,12 @@ delta_body() {   # $1 = heading line
   echo "_commit \`${short_rev}\` · changes since ${base_label}${art}_"
   echo "${marker}"
   echo
+      # Point at the artifact itself: everything a version actually contains --
+      # its pinned chart dependencies and image tags -- is inside the package.
+      if [ -n "${CHART_PACKAGE_URL:-}" ]; then
+        echo "**Chart:** [${CHART_LABEL:-download the chart}](${CHART_PACKAGE_URL})"
+        echo
+      fi
   # A trivial delta (0-1 commits) skips the AI summary: the commit list IS the summary.
   if [ "${SUMMARY_OMIT:-false}" != true ]; then
     echo "### Summary"
@@ -114,6 +125,12 @@ case "$MODE" in
         echo "_commit \`${short_rev}\` · first release${art}_"
       fi
       echo
+      # Point at the artifact itself: everything a version actually contains --
+      # its pinned chart dependencies and image tags -- is inside the package.
+      if [ -n "${CHART_PACKAGE_URL:-}" ]; then
+        echo "**Chart:** [${CHART_LABEL:-download the chart}](${CHART_PACKAGE_URL})"
+        echo
+      fi
       # Curated release notes from the annotated tag message (verbatim, Jira-linkified),
       # shown above the auto-generated summary. Absent for lightweight tags.
       if [ -n "${RELEASE_NOTES_FILE:-}" ] && [ -s "$RELEASE_NOTES_FILE" ]; then
@@ -125,10 +142,9 @@ case "$MODE" in
       echo "### Changes"; echo
       printf '%s\n' "$cum_notes"
     } > "${vdir}/${VERSION}.md"
-    # This release supersedes its own RCs -> drop them from the catalogue. Develop
-    # pages are LEFT ALONE: the last few develop builds stay visible even after a
-    # release tagged on develop.
-    rm -f "${vdir}/${VERSION}-rc."*.md
+    # RC pages are KEPT after the release ships: they are the audit trail of the
+    # release run -- what changed between rc.N and rc.N+1 is exactly what QA needs
+    # to look back at. They are pruned only by KEEP_RC, like any other build.
     ;;
   rc)
     delta_body "${disp} ${VERSION} — ${DATE}" > "${vdir}/${VERSION}.md"

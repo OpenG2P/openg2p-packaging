@@ -8,7 +8,7 @@
 #      BY COMMIT TIME (the `ts` marker) so versions published the same day still
 #      order correctly
 #   2. Releases            — N.N.N pages (all kept), newest-first
-#   3. Release candidates  — RC pages whose release is not yet published (last few)
+#   3. Release candidates  — RC pages (last few per line), kept after release
 #   4. Develop builds      — 0.0.0-develop.N pages (last few)
 #
 #   env: PAGES_DIR REPO
@@ -39,16 +39,9 @@ kind=$(grep -m1 '^kind=' "${repo_dir}/.meta" 2>/dev/null | sed 's/^kind=//' || t
 withdrawn_file="${repo_dir}/.withdrawn"
 is_withdrawn() { [ -f "$withdrawn_file" ] && grep -q "^${1}|" "$withdrawn_file" 2>/dev/null; }
 
-rcs_all=$(list_versions | grep -E '^[0-9]+\.[0-9]+\.[0-9]+-rc\.[0-9]+$' || true)
-inprogress=""
-while IFS= read -r v; do
-  [ -n "$v" ] || continue
-  [ -f "${vdir}/${v%-rc.*}.md" ] && continue     # released -> hidden (also deleted at release)
-  inprogress="${inprogress}${v}"$'\n'
-done <<EOF
-$rcs_all
-EOF
-inprogress=$(printf '%s' "$inprogress" | sed '/^$/d' | sort -rV || true)
+# Every RC page, whether or not its release has shipped -- an RC is the audit trail
+# of a release run, so it stays visible afterwards (pruned only by KEEP_RC).
+rcs=$(list_versions | grep -E '^[0-9]+\.[0-9]+\.[0-9]+-rc\.[0-9]+$' | sort -rV || true)
 
 # A YYYY-MM-DD from a page's heading, or em dash.
 pdate() { grep -m1 '^## ' "$1" 2>/dev/null | grep -oE '20[0-9]{2}-[0-9]{2}-[0-9]{2}' | head -1; }
@@ -103,7 +96,7 @@ section() {  # $1 = heading  $2 = newline list of versions
   }
   {
     emit "$frozen"     "release"
-    emit "$inprogress" "release candidate"
+    emit "$rcs"        "release candidate"
     emit "$develop"    "develop"
     emit "$branches"   "branch"
   } | sed 's/^|/0|/' > "$tbl"     # missing ts -> 0, so it sorts last
@@ -121,7 +114,7 @@ section() {  # $1 = heading  $2 = newline list of versions
   echo
 
   section "Releases" "$frozen"
-  section "Release candidates (in progress)" "$inprogress"
+  section "Release candidates" "$rcs"
   section "Develop builds" "$develop"
   section "Branches (moving)" "$branches"
 
@@ -155,9 +148,10 @@ section() {  # $1 = heading  $2 = newline list of versions
   else
     echo "> **What's shown here.** This catalogue lists **every stable release**, plus"
     echo "> the **latest ${KEEP} develop builds** and the **latest ${KEEP_RC} release"
-    echo "> candidates** per release line. Older develop builds and release candidates"
-    echo "> are pruned as they are superseded, and a release's candidates are removed"
-    echo "> once it ships. Those versions still exist in the container and Helm"
+    echo "> candidates** per release line -- candidates are KEPT after their release"
+    echo "> ships, as the audit trail of the release run. Older develop builds and"
+    echo "> release candidates are pruned as they are superseded. Those versions"
+    echo "> still exist in the container and Helm"
     echo "> registries — they are simply not listed here. This page is generated"
     echo "> automatically from commit history; do not edit it by hand."
   fi

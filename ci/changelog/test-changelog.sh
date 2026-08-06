@@ -91,7 +91,7 @@ contains "rc.8 diffs vs rc.7"           "$rc8" "changes since 1.1.0-rc.7"
 contains "rc.8 delta has its commit"    "$rc8" "RC work two"
 excludes "rc.8 delta omits rc.7 commit" "$rc8" "RC work one"
 agg=$(cat "$PAGES/demo/CHANGELOG.md")
-contains "aggregate has RC-in-progress section" "$agg" "Release candidates (in progress)"
+contains "aggregate has an RC section" "$agg" "# Release candidates"
 
 echo
 echo "cut release 1.0.1 (frozen)"
@@ -265,7 +265,7 @@ contains "has Develop builds section" "$agg" "# Develop builds"
 excludes "table drops pruned develop" "$agg" "0.0.0-develop.10"
 
 echo
-echo "retention: RCs keep last KEEP per line; a release deletes that line's RCs"
+echo "retention: RCs keep last KEEP per line; a release KEEPS them (audit trail)"
 git -C "$rd" checkout -q -b 2.0
 for n in 20 21 22 23 24; do git -C "$rd" commit -q --allow-empty -m "G2P-$n rc $n"; rbuild "2.0.0-rc.$n"; done
 check "rc.24 kept"   yes "$(present 2.0.0-rc.24)"
@@ -274,9 +274,10 @@ check "rc.21 pruned"  no "$(present 2.0.0-rc.21)"
 git -C "$rd" tag 2.0.0
 rbuild 2.0.0 true
 check "release 2.0.0 written"     yes "$(present 2.0.0)"
-check "rc.24 deleted by release"   no "$(present 2.0.0-rc.24)"
-check "rc.22 deleted by release"   no "$(present 2.0.0-rc.22)"
-excludes "table has no RCs after release" "$(cat "$Pr/rd/CHANGELOG.md")" "2.0.0-rc."
+check "rc.24 SURVIVES the release" yes "$(present 2.0.0-rc.24)"
+check "rc.22 SURVIVES the release" yes "$(present 2.0.0-rc.22)"
+contains "table still lists the RCs" "$(cat "$Pr/rd/CHANGELOG.md")" "2.0.0-rc.24"
+contains "RC section still rendered"  "$(cat "$Pr/rd/CHANGELOG.md")" "# Release candidates"
 rm -rf "$rd" "$Pr"
 
 echo
