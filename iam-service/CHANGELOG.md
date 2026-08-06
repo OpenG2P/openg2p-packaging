@@ -6,9 +6,21 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.72`](#v-0-0-0-develop-72) | 2026-08-06 | develop |
 | [`0.0.0-develop.70`](#v-0-0-0-develop-70) | 2026-08-06 | develop |
 
 # Develop builds
+
+<a id="v-0-0-0-develop-72"></a>
+
+## iam-service — develop 0.0.0-develop.72 (2026-08-06)
+
+_commit `f7f1d44` · changes since 0.0.0-develop.70_
+<!-- build:0.0.0-develop.72 revision:f7f1d448e121e19cca13088ba6251f6921564bd3 ts:1786019264 -->
+
+### Changes since 0.0.0-develop.70
+
+- [G2P-5479](https://openg2p.atlassian.net/browse/G2P-5479) Add policy filter preview and view data policy modal components ([`5234a36`](https://github.com/OpenG2P/iam-service/commit/5234a3655cc2f27e4bb0471743df402ff66df143))
 
 <a id="v-0-0-0-develop-70"></a>
 
@@ -47,8 +59,9 @@ _commit `c607223` · changes since v1.3.0_
 
 > **What's shown here.** This catalogue lists **every stable release**, plus
 > the **latest 20 develop builds** and the **latest 10 release
-> candidates** per release line. Older develop builds and release candidates
-> are pruned as they are superseded, and a release's candidates are removed
-> once it ships. Those versions still exist in the container and Helm
+> candidates** per release line -- candidates are KEPT after their release
+> ships, as the audit trail of the release run. Older develop builds and
+> release candidates are pruned as they are superseded. Those versions
+> still exist in the container and Helm
 > registries — they are simply not listed here. This page is generated
 > automatically from commit history; do not edit it by hand.
