@@ -1,0 +1,3 @@
+name=iam-service
+kind=service
+repo=https://github.com/OpenG2P/iam-service
