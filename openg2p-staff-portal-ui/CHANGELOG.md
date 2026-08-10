@@ -6,10 +6,22 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.60`](#v-0-0-0-develop-60) | 2026-08-10 | develop |
 | [`0.0.0-develop.58`](#v-0-0-0-develop-58) | 2026-08-06 | develop |
 | [`0.0.0-develop.56`](#v-0-0-0-develop-56) | 2026-08-04 | develop |
 
 # Develop builds
+
+<a id="v-0-0-0-develop-60"></a>
+
+## openg2p-staff-portal-ui — develop 0.0.0-develop.60 (2026-08-10)
+
+_commit `249ccf8` · changes since 0.0.0-develop.58_
+<!-- build:0.0.0-develop.60 revision:249ccf898f1f8aa4d1119e5a3a5f82ae12e70174 ts:1786358543 -->
+
+### Changes since 0.0.0-develop.58
+
+- [G2P-5489](https://openg2p.atlassian.net/browse/G2P-5489) Remove redundant sharp install and chown layers from Dockerfile ([`850420b`](https://github.com/OpenG2P/openg2p-staff-portal-ui/commit/850420b2e78e4abc5fbdb8b6842999efe81b1290))
 
 <a id="v-0-0-0-develop-58"></a>
 
@@ -48,8 +60,9 @@ _commit `c5e87ba` · changes since v1.1.0_
 
 > **What's shown here.** This catalogue lists **every stable release**, plus
 > the **latest 20 develop builds** and the **latest 10 release
-> candidates** per release line. Older develop builds and release candidates
-> are pruned as they are superseded, and a release's candidates are removed
-> once it ships. Those versions still exist in the container and Helm
+> candidates** per release line -- candidates are KEPT after their release
+> ships, as the audit trail of the release run. Older develop builds and
+> release candidates are pruned as they are superseded. Those versions
+> still exist in the container and Helm
 > registries — they are simply not listed here. This page is generated
 > automatically from commit history; do not edit it by hand.
