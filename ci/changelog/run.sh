@@ -250,6 +250,23 @@ else
   summarise_into "$work/notes.md" "$work/summary.md"
 fi
 
+# What a RELEASE was promoted from. A release never rebuilds: it retags the artifact
+# already built at ITS OWN commit, which derive-version names deterministically from
+# the commit count -- `<version>-rc.<count>` on a release line, or the develop build
+# of the same commit. Naming it on the page answers the question the page otherwise
+# cannot: "is 1.3.0 any different from 1.3.0-rc.151?" (No -- same commit, same bytes.)
+# If the tagged commit had NO build, the pipeline fails earlier with "nothing to
+# promote", so a published release always has one.
+PROMOTED_FROM=""
+if [ "$MODE" = frozen ]; then
+  _count=$(git rev-list --count HEAD 2>/dev/null || echo "")
+  if [ -n "$_count" ]; then
+    for _cand in "${VERSION}-rc.${_count}" "0.0.0-develop.${_count}"; do
+      if [ -f "${vdir}/${_cand}.md" ]; then PROMOTED_FROM="$_cand"; break; fi
+    done
+  fi
+fi
+
 # Commit time (epoch) -> the aggregate sorts the summary table by this, so versions
 # published the same day still order correctly. Reproducible from the revision.
 TS=$(git show -s --format=%ct "$REVISION" 2>/dev/null || echo 0)
@@ -306,6 +323,7 @@ PAGES_DIR="$PAGES_DIR" REPO="$REPO" REPO_DISPLAY="$REPO_DISPLAY" VERSION="$VERSI
   RELEASE_NOTES_FILE="$RELEASE_NOTES_FILE" \
   BRANCH="${BRANCH:-}" RECENT_FILE="$RECENT_FILE" KEEP="$KEEP" KEEP_RC="$KEEP_RC" \
   CHART_PACKAGE_URL="${CHART_PACKAGE_URL:-}" CHART_LABEL="${CHART_LABEL:-}" \
+  PROMOTED_FROM="$PROMOTED_FROM" \
   bash "$HERE/render.sh"
 
 PAGES_DIR="$PAGES_DIR" bash "$HERE/render-root-index.sh"

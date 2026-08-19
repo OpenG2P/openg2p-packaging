@@ -423,5 +423,26 @@ contains "library: v-tag listed in table"      "$(cat "$Plb/mylib/CHANGELOG.md")
 rm -rf "$lb" "$Plb"
 
 echo
+echo "a release states which build it is identical to (promoted, not rebuilt)"
+pf=$(mktemp -d); Ppf=$(mktemp -d)
+git -C "$pf" init -q -b develop; git -C "$pf" config user.email t@t; git -C "$pf" config user.name t
+git -C "$pf" commit -q --allow-empty -m "G2P-80 base"
+git -C "$pf" commit -q --allow-empty -m "G2P-81 release work"
+git -C "$pf" checkout -q -b 1.3
+pfrun(){ ( cd "$pf" && REPO=pf REPO_DISPLAY=pf VERSION="$1" FROZEN="${2:-false}" \
+   REVISION=$(git -C "$pf" rev-parse HEAD) PAGES_DIR="$Ppf" SKIP_AI=true DATE=2026-08-06 \
+   bash "$HERE/run.sh" >/dev/null 2>&1 ); }
+cnt=$(git -C "$pf" rev-list --count HEAD)
+pfrun "1.3.0-rc.${cnt}"          # the RC at this commit
+git -C "$pf" tag 1.3.0
+pfrun 1.3.0 true                 # the release, SAME commit
+rp=$(cat "$Ppf/pf/versions/1.3.0.md")
+contains "release names its source build" "$rp" "Same artifact as [\`1.3.0-rc.${cnt}\`]"
+contains "release says not rebuilt"       "$rp" "promoted"
+contains "release says no code changed"   "$rp" "No code changed between them"
+check    "the RC page survives"           yes "$([ -f "$Ppf/pf/versions/1.3.0-rc.${cnt}.md" ] && echo yes || echo no)"
+rm -rf "$pf" "$Ppf"
+
+echo
 echo "$pass passed, $fail failed"
 [ "$fail" -eq 0 ]

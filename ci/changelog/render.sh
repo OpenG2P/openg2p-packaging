@@ -29,6 +29,7 @@
 #                              what the version contains -- pinned dependencies,
 #                              image tags). Empty -> the line is omitted.
 #        CHART_LABEL           what to call it, e.g. "openg2p-nsr 1.1.0"
+#        PROMOTED_FROM         (frozen only) the build this release retags
 #   library (a library repo's non-tag build) also uses:
 #        BRANCH                the moving branch being tracked (page id)
 #        RECENT_FILE           the last KEEP commits, as a bullet list
@@ -89,12 +90,12 @@ delta_body() {   # $1 = heading line
   echo "_commit \`${short_rev}\` · changes since ${base_label}${art}_"
   echo "${marker}"
   echo
-      # Point at the artifact itself: everything a version actually contains --
-      # its pinned chart dependencies and image tags -- is inside the package.
-      if [ -n "${CHART_PACKAGE_URL:-}" ]; then
-        echo "**Chart:** [${CHART_LABEL:-download the chart}](${CHART_PACKAGE_URL})"
-        echo
-      fi
+  # Point at the artifact itself: everything a version actually contains -- its
+  # pinned chart dependencies and image tags -- is inside the package.
+  if [ -n "${CHART_PACKAGE_URL:-}" ]; then
+    echo "**Chart:** [${CHART_LABEL:-download the chart}](${CHART_PACKAGE_URL})"
+    echo
+  fi
   # A trivial delta (0-1 commits) skips the AI summary: the commit list IS the summary.
   if [ "${SUMMARY_OMIT:-false}" != true ]; then
     echo "### Summary"
@@ -125,6 +126,16 @@ case "$MODE" in
         echo "_commit \`${short_rev}\` · first release${art}_"
       fi
       echo
+      # The "Changes" below are cumulative since the previous RELEASE, which leaves one
+      # question unanswered: does this release differ from the last candidate? It never
+      # does -- a release retags the artifact built at its own commit. Say so, so nobody
+      # has to guess whether something slipped in between the RC and the tag.
+      if [ -n "${PROMOTED_FROM:-}" ]; then
+        promoted_anchor=$(printf 'v-%s' "$(printf '%s' "$PROMOTED_FROM" | sed 's/[^A-Za-z0-9]/-/g')")
+        echo "**Same artifact as [\`${PROMOTED_FROM}\`](#${promoted_anchor})** — built from the"
+        echo "same commit and *promoted* (retagged), not rebuilt. No code changed between them."
+        echo
+      fi
       # Point at the artifact itself: everything a version actually contains --
       # its pinned chart dependencies and image tags -- is inside the package.
       if [ -n "${CHART_PACKAGE_URL:-}" ]; then
