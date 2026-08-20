@@ -6,11 +6,23 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.78`](#v-0-0-0-develop-78) | 2026-08-20 | develop |
 | [`0.0.0-develop.77`](#v-0-0-0-develop-77) | 2026-08-10 | develop |
 | [`0.0.0-develop.72`](#v-0-0-0-develop-72) | 2026-08-06 | develop |
 | [`0.0.0-develop.70`](#v-0-0-0-develop-70) | 2026-08-06 | develop |
 
 # Develop builds
+
+<a id="v-0-0-0-develop-78"></a>
+
+## iam-service — develop 0.0.0-develop.78 (2026-08-20)
+
+_commit `9de210b` · changes since 0.0.0-develop.77_
+<!-- build:0.0.0-develop.78 revision:9de210b49892450a651173bdd85538db21e692b9 ts:1787200350 -->
+
+### Changes since 0.0.0-develop.77
+
+- [G2P-4929](https://openg2p.atlassian.net/browse/G2P-4929) Wire iam-agent-portal-api into the IAM chart behind a disabled-by-default switch ([`9de210b`](https://github.com/OpenG2P/iam-service/commit/9de210b49892450a651173bdd85538db21e692b9))
 
 <a id="v-0-0-0-develop-77"></a>
 
