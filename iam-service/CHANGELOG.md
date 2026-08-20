@@ -6,12 +6,24 @@ _Published automatically._
 
 | Version | Date | Type |
 | --- | --- | --- |
+| [`0.0.0-develop.80`](#v-0-0-0-develop-80) | 2026-08-20 | develop |
 | [`0.0.0-develop.78`](#v-0-0-0-develop-78) | 2026-08-20 | develop |
 | [`0.0.0-develop.77`](#v-0-0-0-develop-77) | 2026-08-10 | develop |
 | [`0.0.0-develop.72`](#v-0-0-0-develop-72) | 2026-08-06 | develop |
 | [`0.0.0-develop.70`](#v-0-0-0-develop-70) | 2026-08-06 | develop |
 
 # Develop builds
+
+<a id="v-0-0-0-develop-80"></a>
+
+## iam-service — develop 0.0.0-develop.80 (2026-08-20)
+
+_commit `6eac6a9` · changes since 0.0.0-develop.78_
+<!-- build:0.0.0-develop.80 revision:6eac6a995e00b392fdf65b7a5a5faf983b14b38e ts:1787201110 -->
+
+### Changes since 0.0.0-develop.78
+
+- [G2P-5537](https://openg2p.atlassian.net/browse/G2P-5537) Refactor API routes and hooks for attribute management; streamline payload structures and enhance response handling ([`42d17ed`](https://github.com/OpenG2P/iam-service/commit/42d17edb31e640c3e2ac580c381309d1dc7f5055))
 
 <a id="v-0-0-0-develop-78"></a>
 
