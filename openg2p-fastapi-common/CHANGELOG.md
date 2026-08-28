@@ -4,29 +4,29 @@ _Published automatically._
 
 **Repository:** [github.com/OpenG2P/openg2p-fastapi-common](https://github.com/OpenG2P/openg2p-fastapi-common)
 
-| Version | Date | Type |
-| --- | --- | --- |
-| [`develop`](#v-branch-develop) | 2026-08-24 | branch |
+| Version | Date | Type | Notes |
+| --- | --- | --- | --- |
+| [`develop`](#v-branch-develop) | 2026-08-28 | branch |  |
 
 # Branches (moving)
 
 <a id="v-branch-develop"></a>
 
-## openg2p-fastapi-common — `develop` branch (2026-08-24)
+## openg2p-fastapi-common — `develop` branch (2026-08-28)
 
-_moving branch · latest commit `6a5ed6d` · baseline: v1.1.5_
-<!-- build:develop revision:6a5ed6dea154808836ba540d1fa46d401e2fac77 ts:1787558752 -->
+_moving branch · latest commit `57a7bb9` · baseline: v1.1.5_
+<!-- build:develop revision:57a7bb9148dcc68f6d6f079e5f664777a96150dc ts:1787881502 -->
 
 ### Summary
 
 _Changes on `develop` since v1.1.5:_
 
 - **Major:** Repository migration to GitLab reflected in README updates and formatting fixes.
-- Connection management: Enabled SQLAlchemy connection pool pre-ping and recycling to prevent stale connections, addressing HTTP 500 errors in long-running pods.
+- Connection management: Enabled SQLAlchemy connection-pool pre-ping and recycling to prevent stale connections, addressing HTTP 500 errors in long-running pods.
 - Security enhancements: Added middleware for security headers in API responses and implemented tests to verify their presence.
-- Library management: Introduced changelog tracking for library updates and removed the obsolete manual tag.yml file.
+- Library management: Introduced changelog tracking for reusable images and removed the obsolete manual tag.yml file.
 - Key management improvements: Added local crypto management to bypass Keymanager and implemented caching for partner management service keys.
-- Code quality: Fixed ruff C408 issues in tests and applied pre-commit style fixes.
+- Code quality: Fixed ruff C408 issues in tests and applied pre-commit style fixes across the codebase.
 
 ### Recent commits (latest 5)
 
