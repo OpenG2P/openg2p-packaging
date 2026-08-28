@@ -128,12 +128,15 @@ on:
         default: false
       changelog-repo:
         required: false
+        # The catalogue has its own repo (published at openg2p.github.io/versions).
+        # It used to be this project's gh-pages branch, which put a high-churn
+        # generated site in the same repo as the CI that generates it.
         type: string
-        default: openg2p/openg2p-packaging
+        default: openg2p/versions
       changelog-branch:
         required: false
         type: string
-        default: gh-pages
+        default: develop
       changelog_skip_ai:
         description: 'Publish the changelog with human notes only, no AI summary.'
         required: false
