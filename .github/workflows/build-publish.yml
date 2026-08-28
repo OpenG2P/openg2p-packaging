@@ -763,7 +763,6 @@ jobs:
           git config user.email "bot@openg2p.org"
           # Regenerate our files onto the latest branch tip each attempt: many
           # repos push here, and per-repo folders keep conflicts rare.
-          src="${{ github.workspace }}/changelog-pages"
           attempt() {
             # A fetch failure (no access to the changelog repo, network) must end the
             # attempt here. Falling through would reset onto a stale local ref and
