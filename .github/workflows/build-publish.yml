@@ -765,12 +765,27 @@ jobs:
           # repos push here, and per-repo folders keep conflicts rare.
           src="${{ github.workspace }}/changelog-pages"
           attempt() {
-            git fetch -q origin "$BRANCH"
+            # A fetch failure (no access to the changelog repo, network) must end the
+            # attempt here. Falling through would reset onto a stale local ref and
+            # produce a confusing result far from the real cause.
+            git fetch -q origin "$BRANCH" || return 1
             git stash -q --include-untracked || true
             git reset -q --hard "origin/$BRANCH"
             git stash pop -q 2>/dev/null || true
             git add -A
-            git diff --quiet --cached && { echo "no changelog change"; return 0; }
+            if git diff --quiet --cached; then
+              # Nothing staged. On the FIRST attempt that legitimately means this
+              # version's page is already published -- a re-run of the same commit.
+              #
+              # On a RETRY it means something else: the previous attempt committed and
+              # then failed to push, and the reset above has just discarded that
+              # commit. Returning success here would end the loop green having
+              # published nothing, which is exactly how a 403 on the changelog repo
+              # turned into a passing job that wrote no catalogue entry.
+              [ "$i" -eq 1 ] && { echo "no changelog change"; return 0; }
+              echo "::error::changelog changes were lost between attempts -- see the first failure above"
+              return 1
+            fi
             git commit -q -m "changelog: ${REPO} ${VERSION}"
             git push -q origin "HEAD:$BRANCH"
           }
