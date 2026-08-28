@@ -691,6 +691,47 @@ jobs:
           echo "jira_base=$(yq '.jira_base // ""' "$f")" >> "$GITHUB_OUTPUT"
           echo "jira_project=$(yq '.jira_project // ""' "$f")" >> "$GITHUB_OUTPUT"
 
+      # Links the catalogue shows for this version. Computed here rather than passed
+      # between jobs: the chart job is conditional (a library or a no-chart repo skips
+      # it), so depending on its outputs would drop the links exactly where the job
+      # did not run.
+      - name: Catalogue links
+        id: links
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+          IMAGES_JSON: ${{ inputs.images }}
+          CHART_PATH: ${{ inputs.chart-path }}
+          HELM_URL: ${{ inputs.helm-repo-url }}
+          REGISTRY: ${{ inputs.registry }}
+          NAMESPACE: ${{ inputs.namespace }}
+        run: |
+          set -euo pipefail
+          # Direct link to THIS version's packaged chart. Everything a version
+          # actually contains -- pinned chart dependencies, image tags -- is inside
+          # that package, so the page points at the artifact rather than trying to
+          # duplicate (and drift from) its contents.
+          if [ -n "$CHART_PATH" ] && [ -f "${CHART_PATH}/Chart.yaml" ]; then
+            name=$(yq '.name' "${CHART_PATH}/Chart.yaml")
+            {
+              echo "chart_label=${name} ${VERSION}"
+              echo "chart_url=${HELM_URL}/${name}-${VERSION}.tgz"
+            } >> "$GITHUB_OUTPUT"
+          fi
+          # Where this repo's images live, for the page header. A repo with ONE image
+          # links that image's page; with several, the namespace -- the header carries
+          # a single link, and pointing at one of five would be arbitrary. A library
+          # declares no images and gets no link at all.
+          n=$(printf '%s' "${IMAGES_JSON:-[]}" | jq 'length')
+          if [ "$REGISTRY" = "docker.io" ] && [ "$n" -ge 1 ]; then
+            if [ "$n" -eq 1 ]; then
+              repo=$(printf '%s' "$IMAGES_JSON" \
+                | jq -r --arg ns "$NAMESPACE" '.[0].repo // ($ns + "/" + .[0].name)')
+              echo "images_url=https://hub.docker.com/r/${repo}" >> "$GITHUB_OUTPUT"
+            else
+              echo "images_url=https://hub.docker.com/u/${NAMESPACE}" >> "$GITHUB_OUTPUT"
+            fi
+          fi
+
       - name: Checkout changelog branch
         uses: actions/checkout@v4
         with:
@@ -708,6 +749,9 @@ jobs:
           REVISION: ${{ needs.version.outputs.revision }}
           PAGES_DIR: ${{ github.workspace }}/changelog-pages
           REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+          IMAGES_URL: ${{ steps.links.outputs.images_url }}
+          CHART_PACKAGE_URL: ${{ steps.links.outputs.chart_url }}
+          CHART_LABEL: ${{ steps.links.outputs.chart_label }}
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
           # kind + the moving branch drive library mode (rolling per-branch page keyed
           # by SHA, grouped under "Libraries" in the catalogue).
