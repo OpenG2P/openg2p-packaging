@@ -175,6 +175,17 @@ on:
 
 jobs:
   version:
+    # Dependabot opens a branch per security advisory, and `branches: ["**"]` in the
+    # callers means each one starts a full build. Those runs can never succeed:
+    # GitHub deliberately withholds Actions secrets from Dependabot-triggered events,
+    # so they die at `docker login` -- burning minutes and filling the run list with
+    # red that hides real failures.
+    #
+    # Gating the FIRST job skips everything downstream, so the run shows as skipped
+    # rather than failed, and it applies to every caller without editing their stubs.
+    # Building other branches stays deliberate: a feature branch builds images at
+    # 0.0.0-<branch>.N and skips chart/changelog, which is the smoke-test path.
+    if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.v.outputs.version }}
