@@ -264,7 +264,11 @@ jobs:
 
   images:
     needs: version
-    if: inputs.changelog_kind != 'library'   # a library builds/promotes no image
+    # A library builds no image. A CHART-ONLY repo declares none either -- its chart
+    # deploys upstream third-party images consumed as-is -- and an empty matrix makes
+    # the job fail to materialise rather than skip, which reads as a failed run with
+    # no jobs listed and no error.
+    if: inputs.changelog_kind != 'library' && toJSON(fromJSON(inputs.images)) != '[]'
     runs-on: ubuntu-latest
     # packages: write lets us push to GHCR with the built-in GITHUB_TOKEN. The
     # CALLER stub must also grant it (permissions are capped by the caller).
