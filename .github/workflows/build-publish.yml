@@ -414,7 +414,16 @@ jobs:
 
   chart:
     needs: [version, images]
-    if: inputs.chart-path != '' && needs.version.outputs.publish_chart == 'true'
+    # always() so a SKIPPED images job does not skip the chart with it: a chart-only
+    # repo declares no images, and a library skips them too. A FAILED images job must
+    # still block the chart -- publishing a chart whose images did not build is the
+    # drift this pipeline exists to prevent -- hence the explicit result check rather
+    # than a bare always().
+    if: >-
+      always() &&
+      needs.version.result == 'success' &&
+      needs.images.result != 'failure' && needs.images.result != 'cancelled' &&
+      inputs.chart-path != '' && needs.version.outputs.publish_chart == 'true'
     runs-on: ubuntu-latest
     # packages: write for the OCI push path (harmless for the HTTP path).
     permissions:
