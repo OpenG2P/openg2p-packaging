@@ -219,10 +219,22 @@ fi
 if [ "$MODE" = frozen ] || [ -z "$BASELINE" ]; then
   BASELINE="$FROM"; BASE_LABEL="${PREV_VERSION:-}"
 fi
+# No baseline at all -- no previous page of this kind, and no release tag reachable
+# from HEAD. That is a FIRST build in a fresh catalogue: an untagged repo would
+# otherwise dump its entire history onto one page, which is unreadable and not what
+# anyone wants from a per-build delta. Cap it at the newest FIRST_PAGE_LIMIT commits
+# and say so, rather than pretending the page covers everything.
+FIRST_PAGE_LIMIT="${FIRST_PAGE_LIMIT:-20}"
+NOTES_LIMIT=""
+if [ -z "$BASELINE" ] && [ "$MODE" != library ]; then
+  NOTES_LIMIT="$FIRST_PAGE_LIMIT"
+  BASE_LABEL="the start (showing the latest ${FIRST_PAGE_LIMIT} commits)"
+fi
 [ -n "$BASE_LABEL" ] || BASE_LABEL="the start"
 
 # ---- the notes for THIS page: exactly the range decided above
-RANGE_FROM="$BASELINE" RANGE_TO=HEAD bash "$HERE/assemble.sh" >"$work/notes.md" || true
+RANGE_FROM="$BASELINE" RANGE_TO=HEAD RANGE_LIMIT="$NOTES_LIMIT" \
+  bash "$HERE/assemble.sh" >"$work/notes.md" || true
 
 # An empty delta on develop means the pipeline re-ran on the same commit -- nothing to
 # publish. An RC branched at the same commit as the last develop build legitimately has

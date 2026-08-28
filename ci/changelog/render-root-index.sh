@@ -15,6 +15,11 @@
 #                          registry and mentions per-repo Container Registries
 #        DOCS_URL          versioning & CI docs (has a default)
 #
+# A `.notice` file at the root of PAGES_DIR, if present, is emitted verbatim (as
+# markdown) just under the intro. It is written and edited BY HAND -- the one place
+# to say something about the catalogue as a whole, e.g. where versions published
+# before a platform move are archived. Absent by default; nothing is generated.
+#
 # Each repo's clickable "repository" link comes from PAGES_DIR/<repo>/.meta
 # (written by the changelog run) -- the repo path can't be reconstructed from the
 # flattened folder name once subgroups exist, so it is stored, not guessed.
@@ -81,6 +86,11 @@ fi
     echo "See the **[versioning & CI docs](${docs_url})** for how these are produced."
   fi
   echo
+  # Hand-written site-wide notice, verbatim. See the header.
+  if [ -s "${PAGES_DIR}/.notice" ]; then
+    cat "${PAGES_DIR}/.notice"
+    echo
+  fi
   if [ -z "$repos" ]; then
     echo "_No changelogs published yet._"
   else
