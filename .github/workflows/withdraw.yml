@@ -84,8 +84,8 @@ env:
   HELM_REPO: openg2p/openg2p-helm
   HELM_BRANCH: gh-pages
   HELM_URL: https://openg2p.github.io/openg2p-helm
-  CHANGELOG_REPO: openg2p/openg2p-packaging
-  CHANGELOG_BRANCH: gh-pages
+  CHANGELOG_REPO: openg2p/versions
+  CHANGELOG_BRANCH: develop
 
 jobs:
   withdraw:
@@ -140,6 +140,8 @@ jobs:
           FROM: ${{ inputs.from }}
           TO: ${{ inputs.to }}
           KEEP_LAST: ${{ inputs.keep_last }}
+          REPO: ${{ inputs.repo }}
+          GH_TOKEN: ${{ secrets.OPENG2P_BOT_GITHUB_PAT || github.token }}
         run: |
           set -euo pipefail
           if [ -n "$CHART" ]; then
@@ -151,7 +153,19 @@ jobs:
             exit 1
           fi
           echo "published versions: $(wc -l < /tmp/published.txt)"
+
+          # A build can be MARKED known-good in the catalogue without being released
+          # (<repo>/.marked in the versions repo). select.sh refuses to withdraw those:
+          # deleting the image and chart of a version we told people to rely on is the
+          # mistake worth making impossible. Best-effort fetch -- if the catalogue is
+          # unreachable the file is simply absent and nothing is skipped.
+          : > /tmp/marked.txt
+          gh api "repos/${CHANGELOG_REPO}/contents/${REPO}/.marked?ref=${CHANGELOG_BRANCH}" \
+            -H 'Accept: application/vnd.github.raw' > /tmp/marked.txt 2>/dev/null || : > /tmp/marked.txt
+          [ -s /tmp/marked.txt ] && echo "marked (protected) versions: $(wc -l < /tmp/marked.txt)"
+
           MODE="$MODE" VERSION="$VERSION" FROM="$FROM" TO="$TO" KEEP_LAST="$KEEP_LAST" \
+            MARKED_FILE=/tmp/marked.txt \
             bash .openg2p-ci/ci/withdraw/select.sh < /tmp/published.txt > /tmp/selected.txt
           echo "--- will withdraw ---"; cat /tmp/selected.txt
           echo "count=$(wc -l < /tmp/selected.txt)" >> "$GITHUB_OUTPUT"
