@@ -80,7 +80,12 @@ tar -xzOf "$tgz" "${DEPENDENCY}/values.yaml" > "$work/values.yaml" 2>/dev/null |
 
 [ -s "${CHART_PATH}/values.yaml" ] || die "wrapper chart has no values.yaml at ${CHART_PATH}/values.yaml"
 
+# The wrapper's own questions, for keys that belong to no dependency.
+OWN_QUESTIONS="${CHART_PATH}/questions.own.yaml"
+[ -f "$OWN_QUESTIONS" ] && echo "  ..  appending $(basename "$OWN_QUESTIONS")"
+
 ALIAS="$ALIAS" SRC="$work/questions.yaml" VALUES="$work/values.yaml" \
+OWN="$OWN_QUESTIONS" \
 OWN_VALUES="${CHART_PATH}/values.yaml" \
 OUT="${CHART_PATH}/questions.yaml" python3 - <<'PY'
 import json, os, re, sys
@@ -204,6 +209,29 @@ for line in src:
 
     result.append(line)
 
+# The wrapper's OWN questions, appended verbatim.
+#
+# A wrapper is not only a values overlay any more: farmer-registry and NSR own
+# templates of their own (the analytics chain -- bulk sample, reporting views,
+# dashboards) whose keys live at the wrapper's root and exist in no dependency.
+# Because this file REWRITES questions.yaml wholesale, those keys could never
+# appear in the Rancher form no matter where they were written -- the generated
+# file overwrote them at package time -- so the only way to set them was the YAML
+# editor beside the form, which is exactly where an operator does not look.
+#
+# Appended after the inherited block and NOT path-prefixed: these variables
+# already address the root chart.
+own = os.environ.get("OWN", "")
+n_own = 0
+if own and os.path.isfile(own):
+    own_lines = open(own).read().splitlines()
+    n_own = sum(1 for line in own_lines if VAR_RE.match(line))
+    if n_own:
+        result.append("")
+        result.append("# ---- questions owned by this chart "
+                      "(appended by inherit-questions.sh, do not edit above) ----")
+        result.extend(own_lines)
+
 if n_vars == 0:
     die("dependency questions.yaml declares no variables -- refusing to write an empty form")
 if n_global + n_scoped != n_vars:
@@ -213,6 +241,8 @@ with open(out_path, "w") as fh:
     fh.write("\n".join(result) + "\n")
 
 print("  ok  questions.yaml inherited from %s" % os.path.basename(os.environ["SRC"]))
+if n_own:
+    print("      + %d question(s) owned by this chart, appended unprefixed" % n_own)
 print("      %d variables: %d global.* kept, %d prefixed with '%s.'"
       % (n_vars, n_global, n_scoped, alias))
 print("      %d defaults backfilled (%d from this chart's own overlay, %d from "

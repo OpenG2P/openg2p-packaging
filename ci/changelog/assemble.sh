@@ -32,11 +32,32 @@ fi
 # COMMIT_PATH is the forge's commit path segment: `commit` for GitHub (default),
 # `-/commit` for GitLab. tformat: one trailing newline per entry, nothing when empty.
 base="${REPO_URL:-}"
-if [ -n "$base" ]; then
-  fmt="- %s ([\`%h\`](${base}/${COMMIT_PATH:-commit}/%H))"
-else
-  fmt="- %s (\`%h\`)"
-fi
-# ${LIMIT:+…} is unquoted so an empty LIMIT expands to nothing; LIMIT is numeric so
-# word-splitting into `-n N` is safe (and works on bash 3.2 without arrays).
-git log "$range" ${LIMIT:+-n $LIMIT} --no-merges --no-color --pretty=tformat:"$fmt" 2>/dev/null || true
+
+# A commit subject is UNTRUSTED TEXT on its way into HTML, and markdown passes raw
+# HTML straight through. A subject that mentions a tag therefore emits a real
+# element — and for `<style>`, `<script>`, `<textarea>` or `<title>` the HTML
+# parser then treats everything after it as that element's raw text.
+#
+# Not hypothetical. A commit reading "Drop the inline maps <style>; the platform
+# injects the shared theme" opened a real <style> on the published page and
+# swallowed 29,686 characters: the five changelog entries below it vanished in a
+# browser while curl still returned a complete document, because curl does not
+# parse. The page looked truncated and the build looked broken; neither was.
+#
+# So the subject is escaped, and ONLY the subject — the sha link is built here and
+# has to stay live markdown. Ampersand first, or the escapes escape themselves.
+# Emitted through a delimiter because git's --pretty cannot escape a field.
+SEP=$'\x1f'   # unit separator: cannot appear in a commit subject
+git log "$range" ${LIMIT:+-n $LIMIT} --no-merges --no-color \
+    --pretty=tformat:"%s${SEP}%h${SEP}%H" 2>/dev/null \
+  | awk -v FS="$SEP" -v base="$base" -v path="${COMMIT_PATH:-commit}" '
+      NF >= 3 {
+        s = $1
+        gsub(/&/, "\\&amp;", s)
+        gsub(/</, "\\&lt;",  s)
+        gsub(/>/, "\\&gt;",  s)
+        if (base != "")
+          printf "- %s ([`%s`](%s/%s/%s))\n", s, $2, base, path, $3
+        else
+          printf "- %s (`%s`)\n", s, $2
+      }' || true

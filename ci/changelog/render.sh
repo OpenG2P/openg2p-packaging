@@ -69,6 +69,13 @@ base_label="${BASE_LABEL:-$rel_label}"
 art=""
 [ -n "${ARTIFACT_SOURCE:-}" ] && art=" · artifacts: \`${ARTIFACT_SOURCE}\`"
 
+# A version listed in <repo>/.marked has been declared known-good by hand ("Intermediate
+# Stable Version" and the like). Retention must not delete it: the whole point of marking
+# a build is that you can still find it later, and a develop page would otherwise age out
+# after KEEP builds and take the mark with it. Marked pages live until unmarked.
+marked_file="${repo_dir}/.marked"
+is_marked() { [ -f "$marked_file" ] && grep -q "^${1}|" "$marked_file" 2>/dev/null; }
+
 # Keep only the newest $2 pages named "<prefix>.<number>.md"; delete the rest.
 prune() {   # $1 = filename prefix, $2 = how many to keep
   local prefix="$1" keep="$2" esc
@@ -78,7 +85,11 @@ prune() {   # $1 = filename prefix, $2 = how many to keep
     | grep -E '^[0-9]+ ' \
     | sort -rn \
     | awk -v k="$keep" 'NR>k{print $2}' \
-    | while IFS= read -r f; do [ -n "$f" ] && rm -f "$f"; done || true
+    | while IFS= read -r f; do
+        [ -n "$f" ] || continue
+        is_marked "$(basename "$f" .md)" && continue   # marked -> exempt from retention
+        rm -f "$f"
+      done || true
 }
 
 # Emit a single-delta body: what changed since BASE_LABEL, and nothing else. Develop and
@@ -103,7 +114,10 @@ delta_body() {   # $1 = heading line
     printf '%s\n' "$summary"
     echo
   fi
-  echo "### Changes since ${base_label}"
+  # Just "Changes" -- the italic line above already says what the range is measured
+  # from, and repeating it in the heading reads as a stutter. Matches the release page,
+  # which has always used a bare "### Changes".
+  echo "### Changes"
   echo
   if [ -n "$cum_notes" ]; then
     printf '%s\n' "$cum_notes"

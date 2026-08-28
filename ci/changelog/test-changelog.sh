@@ -50,7 +50,8 @@ build 0.0.0-develop.3
 u=$(cat "$PAGES/demo/versions/0.0.0-develop.3.md")
 # no previous develop page yet -> baseline falls back to the last release tag
 contains "baseline is the last tag"  "$u" "changes since 1.0.0"
-contains "delta section header"      "$u" "### Changes since 1.0.0"
+contains "delta section header"      "$u" "### Changes"
+excludes "baseline not repeated in heading" "$u" "### Changes since"
 contains "lists the commit"          "$u" "signed JWTs"
 contains "jira linked"               "$u" "[G2P-3](https://openg2p.atlassian.net/browse/G2P-3)"
 contains "records a build marker"    "$u" "<!-- build:0.0.0-develop.3 revision:"
@@ -62,7 +63,8 @@ commit "G2P-4 Add JWKS rotation endpoint"
 build 0.0.0-develop.4
 u2=$(cat "$PAGES/demo/versions/0.0.0-develop.4.md")
 contains "diffs against previous develop" "$u2" "changes since 0.0.0-develop.3"
-contains "delta section header"           "$u2" "### Changes since 0.0.0-develop.3"
+contains "delta section header"           "$u2" "### Changes"
+excludes "baseline not repeated in heading" "$u2" "### Changes since"
 contains "marker advanced"                "$u2" "<!-- build:0.0.0-develop.4 revision:"
 contains "delta has the new commit"       "$u2" "JWKS rotation"
 # the whole point: an older commit already shown on develop.3 is NOT repeated here
@@ -442,6 +444,86 @@ contains "release says not rebuilt"       "$rp" "promoted"
 contains "release says no code changed"   "$rp" "No code changed between them"
 check    "the RC page survives"           yes "$([ -f "$Ppf/pf/versions/1.3.0-rc.${cnt}.md" ] && echo yes || echo no)"
 rm -rf "$pf" "$Ppf"
+
+# --- marking a develop build known-good, without releasing it ---------------
+#
+# Not every good build is shipped. A version can be declared "Intermediate Stable
+# Version" by adding a line to <repo>/.marked in the versions repo -- a plain,
+# hand-editable file, no tag and therefore no release. Two things must hold or the
+# mark is worthless: it shows in the table, and retention must never delete the page
+# it points at (a develop page would otherwise age out after KEEP builds).
+echo "a marked develop build is flagged and exempt from retention"
+mk=$(mktemp -d); Pmk=$(mktemp -d)
+git -C "$mk" init -q -b develop; git -C "$mk" config user.email t@t; git -C "$mk" config user.name t
+mkrun(){ git -C "$mk" commit -q --allow-empty -m "G2P-9$1 change $1"
+  ( cd "$mk" && REPO=mk REPO_DISPLAY=mk VERSION="0.0.0-develop.$1" FROZEN=false \
+      REVISION=$(git -C "$mk" rev-parse HEAD) PAGES_DIR="$Pmk" SKIP_AI=true DATE=2026-08-25 \
+      KEEP=3 bash "$HERE/run.sh" >/dev/null 2>&1 ); }
+mkrun 1
+# Mark build 1 by hand, exactly as an operator would edit the file.
+printf '0.0.0-develop.1|**Intermediate Stable Version** — verified on staging\n' > "$Pmk/mk/.marked"
+for n in 2 3 4 5; do mkrun "$n"; done      # KEEP=3, so 1 and 2 would normally be pruned
+check    "the marked page survives pruning"     yes "$([ -f "$Pmk/mk/versions/0.0.0-develop.1.md" ] && echo yes || echo no)"
+check    "an unmarked old page is still pruned" no  "$([ -f "$Pmk/mk/versions/0.0.0-develop.2.md" ] && echo yes || echo no)"
+mkagg=$(cat "$Pmk/mk/CHANGELOG.md")
+contains "table has a Notes column"  "$mkagg" "| Version | Date | Type | Notes |"
+# The note must also reach the version's own section on the page, and it must get
+# there WITHOUT rebuilding: marking happens long after the page was written, so
+# re-rendering only the aggregate has to be enough.
+PAGES_DIR="$Pmk" REPO=mk bash "$HERE/render-aggregate.sh" >/dev/null
+mkagg=$(cat "$Pmk/mk/CHANGELOG.md")
+contains "the note appears in the version's section" "$mkagg" "> **Note** — **Intermediate Stable Version** — verified on staging"
+contains "the note renders as written" "$mkagg" "**Intermediate Stable Version** — verified on staging"
+excludes "the note is not double-wrapped" "$mkagg" "***Intermediate"
+rm -rf "$mk" "$Pmk"
+
+# --- a NON-SemVer version must still reach the catalogue -------------------
+#
+# Some artefacts are not versioned by the derived SemVer scheme at all: the themed
+# Keycloak image is tagged 24.0.5-debian-12-r1-g2pN, chosen by the operator. Its page
+# was written correctly, but the aggregate selected releases by MATCHING a SemVer
+# pattern, so the version appeared in no section and the catalogue rendered an empty
+# table -- silently, with no error anywhere. Releases are now selected by EXCLUDING
+# the three transient shapes instead.
+echo "a non-SemVer version is listed as a release"
+nv=$(mktemp -d); Pnv=$(mktemp -d)
+git -C "$nv" init -q -b develop; git -C "$nv" config user.email t@t; git -C "$nv" config user.name t
+git -C "$nv" commit -q --allow-empty -m "G2P-90 add the agent portal theme"
+( cd "$nv" && REPO=nv REPO_DISPLAY=nv VERSION=24.0.5-debian-12-r1-g2p2 FROZEN=true \
+    REVISION=$(git -C "$nv" rev-parse HEAD) PAGES_DIR="$Pnv" SKIP_AI=true DATE=2026-08-25 \
+    bash "$HERE/run.sh" >/dev/null 2>&1 )
+nvp="$Pnv/nv/versions/24.0.5-debian-12-r1-g2p2.md"
+check    "the version page is written" yes "$([ -f "$nvp" ] && echo yes || echo no)"
+nvagg=$(cat "$Pnv/nv/CHANGELOG.md")
+contains "aggregate lists it in the table"   "$nvagg" "24.0.5-debian-12-r1-g2p2"
+contains "and renders its section"           "$nvagg" "# Releases"
+excludes "it is not treated as a develop build" "$nvagg" "develop 24.0.5"
+rm -rf "$nv" "$Pnv"
+
+# --- HTML in a commit subject must not escape into the page ----------------
+#
+# A subject reading "Drop the inline maps <style>" opened a real <style> element
+# on the published catalogue and swallowed the 29,686 characters after it — five
+# changelog entries invisible in a browser while curl returned a complete
+# document. `<style>`, `<script>`, `<textarea>` and `<title>` are the dangerous
+# ones: the HTML parser treats their contents as raw text, so anything following
+# is consumed rather than rendered.
+esc="$(mktemp -d)"; Pesc="$(mktemp -d)"
+git -C "$esc" init -q -b develop
+git -C "$esc" config user.email t@t.t; git -C "$esc" config user.name t
+git -C "$esc" commit -q --allow-empty -m "root"
+git -C "$esc" commit -q --allow-empty -m "Drop the inline maps <style>; theme injected at build"
+git -C "$esc" commit -q --allow-empty -m "Handle A & B and <script>alert(1)</script>"
+git -C "$esc" commit -q --allow-empty -m "It produces 0.0.0-develop.<n> and develop"
+notes=$(cd "$esc" && RANGE_FROM= RANGE_TO=HEAD REPO_URL=https://x/y COMMIT_PATH=-/commit \
+        bash "$HERE/assemble.sh")
+excludes "no raw <style> reaches the page"    "$notes" "<style>"
+excludes "no raw <script> reaches the page"   "$notes" "<script>"
+excludes "no raw unknown tag reaches the page" "$notes" "<n>"
+contains "style is escaped"                   "$notes" "&lt;style&gt;"
+contains "ampersand is escaped"               "$notes" "A &amp; B"
+contains "the sha link is still live markdown" "$notes" "](https://x/y/-/commit/"
+rm -rf "$esc" "$Pesc"
 
 echo
 echo "$pass passed, $fail failed"

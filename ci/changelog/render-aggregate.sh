@@ -23,8 +23,18 @@ KEEP_RC="${KEEP_RC:-10}"   # release candidates, per release line
 
 list_versions() { ls "$vdir" 2>/dev/null | sed 's/\.md$//'; }
 
-# Release pages: bare N.N.N and legacy v-prefixed vN.N.N (some libraries still tag v…).
-frozen=$(list_versions | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+$' | sort -rV || true)
+# Release pages: everything that is NOT a develop build, an RC, or a library branch
+# page. Defined by EXCLUSION on purpose. The three transient shapes are precisely
+# known, so anything else is a durable, immutable published version -- which covers
+# bare N.N.N, legacy v-prefixed vN.N.N (some libraries still tag v…), AND versions
+# that are not SemVer at all, such as an image tag like 24.0.5-debian-12-r1-g2p2.
+# Matching releases positively against a SemVer pattern silently dropped those from
+# every section: the page was written, and the catalogue listed nothing.
+frozen=$(list_versions \
+  | grep -vE '^0\.0\.0-develop\.[0-9]+$' \
+  | grep -vE '^[0-9]+\.[0-9]+\.[0-9]+-rc\.[0-9]+$' \
+  | grep -vE '^branch-' \
+  | sort -rV || true)
 develop=$(list_versions | grep -E '^0\.0\.0-develop\.[0-9]+$' | sort -t. -k4,4rn || true)
 # Library repos: one rolling page per tracked branch (branch-<name>.md). Empty for
 # services, so the branch table rows + section simply don't appear for them.
@@ -39,6 +49,20 @@ kind=$(grep -m1 '^kind=' "${repo_dir}/.meta" 2>/dev/null | sed 's/^kind=//' || t
 withdrawn_file="${repo_dir}/.withdrawn"
 is_withdrawn() { [ -f "$withdrawn_file" ] && grep -q "^${1}|" "$withdrawn_file" 2>/dev/null; }
 
+# Marked versions (ci/mark): "<version>|<note>" per line, one per marked version.
+# A build can be declared known-good WITHOUT tagging a release -- tagging means
+# "shipped", and most good builds are never shipped. The note is free text, shown
+# in bold in the Notes column, and is meant to be EDITED later (a plain file in
+# this repo; correct it in the web IDE, no pipeline needed). Marked versions are
+# also exempt from retention (render.sh) and refused by withdraw, so the mark
+# cannot outlive the thing it points at.
+marked_file="${repo_dir}/.marked"
+mark_note() {   # $1 = version -> its note, or empty
+  [ -f "$marked_file" ] || return 0
+  # Take the FIRST match: a hand-edited file may end up with duplicates.
+  grep -m1 "^${1}|" "$marked_file" 2>/dev/null | cut -d'|' -f2- || true
+}
+
 # Every RC page, whether or not its release has shipped -- an RC is the audit trail
 # of a release run, so it stays visible afterwards (pruned only by KEEP_RC).
 rcs=$(list_versions | grep -E '^[0-9]+\.[0-9]+\.[0-9]+-rc\.[0-9]+$' | sort -rV || true)
@@ -50,7 +74,20 @@ pts()   { grep -m1 -oE 'ts:[0-9]+' "$1" 2>/dev/null | sed 's/^ts://'; }
 # A stable HTML-anchor id for a version (so the table can link to its section).
 anchor() { printf 'v-%s' "$(printf '%s' "$1" | sed 's/[^A-Za-z0-9]/-/g')"; }
 
-# Print one section: an anchored dump of each version's page.
+# Print one section: an anchored dump of each version's page, with the operator's
+# note (if any) injected just under the heading.
+#
+# WHY THE NOTE IS INJECTED HERE AND NOT WRITTEN INTO THE PAGE
+#   A version page is written ONCE, by the build that produced it. Marking a build is
+#   something you do afterwards -- often months afterwards -- so a note written into
+#   the page at build time could never appear on a version that already exists, which
+#   is every version you would actually want to mark. This file, by contrast, is
+#   regenerated from the pages on every push to the versions repo, so a note added
+#   today shows up immediately, on any version, however old.
+#
+#   It is deliberately NOT called "release notes": it applies to any build, usually
+#   one that was never released, and is written after the fact rather than at tag
+#   time. A blockquote keeps it visibly an aside from the generated content.
 section() {  # $1 = heading  $2 = newline list of versions
   [ -n "$2" ] || return 0
   echo "# $1"; echo
@@ -58,7 +95,16 @@ section() {  # $1 = heading  $2 = newline list of versions
     [ -n "$v" ] || continue
     echo "<a id=\"$(anchor "$v")\"></a>"
     echo
-    cat "${vdir}/${v}.md"; echo
+    n=$(mark_note "$v")
+    if [ -n "$n" ]; then
+      head -1 "${vdir}/${v}.md"        # the "## <repo> <version> — <date>" heading
+      echo
+      echo "> **Note** — ${n}"
+      tail -n +2 "${vdir}/${v}.md"
+    else
+      cat "${vdir}/${v}.md"
+    fi
+    echo
   done
 }
 
@@ -101,14 +147,19 @@ section() {  # $1 = heading  $2 = newline list of versions
     emit "$branches"   "branch"
   } | sed 's/^|/0|/' > "$tbl"     # missing ts -> 0, so it sorts last
 
-  echo "| Version | Date | Type |"
-  echo "| --- | --- | --- |"
+  echo "| Version | Date | Type | Notes |"
+  echo "| --- | --- | --- | --- |"
   sort -s -t'|' -k1,1rn "$tbl" | while IFS='|' read -r ts d v t; do
     [ -n "$v" ] || continue
     [ -n "$d" ] || d="—"
     label="$v"; case "$v" in branch-*) label="${v#branch-}" ;; esac   # show branch name, not the file key
     if is_withdrawn "$v"; then t="${t} · **withdrawn**"; fi
-    echo "| [\`$label\`](#$(anchor "$v")) | $d | $t |"
+    # Passed through as markdown, exactly as written in .marked -- so `**bold**`,
+    # `code`, a link, or plain text all render the way the author intended, rather
+    # than the catalogue deciding. Pipes are escaped (a bare one would end the cell
+    # and silently mangle the row); \| still renders as a literal pipe.
+    note=$(mark_note "$v" | sed 's/|/\\|/g')
+    echo "| [\`$label\`](#$(anchor "$v")) | $d | $t | ${note:-} |"
   done
   rm -f "$tbl"
   echo

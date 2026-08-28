@@ -18,6 +18,9 @@
 #           VERSION    (single) the one version to withdraw
 #           FROM, TO   (range)  inclusive N bounds, e.g. FROM=100 TO=200
 #           KEEP_LAST  (keep)   how many newest develop builds to KEEP
+#           MARKED_FILE         optional path to <repo>/.marked; every version listed
+#                               there is refused (a build declared known-good must not
+#                               be deleted out from under whoever is relying on it)
 #   stdout: the versions to withdraw, newest first
 #
 #   printf '%s\n' 0.0.0-develop.{1..30} | MODE=keep KEEP_LAST=10 ./select.sh
@@ -78,8 +81,22 @@ esac
 # Rule 2 -- applied AFTER selection so it also catches an explicit single request.
 selected=$(printf '%s\n' "$selected" | sed '/^$/d' | grep -vx "$newest" || true)
 
+# Rule 4 -- a MARKED version is never withdrawn. Marking says "this build is known
+# good, rely on it"; deleting its image and chart afterwards is the exact mistake
+# worth making impossible. Unmark it first (remove the line from .marked) if you
+# really mean to withdraw it. Applied after selection so a range or keep-N sweep
+# silently skips marked builds instead of failing wholesale.
+if [ -n "${MARKED_FILE:-}" ] && [ -s "$MARKED_FILE" ]; then
+  marked=$(cut -d'|' -f1 "$MARKED_FILE" | sed '/^$/d')
+  if [ -n "$marked" ]; then
+    kept=$(printf '%s\n' "$selected" | grep -Fxf <(printf '%s\n' "$marked") || true)
+    [ -n "$kept" ] && printf 'skipping marked (known-good) versions:\n%s\n' "$kept" >&2
+    selected=$(printf '%s\n' "$selected" | grep -Fxvf <(printf '%s\n' "$marked") || true)
+  fi
+fi
+
 if [ -z "$selected" ]; then
-  echo "nothing to withdraw (the newest build ${newest} is always kept)" >&2
+  echo "nothing to withdraw (the newest build ${newest} is always kept; marked builds are skipped)" >&2
   exit 2
 fi
 printf '%s\n' "$selected"
