@@ -776,25 +776,18 @@ jobs:
           # actually contains -- pinned chart dependencies, image tags -- is inside
           # that package, so the page points at the artifact rather than trying to
           # duplicate (and drift from) its contents.
-          # A repo with ONE chart links that chart's package; with several, the
-          # repo index -- same reasoning as the images link below, since the page
-          # header carries a single link and naming one of several is arbitrary.
-          c=$(printf '%s' "${CHART_PATHS:-[]}" | jq 'length')
-          if [ "$c" -eq 1 ]; then
-            cp=$(printf '%s' "$CHART_PATHS" | jq -r '.[0]')
-            if [ -f "${cp}/Chart.yaml" ]; then
-              name=$(yq '.name' "${cp}/Chart.yaml")
-              {
-                echo "chart_label=${name} ${VERSION}"
-                echo "chart_url=${HELM_URL}/${name}-${VERSION}.tgz"
-              } >> "$GITHUB_OUTPUT"
-            fi
-          elif [ "$c" -gt 1 ]; then
-            {
-              echo "chart_label=${c} charts ${VERSION}"
-              echo "chart_url=${HELM_URL}/index.yaml"
-            } >> "$GITHUB_OUTPUT"
-          fi
+          # Every chart this version published, so the page can name them all.
+          # They share one version -- the run derives a single one and stamps it
+          # on each chart -- so listing them is not ambiguity, it is the fact.
+          charts='[]'
+          for cp in $(printf '%s' "${CHART_PATHS:-[]}" | jq -r '.[]'); do
+            [ -f "${cp}/Chart.yaml" ] || continue
+            name=$(yq '.name' "${cp}/Chart.yaml")
+            charts=$(printf '%s' "$charts" | jq -c \
+              --arg n "$name" --arg v "$VERSION" --arg u "${HELM_URL}/${name}-${VERSION}.tgz" \
+              '. + [{name:$n, version:$v, url:$u}]')
+          done
+          echo "charts_json=${charts}" >> "$GITHUB_OUTPUT"
           # Where this repo's images live, for the page header. A repo with ONE image
           # links that image's page; with several, the namespace -- the header carries
           # a single link, and pointing at one of five would be arbitrary. A library
@@ -828,8 +821,7 @@ jobs:
           PAGES_DIR: ${{ github.workspace }}/changelog-pages
           REPO_URL: ${{ github.server_url }}/${{ github.repository }}
           IMAGES_URL: ${{ steps.links.outputs.images_url }}
-          CHART_PACKAGE_URL: ${{ steps.links.outputs.chart_url }}
-          CHART_LABEL: ${{ steps.links.outputs.chart_label }}
+          CHARTS_JSON: ${{ steps.links.outputs.charts_json }}
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
           # kind + the moving branch drive library mode (rolling per-branch page keyed
           # by SHA, grouped under "Libraries" in the catalogue).

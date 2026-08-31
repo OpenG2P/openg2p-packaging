@@ -24,11 +24,16 @@
 #        RELEASE_NOTES_FILE    (frozen only) annotated-tag message -> "Release notes"
 #        KEEP                  how many develop pages to keep (default 20)
 #        KEEP_RC               how many RC pages to keep per line (default 10)
-#        CHART_PACKAGE_URL     direct link to this version's packaged chart, so the
-#                              page points at the artifact (open it to see exactly
+#        CHARTS_JSON           JSON array of this version's charts, each
+#                              {"name":..,"version":..,"url":..}, so the page
+#                              points at the artifacts (open one to see exactly
 #                              what the version contains -- pinned dependencies,
-#                              image tags). Empty -> the line is omitted.
-#        CHART_LABEL           what to call it, e.g. "openg2p-nsr 1.1.0"
+#                              image tags). Empty/absent -> the line is omitted.
+#                              A repo publishing several charts lists them ALL:
+#                              they share one version, and naming only one would
+#                              leave the reader guessing which.
+#        CHART_PACKAGE_URL     legacy single-chart form, still honoured when
+#        CHART_LABEL           CHARTS_JSON is absent.
 #        PROMOTED_FROM         (frozen only) the build this release retags
 #   library (a library repo's non-tag build) also uses:
 #        BRANCH                the moving branch being tracked (page id)
@@ -38,6 +43,28 @@
 # Pages embed a hidden `<!-- build:V revision:R ts:EPOCH -->` marker: the next
 # build diffs against it, and the aggregate sorts the summary table by commit
 # time (ts) so versions published on the same day still order correctly.
+
+
+# Renders the "Chart:"/"Charts:" line. One chart keeps the historical wording
+# and output exactly; several are all listed, since they are published together
+# under one version and the reader needs to know which exist.
+chart_line() {
+  if [ -n "${CHARTS_JSON:-}" ] && [ "${CHARTS_JSON}" != "[]" ]; then
+    local n
+    n=$(printf '%s' "$CHARTS_JSON" | jq 'length')
+    if [ "$n" -eq 1 ]; then
+      printf '**Chart:** '
+    else
+      printf '**Charts:** '
+    fi
+    printf '%s\n' "$(printf '%s' "$CHARTS_JSON" \
+      | jq -r 'map("[\(.name) \(.version)](\(.url))") | join(" · ")')"
+    echo
+  elif [ -n "${CHART_PACKAGE_URL:-}" ]; then
+    echo "**Chart:** [${CHART_LABEL:-download the chart}](${CHART_PACKAGE_URL})"
+    echo
+  fi
+}
 
 set -euo pipefail
 
@@ -103,10 +130,7 @@ delta_body() {   # $1 = heading line
   echo
   # Point at the artifact itself: everything a version actually contains -- its
   # pinned chart dependencies and image tags -- is inside the package.
-  if [ -n "${CHART_PACKAGE_URL:-}" ]; then
-    echo "**Chart:** [${CHART_LABEL:-download the chart}](${CHART_PACKAGE_URL})"
-    echo
-  fi
+  chart_line
   # A trivial delta (0-1 commits) skips the AI summary: the commit list IS the summary.
   if [ "${SUMMARY_OMIT:-false}" != true ]; then
     echo "### Summary"
@@ -152,10 +176,7 @@ case "$MODE" in
       fi
       # Point at the artifact itself: everything a version actually contains --
       # its pinned chart dependencies and image tags -- is inside the package.
-      if [ -n "${CHART_PACKAGE_URL:-}" ]; then
-        echo "**Chart:** [${CHART_LABEL:-download the chart}](${CHART_PACKAGE_URL})"
-        echo
-      fi
+      chart_line
       # Curated release notes from the annotated tag message (verbatim, Jira-linkified),
       # shown above the auto-generated summary. Absent for lightweight tags.
       if [ -n "${RELEASE_NOTES_FILE:-}" ] && [ -s "$RELEASE_NOTES_FILE" ]; then
