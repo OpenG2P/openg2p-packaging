@@ -34,7 +34,12 @@ on:
         type: string
         default: '[]'
       chart-path:
-        description: 'Path to the chart dir. Empty = this repo publishes no chart.'
+        description: >-
+          Path to the chart dir. Empty = this repo publishes no chart.
+          Accepts EITHER a single path ("helm/my-chart") or a JSON array of
+          paths ('["helm/a","helm/b"]') for a repo that publishes more than one
+          chart; each is packaged and published independently, under the same
+          version. The single-path form is unchanged.
         required: false
         type: string
         default: ''
@@ -193,6 +198,7 @@ jobs:
       frozen: ${{ steps.v.outputs.frozen }}
       alias: ${{ steps.v.outputs.alias }}
       publish_chart: ${{ steps.v.outputs.publish_chart }}
+      chart_paths: ${{ steps.charts.outputs.paths }}
       promote_from: ${{ steps.v.outputs.promote_from }}
       revision: ${{ steps.v.outputs.revision }}
     steps:
@@ -250,6 +256,30 @@ jobs:
             echo "commit count, push an empty commit so the build gets a fresh version."
             exit 1
           fi
+
+      # Normalise chart-path into a JSON array so the chart job can matrix over
+      # it. Accepts the historical single-path string and a JSON array alike, so
+      # every existing caller keeps working unchanged.
+      - name: Resolve chart paths
+        id: charts
+        env:
+          CHART_PATH: ${{ inputs.chart-path }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CHART_PATH}" ]; then
+            paths='[]'
+          elif [ "${CHART_PATH#[}" != "${CHART_PATH}" ]; then
+            # Already a JSON array. Validate rather than trust: a malformed value
+            # would otherwise surface as an unreadable matrix error much later.
+            if ! paths=$(printf '%s' "${CHART_PATH}" | jq -ce 'if type=="array" then . else error("not an array") end'); then
+              echo "::error::chart-path looks like JSON but is not an array of paths: ${CHART_PATH}"
+              exit 1
+            fi
+          else
+            paths=$(jq -cn --arg p "${CHART_PATH}" '[$p]')
+          fi
+          echo "paths=${paths}" >> "$GITHUB_OUTPUT"
+          echo "chart paths: ${paths}"
 
       - name: Summary
         run: |
@@ -423,8 +453,16 @@ jobs:
       always() &&
       needs.version.result == 'success' &&
       needs.images.result != 'failure' && needs.images.result != 'cancelled' &&
-      inputs.chart-path != '' && needs.version.outputs.publish_chart == 'true'
+      needs.version.outputs.chart_paths != '[]' && needs.version.outputs.publish_chart == 'true'
     runs-on: ubuntu-latest
+    # One job per chart. A repo that publishes a single chart gets a
+    # single-element matrix and behaves exactly as before.
+    strategy:
+      # Independent publishes: one chart failing must not cancel a sibling that
+      # would otherwise have succeeded.
+      fail-fast: false
+      matrix:
+        chart-path: ${{ fromJson(needs.version.outputs.chart_paths) }}
     # packages: write for the OCI push path (harmless for the HTTP path).
     permissions:
       contents: read
@@ -432,6 +470,10 @@ jobs:
     # Serialises this repo's own publishes. It CANNOT serialise across repos --
     # concurrency groups are scoped to a repository -- and gh-pages is shared by
     # all of them, so the push below retries on rejection.
+    #
+    # The group is deliberately NOT keyed on the chart: when a repo publishes
+    # several charts, their matrix legs must queue behind one another rather than
+    # race to push the same gh-pages branch.
     concurrency:
       group: helm-publish-${{ github.repository }}
     env:
@@ -444,7 +486,7 @@ jobs:
         env:
           V: ${{ needs.version.outputs.version }}
         run: |
-          values="${{ inputs.chart-path }}/values.yaml"
+          values="${{ matrix.chart-path }}/values.yaml"
           for path in $(jq -r '.[]' <<<'${{ inputs.chart-image-paths }}'); do
             # The path MUST already exist. yq creates missing keys rather than
             # failing, so a wrong path silently writes a stray key and leaves the
@@ -469,7 +511,7 @@ jobs:
           REVISION: ${{ needs.version.outputs.revision }}
           SOURCE: https://github.com/${{ github.repository }}
         run: |
-          chart="${{ inputs.chart-path }}/Chart.yaml"
+          chart="${{ matrix.chart-path }}/Chart.yaml"
           # Record the commit in the chart itself, so its provenance does not
           # depend on the rev-list ordinal (which merge commits can make
           # ambiguous). Mirrors the OCI labels on the images.
@@ -484,7 +526,7 @@ jobs:
       # Resolves dependencies into <chart>/charts/. Split out of Package so the
       # questions step below can read a dependency's questions.yaml.
       - name: Resolve chart dependencies
-        run: helm dep up "${{ inputs.chart-path }}"
+        run: helm dep up "${{ matrix.chart-path }}"
 
       - name: Load packaging scripts
         if: inputs.chart-inherit-questions != ''
@@ -506,14 +548,14 @@ jobs:
             echo "::error::chart-inherit-questions must be JSON with a .dependency key"; exit 1; }
           alias=$(jq -er '.alias' <<<"$SPEC") || {
             echo "::error::chart-inherit-questions must be JSON with an .alias key"; exit 1; }
-          bash .openg2p-ci/ci/chart/inherit-questions.sh "${{ inputs.chart-path }}" "$dep" "$alias"
+          bash .openg2p-ci/ci/chart/inherit-questions.sh "${{ matrix.chart-path }}" "$dep" "$alias"
 
       - name: Package
         id: pkg
         run: |
-          helm package "${{ inputs.chart-path }}" --version "$VERSION" --app-version "$VERSION" -d dist/
+          helm package "${{ matrix.chart-path }}" --version "$VERSION" --app-version "$VERSION" -d dist/
           ls -l dist/
-          chart="${{ inputs.chart-path }}/Chart.yaml"
+          chart="${{ matrix.chart-path }}/Chart.yaml"
           echo "name=$(yq '.name' "$chart")" >> "$GITHUB_OUTPUT"
           # Rancher catalog membership is declared by the chart, not the caller.
           # The annotation's value is the empty string, so test for presence.
@@ -724,7 +766,7 @@ jobs:
         env:
           VERSION: ${{ needs.version.outputs.version }}
           IMAGES_JSON: ${{ inputs.images }}
-          CHART_PATH: ${{ inputs.chart-path }}
+          CHART_PATHS: ${{ needs.version.outputs.chart_paths }}
           HELM_URL: ${{ inputs.helm-repo-url }}
           REGISTRY: ${{ inputs.registry }}
           NAMESPACE: ${{ inputs.namespace }}
@@ -734,11 +776,23 @@ jobs:
           # actually contains -- pinned chart dependencies, image tags -- is inside
           # that package, so the page points at the artifact rather than trying to
           # duplicate (and drift from) its contents.
-          if [ -n "$CHART_PATH" ] && [ -f "${CHART_PATH}/Chart.yaml" ]; then
-            name=$(yq '.name' "${CHART_PATH}/Chart.yaml")
+          # A repo with ONE chart links that chart's package; with several, the
+          # repo index -- same reasoning as the images link below, since the page
+          # header carries a single link and naming one of several is arbitrary.
+          c=$(printf '%s' "${CHART_PATHS:-[]}" | jq 'length')
+          if [ "$c" -eq 1 ]; then
+            cp=$(printf '%s' "$CHART_PATHS" | jq -r '.[0]')
+            if [ -f "${cp}/Chart.yaml" ]; then
+              name=$(yq '.name' "${cp}/Chart.yaml")
+              {
+                echo "chart_label=${name} ${VERSION}"
+                echo "chart_url=${HELM_URL}/${name}-${VERSION}.tgz"
+              } >> "$GITHUB_OUTPUT"
+            fi
+          elif [ "$c" -gt 1 ]; then
             {
-              echo "chart_label=${name} ${VERSION}"
-              echo "chart_url=${HELM_URL}/${name}-${VERSION}.tgz"
+              echo "chart_label=${c} charts ${VERSION}"
+              echo "chart_url=${HELM_URL}/index.yaml"
             } >> "$GITHUB_OUTPUT"
           fi
           # Where this repo's images live, for the page header. A repo with ONE image
