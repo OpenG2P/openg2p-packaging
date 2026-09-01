@@ -103,20 +103,17 @@ art=""
 marked_file="${repo_dir}/.marked"
 is_marked() { [ -f "$marked_file" ] && grep -q "^${1}|" "$marked_file" 2>/dev/null; }
 
-# Keep only the newest $2 pages named "<prefix>.<number>.md"; delete the rest.
-prune() {   # $1 = filename prefix, $2 = how many to keep
-  local prefix="$1" keep="$2" esc
-  esc=$(printf '%s' "$prefix" | sed 's/[.]/\\./g')
-  find "$vdir" -maxdepth 1 -type f -name "${prefix}.*.md" 2>/dev/null \
-    | sed -E "s#.*/${esc}\.([0-9]+)\.md\$#\1 &#" \
-    | grep -E '^[0-9]+ ' \
-    | sort -rn \
-    | awk -v k="$keep" 'NR>k{print $2}' \
-    | while IFS= read -r f; do
-        [ -n "$f" ] || continue
-        is_marked "$(basename "$f" .md)" && continue   # marked -> exempt from retention
-        rm -f "$f"
-      done || true
+# Version pages are PERMANENT. They used to be deleted here once a repo had more
+# than KEEP of them, which had two costs: a build someone had written notes on
+# vanished silently about KEEP commits later, and the only way to keep one was to
+# mark it. The catalogue is bounded at RENDER time instead (render-aggregate.sh
+# shows the newest RENDER_KEEP), so an old page stays readable in the versions
+# repo without inflating the page. Nothing here removes a page.
+#
+# Kept as a no-op rather than deleted so callers below read the same, and so the
+# intent is recorded where the deletion used to be.
+prune() {   # $1 = filename prefix, $2 = how many to keep (both ignored)
+  :
 }
 
 # Emit a single-delta body: what changed since BASE_LABEL, and nothing else. Develop and
@@ -153,6 +150,13 @@ delta_body() {   # $1 = heading line
 
 case "$MODE" in
   frozen)
+  # A version is immutable, so its page is written ONCE. Re-running a build for the
+  # same version leaves the existing page alone, which is what protects notes added
+  # to it by hand: nothing has to detect an edit, because nothing regenerates over
+  # one. `changelog_regenerate` remains the deliberate way to rebuild a page.
+  if [ -f "${vdir}/${VERSION}.md" ]; then
+    echo "page for ${VERSION} already exists; left untouched"
+  else
     {
       echo "## ${disp} ${VERSION} — ${DATE}"
       echo
@@ -188,13 +192,21 @@ case "$MODE" in
       echo "### Changes"; echo
       printf '%s\n' "$cum_notes"
     } > "${vdir}/${VERSION}.md"
+    fi
     # RC pages are KEPT after the release ships: they are the audit trail of the
     # release run -- what changed between rc.N and rc.N+1 is exactly what QA needs
     # to look back at. They are pruned only by KEEP_RC, like any other build.
     ;;
   rc)
+  # A version is immutable, so its page is written ONCE. Re-running a build for the
+  # same version leaves the existing page alone, which is what protects notes added
+  # to it by hand: nothing has to detect an edit, because nothing regenerates over
+  # one. `changelog_regenerate` remains the deliberate way to rebuild a page.
+  if [ -f "${vdir}/${VERSION}.md" ]; then
+    echo "page for ${VERSION} already exists; left untouched"
+  else
     delta_body "${disp} ${VERSION} — ${DATE}" > "${vdir}/${VERSION}.md"
-    prune "${VERSION%-rc.*}-rc" "$KEEP_RC"   # last KEEP_RC RCs of this release line
+    fi
     ;;
   library)
     # A library's moving branch: one ROLLING page per branch (regenerated each push),
@@ -223,10 +235,17 @@ case "$MODE" in
       fi
     } > "${vdir}/branch-${safe}.md"
     ;;
-  *)  # develop build (MODE=develop): durable per-N page, last KEEP kept
+  *)  # develop build (MODE=develop): durable per-N page, kept permanently
+  # A version is immutable, so its page is written ONCE. Re-running a build for the
+  # same version leaves the existing page alone, which is what protects notes added
+  # to it by hand: nothing has to detect an edit, because nothing regenerates over
+  # one. `changelog_regenerate` remains the deliberate way to rebuild a page.
+  if [ -f "${vdir}/${VERSION}.md" ]; then
+    echo "page for ${VERSION} already exists; left untouched"
+  else
     delta_body "${disp} — develop ${VERSION} (${DATE})" > "${vdir}/${VERSION}.md"
+    fi
     rm -f "${vdir}/unreleased.md"      # retire the legacy single rolling page
-    prune "0.0.0-develop" "$KEEP"
     ;;
 esac
 

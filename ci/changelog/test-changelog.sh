@@ -250,7 +250,7 @@ excludes "diverged frozen: not first release" "$(cat "$Pd/dv/versions/2.0.0.md")
 rm -rf "$dv" "$Pd"
 
 echo
-echo "retention: develop keeps the last KEEP (KEEP=3 here to exercise pruning)"
+echo "retention: every develop page is KEPT; the catalogue shows the newest RENDER_KEEP"
 rd=$(mktemp -d); Pr=$(mktemp -d)
 git -C "$rd" init -q -b develop; git -C "$rd" config user.email t@t; git -C "$rd" config user.name t
 git -C "$rd" commit -q --allow-empty -m base; git -C "$rd" tag 1.0.0
@@ -260,19 +260,24 @@ present() { [ -f "$Pr/rd/versions/$1.md" ] && echo yes || echo no; }
 for n in 10 11 12 13 14; do git -C "$rd" commit -q --allow-empty -m "G2P-$n dev $n"; rbuild "0.0.0-develop.$n"; done
 check "develop.14 kept"  yes "$(present 0.0.0-develop.14)"
 check "develop.12 kept"  yes "$(present 0.0.0-develop.12)"
-check "develop.11 pruned" no "$(present 0.0.0-develop.11)"
-check "develop.10 pruned" no "$(present 0.0.0-develop.10)"
+# Pages are permanent now: nothing deletes them, so a note written on an old build
+# cannot silently disappear with it.
+check "develop.11 KEPT on disk" yes "$(present 0.0.0-develop.11)"
+check "develop.10 KEPT on disk" yes "$(present 0.0.0-develop.10)"
 agg=$(cat "$Pr/rd/CHANGELOG.md")
 contains "has Develop builds section" "$agg" "# Develop builds"
-excludes "table drops pruned develop" "$agg" "0.0.0-develop.10"
+# ...but the rendered catalogue is bounded, so the oldest are simply not shown.
+agg3=$(RENDER_KEEP=3 PAGES_DIR="$Pr" REPO=rd bash "$HERE/render-aggregate.sh" >/dev/null 2>&1; cat "$Pr/rd/CHANGELOG.md")
+contains "catalogue shows the newest"      "$agg3" "0.0.0-develop.14"
+excludes "catalogue omits beyond the cap"  "$agg3" "0.0.0-develop.10"
 
 echo
-echo "retention: RCs keep last KEEP per line; a release KEEPS them (audit trail)"
+echo "retention: RC pages are KEPT; a release keeps them too (audit trail)"
 git -C "$rd" checkout -q -b 2.0
 for n in 20 21 22 23 24; do git -C "$rd" commit -q --allow-empty -m "G2P-$n rc $n"; rbuild "2.0.0-rc.$n"; done
 check "rc.24 kept"   yes "$(present 2.0.0-rc.24)"
 check "rc.22 kept"   yes "$(present 2.0.0-rc.22)"
-check "rc.21 pruned"  no "$(present 2.0.0-rc.21)"
+check "rc.21 KEPT on disk" yes "$(present 2.0.0-rc.21)"
 git -C "$rd" tag 2.0.0
 rbuild 2.0.0 true
 check "release 2.0.0 written"     yes "$(present 2.0.0)"
@@ -283,7 +288,7 @@ contains "RC section still rendered"  "$(cat "$Pr/rd/CHANGELOG.md")" "# Release 
 rm -rf "$rd" "$Pr"
 
 echo
-echo "retention defaults for a service: 20 develop builds, 10 RCs"
+echo "defaults: every page kept on disk, catalogue renders the newest 20 develop builds"
 kd=$(mktemp -d); Pk=$(mktemp -d)
 git -C "$kd" init -q -b develop; git -C "$kd" config user.email t@t; git -C "$kd" config user.name t
 git -C "$kd" commit -q --allow-empty -m base; git -C "$kd" tag 1.0.0
@@ -293,10 +298,13 @@ for n in $(seq 1 22); do
       PAGES_DIR="$Pk" SKIP_AI=true DATE=2026-07-13 bash "$HERE/run.sh" >/dev/null )
 done
 kept=$(ls "$Pk/kd/versions" | grep -c '^0\.0\.0-develop\.' || true)
-check "default keeps exactly 20"   20  "$kept"
+check "every page kept on disk"    22  "$kept"
 check "newest (22) kept"           yes "$([ -f "$Pk/kd/versions/0.0.0-develop.22.md" ] && echo yes || echo no)"
-check "20th-newest (3) kept"       yes "$([ -f "$Pk/kd/versions/0.0.0-develop.3.md" ] && echo yes || echo no)"
-check "21st-newest (2) pruned"     no  "$([ -f "$Pk/kd/versions/0.0.0-develop.2.md" ] && echo yes || echo no)"
+check "oldest (1) kept too"        yes "$([ -f "$Pk/kd/versions/0.0.0-develop.1.md" ] && echo yes || echo no)"
+# The catalogue is bounded at 20 by default, so the two oldest are not rendered.
+kagg=$(cat "$Pk/kd/CHANGELOG.md")
+contains "catalogue renders the newest"   "$kagg" "0.0.0-develop.22"
+excludes "catalogue omits the 21st-oldest" "$kagg" "0.0.0-develop.2.md"
 contains "footnote states both numbers" "$(cat "$Pk/kd/CHANGELOG.md")" "latest 20 develop builds"
 contains "footnote states RC number"    "$(cat "$Pk/kd/CHANGELOG.md")" "latest 10 release"
 rm -rf "$kd" "$Pk"
@@ -452,7 +460,33 @@ rm -rf "$pf" "$Ppf"
 # hand-editable file, no tag and therefore no release. Two things must hold or the
 # mark is worthless: it shows in the table, and retention must never delete the page
 # it points at (a develop page would otherwise age out after KEEP builds).
-echo "a marked develop build is flagged and exempt from retention"
+echo "a hand-edited version page is never regenerated over"
+# The point of keeping pages forever is that you can write on them. That only holds
+# if a re-run of the same version leaves the page alone -- a version is immutable,
+# so its page is written once.
+wd=$(mktemp -d); Pw=$(mktemp -d)
+git -C "$wd" init -q -b develop; git -C "$wd" config user.email t@t; git -C "$wd" config user.name t
+git -C "$wd" commit -q --allow-empty -m base; git -C "$wd" tag 1.0.0
+git -C "$wd" commit -q --allow-empty -m "G2P-1 first"
+wbuild() { ( cd "$wd" && REPO=wd VERSION="$1" FROZEN="${2:-false}" REVISION=$(git rev-parse HEAD) \
+  PAGES_DIR="$Pw" SKIP_AI=true DATE=2026-07-13 bash "$HERE/run.sh" >/dev/null ); }
+wbuild 0.0.0-develop.1
+page="$Pw/wd/versions/0.0.0-develop.1.md"
+check "the page was written" yes "$([ -f "$page" ] && echo yes || echo no)"
+printf '\n> Hand-written: verified on staging, safe to deploy.\n' >> "$page"
+wbuild 0.0.0-develop.1                      # same version, built again
+contains "the hand-written note survives a re-run" "$(cat "$page")" "verified on staging"
+# ...and a release page is protected the same way.
+git -C "$wd" tag 2.0.0
+wbuild 2.0.0 true
+rpage="$Pw/wd/versions/2.0.0.md"
+printf '\n> Hand-written release addendum.\n' >> "$rpage"
+wbuild 2.0.0 true
+contains "a release page is protected too" "$(cat "$rpage")" "release addendum"
+rm -rf "$wd" "$Pw"
+
+echo
+echo "a marked develop build is flagged in the catalogue"
 mk=$(mktemp -d); Pmk=$(mktemp -d)
 git -C "$mk" init -q -b develop; git -C "$mk" config user.email t@t; git -C "$mk" config user.name t
 mkrun(){ git -C "$mk" commit -q --allow-empty -m "G2P-9$1 change $1"
@@ -463,8 +497,8 @@ mkrun 1
 # Mark build 1 by hand, exactly as an operator would edit the file.
 printf '0.0.0-develop.1|**Intermediate Stable Version** — verified on staging\n' > "$Pmk/mk/.marked"
 for n in 2 3 4 5; do mkrun "$n"; done      # KEEP=3, so 1 and 2 would normally be pruned
-check    "the marked page survives pruning"     yes "$([ -f "$Pmk/mk/versions/0.0.0-develop.1.md" ] && echo yes || echo no)"
-check    "an unmarked old page is still pruned" no  "$([ -f "$Pmk/mk/versions/0.0.0-develop.2.md" ] && echo yes || echo no)"
+check    "the marked page is present"          yes "$([ -f "$Pmk/mk/versions/0.0.0-develop.1.md" ] && echo yes || echo no)"
+check    "an unmarked page is present too"     yes "$([ -f "$Pmk/mk/versions/0.0.0-develop.2.md" ] && echo yes || echo no)"
 mkagg=$(cat "$Pmk/mk/CHANGELOG.md")
 contains "table has a Notes column"  "$mkagg" "| Version | Date | Type | Notes |"
 # The note must also reach the version's own section on the page, and it must get

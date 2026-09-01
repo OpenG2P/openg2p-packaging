@@ -35,7 +35,19 @@ frozen=$(list_versions \
   | grep -vE '^[0-9]+\.[0-9]+\.[0-9]+-rc\.[0-9]+$' \
   | grep -vE '^branch-' \
   | sort -rV || true)
-develop=$(list_versions | grep -E '^0\.0\.0-develop\.[0-9]+$' | sort -t. -k4,4rn || true)
+# How much of the history the CATALOGUE shows. Pages are never deleted -- every
+# build's page stays in versions/ permanently -- so this bounds only what is
+# rendered here. Retention used to be enforced by deleting pages, which took any
+# note written on one with it; the page is bounded at render time instead, and an
+# older build stays readable in the versions repo.
+#
+# The table is built from these same lists, so capping here keeps table and
+# sections in step and never leaves a row linking to an anchor that was not
+# emitted.
+RENDER_KEEP="${RENDER_KEEP:-20}"        # newest develop builds shown
+RENDER_KEEP_RC="${RENDER_KEEP_RC:-10}"  # newest RCs shown PER release line
+develop=$(list_versions | grep -E '^0\.0\.0-develop\.[0-9]+$' | sort -t. -k4,4rn \
+  | head -n "$RENDER_KEEP" || true)
 # Library repos: one rolling page per tracked branch (branch-<name>.md). Empty for
 # services, so the branch table rows + section simply don't appear for them.
 branches=$(list_versions | grep -E '^branch-' | sort || true)
@@ -65,7 +77,10 @@ mark_note() {   # $1 = version -> its note, or empty
 
 # Every RC page, whether or not its release has shipped -- an RC is the audit trail
 # of a release run, so it stays visible afterwards (pruned only by KEEP_RC).
-rcs=$(list_versions | grep -E '^[0-9]+\.[0-9]+\.[0-9]+-rc\.[0-9]+$' | sort -rV || true)
+# Newest RENDER_KEEP_RC per release line, not overall: capping globally would hide
+# an older line's candidates entirely the moment a newer line started building.
+rcs=$(list_versions | grep -E '^[0-9]+\.[0-9]+\.[0-9]+-rc\.[0-9]+$' | sort -rV \
+  | awk -v k="$RENDER_KEEP_RC" -F'-rc.' '{ if (++seen[$1] <= k) print }' || true)
 
 # A YYYY-MM-DD from a page's heading, or em dash.
 pdate() { grep -m1 '^## ' "$1" 2>/dev/null | grep -oE '20[0-9]{2}-[0-9]{2}-[0-9]{2}' | head -1; }
