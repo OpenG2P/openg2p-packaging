@@ -30,7 +30,7 @@ on:
         required: true
         type: string
       chart:
-        description: 'Chart name as published, e.g. openg2p-pbms. Leave EMPTY for an image-only repo.'
+        description: 'Chart name(s) as published, e.g. openg2p-pbms. SPACE-SEPARATED if the repo publishes several, e.g. openg2p-commons-base openg2p-commons-services. Leave EMPTY for an image-only repo.'
         required: false
         type: string
         default: ''
@@ -145,9 +145,18 @@ jobs:
         run: |
           set -euo pipefail
           if [ -n "$CHART" ]; then
-            # Every version this chart has published, from the index we are about to edit.
-            NAME="$CHART" yq -r '.entries[strenv(NAME)][]?.version // ""' chart-repo/index.yaml \
-              | sed '/^$/d' | sort -u > /tmp/published.txt
+            # Every version these charts have published, from the index we are about to
+            # edit. A repo can publish SEVERAL charts under one version (commons ships
+            # openg2p-commons-base + -services; verifiable-credentials ships inji-certify
+            # + inji-verify), so take the union: a version is withdrawable if any of its
+            # charts is published, and the delete step removes whichever actually exist.
+            : > /tmp/published.txt
+            for c in $CHART; do
+              n=$(NAME="$c" yq -r '.entries[strenv(NAME)][]?.version // ""' chart-repo/index.yaml \
+                   | sed '/^$/d' | tee -a /tmp/published.txt | wc -l)
+              echo "chart ${c}: ${n} published version(s)"
+            done
+            sort -u -o /tmp/published.txt /tmp/published.txt
           else
             echo "::error::chart is empty. An image-only repo is not supported yet -- withdrawal reads the image list from the published chart."
             exit 1
@@ -180,14 +189,18 @@ jobs:
           : > /tmp/images.txt
           while IFS= read -r v; do
             [ -n "$v" ] || continue
-            tgz="chart-repo/${CHART}-${v}.tgz"
-            if [ ! -f "$tgz" ]; then
-              echo "::warning::$tgz is not in the helm repo; cannot read its images (already deleted?)"
-              continue
-            fi
-            CHART_TGZ="$tgz" VERSION="$v" bash .openg2p-ci/ci/withdraw/chart-images.sh \
-              | while IFS= read -r img; do [ -n "$img" ] && echo "${img}|${v}"; done >> /tmp/images.txt
+            for c in $CHART; do
+              tgz="chart-repo/${c}-${v}.tgz"
+              if [ ! -f "$tgz" ]; then
+                echo "::warning::$tgz is not in the helm repo; cannot read its images (already deleted?)"
+                continue
+              fi
+              CHART_TGZ="$tgz" VERSION="$v" bash .openg2p-ci/ci/withdraw/chart-images.sh \
+                | while IFS= read -r img; do [ -n "$img" ] && echo "${img}|${v}"; done >> /tmp/images.txt
+            done
           done < /tmp/selected.txt
+          # One image can be listed by more than one of a repo's charts; delete it once.
+          sort -u -o /tmp/images.txt /tmp/images.txt
           echo "--- image tags to delete ---"; cat /tmp/images.txt || true
 
       # ---------------------------------------------------------------- dry run
@@ -247,13 +260,15 @@ jobs:
             git fetch -q origin "$HELM_BRANCH"; git reset -q --hard "origin/$HELM_BRANCH"
             while IFS= read -r v; do
               [ -n "$v" ] || continue
-              rm -f "${CHART}-${v}.tgz"
-              # rancher/index.yaml is produced with `--merge`, which NEVER removes an
-              # entry -- so it has to be edited directly or Rancher keeps listing it.
-              if [ -f rancher/index.yaml ]; then
-                NAME="$CHART" VER="$v" yq -i \
-                  'del(.entries[strenv(NAME)][] | select(.version == strenv(VER)))' rancher/index.yaml
-              fi
+              for c in $CHART; do
+                rm -f "${c}-${v}.tgz"
+                # rancher/index.yaml is produced with `--merge`, which NEVER removes an
+                # entry -- so it has to be edited directly or Rancher keeps listing it.
+                if [ -f rancher/index.yaml ]; then
+                  NAME="$c" VER="$v" yq -i \
+                    'del(.entries[strenv(NAME)][] | select(.version == strenv(VER)))' rancher/index.yaml
+                fi
+              done
             done < /tmp/selected.txt
             # Full regeneration from the .tgz files still present -> the deleted
             # versions drop out of the main index by construction.
