@@ -6,11 +6,36 @@ _Published automatically._
 
 | Version | Date | Type | Notes |
 | --- | --- | --- | --- |
+| [`1.2.2`](#v-1-2-2) | 2026-10-01 | release |  |
 | [`develop`](#v-branch-develop) | 2026-09-09 | branch |  |
 | [`1.2.1`](#v-1-2-1) | 2026-09-04 | release |  |
 | [`1.2.0`](#v-1-2-0) | 2026-09-01 | release |  |
 
 # Releases
+
+<a id="v-1-2-2"></a>
+
+## openg2p-fastapi-common 1.2.2 — 2026-10-01
+
+<!-- build:1.2.2 revision:044315b60846e2be90d8bf36069201c04c3a9294 ts:1790829749 -->
+
+_commit `044315b` · changes since release 1.2.1_
+
+### Release notes
+
+## What's Changed
+* Pin sqlalchemy version to 2.0.20 by @mkumar-02 in https://github.com/OpenG2P/openg2p-fastapi-common/pull/72
+
+
+**Full Changelog**: https://github.com/OpenG2P/openg2p-fastapi-common/compare/1.2.1...1.2.2
+
+### Summary
+
+- Dependency management: pinned SQLAlchemy version to 2.0.20 to ensure compatibility and stability.
+
+### Changes
+
+- Pin sqlalchemy version to 2.0.20 ([`e306fe9`](https://github.com/OpenG2P/openg2p-fastapi-common/commit/e306fe98cb07ff7b2f0f0f1f6f9c35d3e14bdf5d))
 
 <a id="v-1-2-1"></a>
 
