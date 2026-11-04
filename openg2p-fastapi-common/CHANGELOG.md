@@ -6,7 +6,7 @@ _Published automatically._
 
 | Version | Date | Type | Notes |
 | --- | --- | --- | --- |
-| [`develop`](#v-branch-develop) | 2026-10-16 | branch |  |
+| [`develop`](#v-branch-develop) | 2026-11-04 | branch |  |
 | [`1.2.2`](#v-1-2-2) | 2026-10-01 | release |  |
 | [`1.2.1`](#v-1-2-1) | 2026-09-04 | release |  |
 | [`1.2.0`](#v-1-2-0) | 2026-09-01 | release |  |
@@ -127,28 +127,27 @@ _commit `2926e24` · changes since release v1.1.5_
 
 <a id="v-branch-develop"></a>
 
-## openg2p-fastapi-common — `develop` branch (2026-10-16)
+## openg2p-fastapi-common — `develop` branch (2026-11-04)
 
-_moving branch · latest commit `164f07f` · baseline: v1.1.5_
-<!-- build:develop revision:164f07f7e7f38944b60cb1528d2582d025b830b5 ts:1792127779 -->
+_moving branch · latest commit `02a8c18` · baseline: 1.2.2_
+<!-- build:develop revision:02a8c1801e9ca7cf0313a50d86d6bbef1639b90c ts:1793780309 -->
 
 ### Summary
 
-_Changes on `develop` since v1.1.5:_
+_Changes on `develop` since 1.2.2:_
 
-- **Major:** Database connection management overhaul with async sessionmaker and pool settings, including enhanced asyncpg support with PgBouncer and connection-pool pre-ping to prevent stale connections.
-- Key management refactor: introduced a process-wide key cache for crypto helpers and added local crypto management to bypass the Keymanager.
-- Security enhancements: added middleware for security headers in API responses and implemented tests for these headers.
-- CI improvements: migrated repository workflows from GitHub to GitLab, including the addition of a changelog workflow and removal of obsolete tag workflow.
-- Testing enhancements: improved init_db tests for PostgreSQL connection arguments and added new tests for database pooling and partner management key store.
+- **Major:** Removed Novu notification implementation and all related configurations, streamlining the notification system.
+- Key management enhancement: Implemented a process-wide key cache for Partner Management in CryptoHelpers, improving efficiency and performance.
+- Database improvements: Enhanced connection settings for asyncpg with PgBouncer support and updated init_db tests to verify additional PostgreSQL connection arguments.
+- Dependency updates: Adjusted dependency manifests in pyproject.toml, reflecting changes in project requirements.
 
 ### Recent commits (latest 5)
 
+- Remove Novu notification implementation and related configurations ([`a947250`](https://github.com/OpenG2P/openg2p-fastapi-common/commit/a9472505057dd275bc541f67277b105b64419034))
+- Implement process-wide key cache for Partner Management in CryptoHelpers ([`6ca9e5c`](https://github.com/OpenG2P/openg2p-fastapi-common/commit/6ca9e5cd6875a4bdf584e3570eec8108df6164eb))
 - [G2P-5811](https://openg2p.atlassian.net/browse/G2P-5811) Refactor key management in crypto helpers to share a process-wide key cache ([`ab0ea5d`](https://github.com/OpenG2P/openg2p-fastapi-common/commit/ab0ea5dc334e7eb3d3c240c47b8ebbc16f937ddf))
+- Pin sqlalchemy version to 2.0.20 ([`e306fe9`](https://github.com/OpenG2P/openg2p-fastapi-common/commit/e306fe98cb07ff7b2f0f0f1f6f9c35d3e14bdf5d))
 - Enhance init_db test to verify additional connection arguments for PostgreSQL ([`9859382`](https://github.com/OpenG2P/openg2p-fastapi-common/commit/98593820b17b63220c08bfd071e5171e8c60e63b))
-- Enhance database connection settings for asyncpg with PgBouncer support ([`6753b84`](https://github.com/OpenG2P/openg2p-fastapi-common/commit/6753b846e9c9f853b8526700453a20c492ee6507))
-- [G2P-5620](https://openg2p.atlassian.net/browse/G2P-5620) Enhance database connection management with async sessionmaker and pool settings ([`17057b7`](https://github.com/OpenG2P/openg2p-fastapi-common/commit/17057b7ec69f02bc982813886749d61a4f94d620))
-- Update README to reflect repository migration to GitLab ([`6a5ed6d`](https://github.com/OpenG2P/openg2p-fastapi-common/commit/6a5ed6dea154808836ba540d1fa46d401e2fac77))
 
 ---
 
