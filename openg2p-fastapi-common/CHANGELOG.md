@@ -6,12 +6,50 @@ _Published automatically._
 
 | Version | Date | Type | Notes |
 | --- | --- | --- | --- |
+| [`1.3.0`](#v-1-3-0) | 2026-11-17 | release |  |
 | [`develop`](#v-branch-develop) | 2026-11-04 | branch |  |
 | [`1.2.2`](#v-1-2-2) | 2026-10-01 | release |  |
 | [`1.2.1`](#v-1-2-1) | 2026-09-04 | release |  |
 | [`1.2.0`](#v-1-2-0) | 2026-09-01 | release |  |
 
 # Releases
+
+<a id="v-1-3-0"></a>
+
+## openg2p-fastapi-common 1.3.0 — 2026-11-17
+
+<!-- build:1.3.0 revision:e63557ebc9a42f806945a0c27d7bc4ebb003c5bd ts:1794900833 -->
+
+_commit `e63557e` · changes since release 1.2.2_
+
+### Release notes
+
+## What's Changed
+* Enhance database connection settings for asyncpg with PgBouncer support by @vin0dkhichar in https://github.com/OpenG2P/openg2p-fastapi-common/pull/71
+* [G2P-5811](https://openg2p.atlassian.net/browse/G2P-5811) Refactor key management in crypto helpers to share a process-wide key cache by @vin0dkhichar in https://github.com/OpenG2P/openg2p-fastapi-common/pull/73
+* Merge branch '1.2' into develop by @vin0dkhichar in https://github.com/OpenG2P/openg2p-fastapi-common/pull/74
+* Bump version to 1.3.0 by @vin0dkhichar in https://github.com/OpenG2P/openg2p-fastapi-common/pull/75
+
+
+**Full Changelog**: https://github.com/OpenG2P/openg2p-fastapi-common/compare/1.2.2...1.3.0
+
+### Summary
+
+- **Major:** Version bump to 1.3.0, reflecting significant updates and changes.
+- Notification system removal: eliminated Novu notification implementation and all related configurations, streamlining the codebase.
+- Key management enhancement: introduced a process-wide key cache for Partner Management in CryptoHelpers, improving efficiency and refactoring existing key management.
+- Database improvements: enhanced connection settings for asyncpg with PgBouncer support and updated init_db tests to verify additional PostgreSQL connection arguments.
+- Dependency update: upgraded pyupgrade to version 3.21.2 in the pre-commit configuration.
+
+### Changes
+
+- Update pyupgrade version to v3.21.2 in pre-commit configuration ([`3cdae79`](https://github.com/OpenG2P/openg2p-fastapi-common/commit/3cdae7936e434d3e65d18bdc9bf7ee7fd39d6ab3))
+- Bump version to 1.3.0 ([`fdbbe2c`](https://github.com/OpenG2P/openg2p-fastapi-common/commit/fdbbe2c7fcf315fd3d873740f843604479261849))
+- Remove Novu notification implementation and related configurations ([`a947250`](https://github.com/OpenG2P/openg2p-fastapi-common/commit/a9472505057dd275bc541f67277b105b64419034))
+- Implement process-wide key cache for Partner Management in CryptoHelpers ([`6ca9e5c`](https://github.com/OpenG2P/openg2p-fastapi-common/commit/6ca9e5cd6875a4bdf584e3570eec8108df6164eb))
+- [G2P-5811](https://openg2p.atlassian.net/browse/G2P-5811) Refactor key management in crypto helpers to share a process-wide key cache ([`ab0ea5d`](https://github.com/OpenG2P/openg2p-fastapi-common/commit/ab0ea5dc334e7eb3d3c240c47b8ebbc16f937ddf))
+- Enhance init_db test to verify additional connection arguments for PostgreSQL ([`9859382`](https://github.com/OpenG2P/openg2p-fastapi-common/commit/98593820b17b63220c08bfd071e5171e8c60e63b))
+- Enhance database connection settings for asyncpg with PgBouncer support ([`6753b84`](https://github.com/OpenG2P/openg2p-fastapi-common/commit/6753b846e9c9f853b8526700453a20c492ee6507))
 
 <a id="v-1-2-2"></a>
 
